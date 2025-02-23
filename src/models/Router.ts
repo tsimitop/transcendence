@@ -3,7 +3,7 @@ import Home from "../pages/Home";
 import Login from "../pages/Login";
 import NotFound from "../pages/NotFound";
 
-class Router {
+abstract class Router {
   static routes = {
     "/": Home.create(),
     "/login": Login.create(),

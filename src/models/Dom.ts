@@ -1,4 +1,4 @@
-class Dom {
+abstract class Dom {
   private static _root: HTMLElement = document.getElementById("root")!;
 
   static clearDOM = function (): void {
