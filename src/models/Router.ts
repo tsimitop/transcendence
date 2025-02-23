@@ -1,4 +1,4 @@
-import { clearDOM, root, updateDOM } from "../exports";
+import Dom from "./Dom";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import NotFound from "../pages/NotFound";
@@ -13,8 +13,8 @@ class Router {
     const path = window.location.pathname;
     const toRender =
       Router.routes[path as keyof typeof Router.routes] || NotFound.create();
-    clearDOM();
-    updateDOM(toRender);
+    Dom.clearDOM();
+    Dom.updateDOM(toRender);
     return toRender;
   }
 
@@ -41,8 +41,8 @@ class Router {
     const toRender =
       Router.routes[routeToGo as keyof typeof Router.routes] ||
       NotFound.create();
-    clearDOM();
-    root.append(toRender);
+    Dom.clearDOM();
+    Dom.updateDOM(toRender);
     Router.listenForRouteChange();
   }
 
