@@ -9,12 +9,13 @@ class Home extends Component {
   }
 
   static create(): Home {
-    customElements.define("home-component", Home);
+    if (!customElements.getName(Home)) {
+      customElements.define("home-component", Home);
+    }
     const header = "<h1>Homepage</h1>";
     const loginLink = document.createElement("a");
     loginLink.href = "/login";
     loginLink.innerText = "To Login";
-    // loginLink.addEventListener("click", event => event.preventDefault());
     const HomeInstance = new Home(header, loginLink);
     HomeInstance.renderChildren("beforeend");
     return HomeInstance;

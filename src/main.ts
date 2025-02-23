@@ -1,12 +1,9 @@
-import Home from "./pages/Home";
-// import Login from "./pages/Login";
+import Router from "./models/Router";
 
 const renderApp = function (): void {
-  const root = document.getElementById("root")!;
-  const HomeInstance = Home.create();
-  // const LoginInstance = Login.create();
-  root.append(HomeInstance);
-  // root.append(LoginInstance);
+  Router.renderPageBasedOnPath();
+  Router.listenForRouteChange();
+  Router.handleBackAndForward();
 };
 
-renderApp();
+document.addEventListener("DOMContentLoaded", renderApp);
