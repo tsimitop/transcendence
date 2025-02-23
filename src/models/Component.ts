@@ -13,7 +13,7 @@ class Component extends HTMLElement {
     this._childrenElements = childrenElements;
   }
 
-  protected renderChildren(position: Position) {
+  protected renderChildren(position: Position): void {
     if (this._childrenString) {
       this.insertAdjacentHTML(position, this._childrenString);
     }
@@ -21,18 +21,6 @@ class Component extends HTMLElement {
     if (this._childrenElements) {
       this.insertAdjacentElement(position, this._childrenElements);
     }
-  }
-
-  static create(
-    position: Position,
-    componentName: string,
-    childrenString: string = "",
-    childrenElements: HTMLElement | null = null
-  ): Component {
-    customElements.define(componentName, this);
-    const HomeInstance = new this(childrenString, childrenElements);
-    HomeInstance.renderChildren(position);
-    return HomeInstance;
   }
 }
 
