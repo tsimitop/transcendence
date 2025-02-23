@@ -1,6 +1,6 @@
 type Position = "afterbegin" | "afterend" | "beforebegin" | "beforeend";
 
-class Component extends HTMLElement {
+abstract class Component extends HTMLElement {
   private _childrenString: string;
   private _childrenElements: HTMLElement | null;
 

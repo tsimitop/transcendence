@@ -1,6 +1,6 @@
 import Component from "../models/Component";
 
-export class Home extends Component {
+class Home extends Component {
   constructor(
     childrenString: string = "",
     childrenElements: HTMLElement | null = null
@@ -11,10 +11,14 @@ export class Home extends Component {
   static create(): Home {
     customElements.define("home-component", Home);
     const header = "<h1>Homepage</h1>";
-    const paragraph = document.createElement("p");
-    paragraph.innerText = "paragraph";
-    const HomeInstance = new Home(header, paragraph);
+    const loginLink = document.createElement("a");
+    loginLink.href = "/login";
+    loginLink.innerText = "To Login";
+    // loginLink.addEventListener("click", event => event.preventDefault());
+    const HomeInstance = new Home(header, loginLink);
     HomeInstance.renderChildren("beforeend");
     return HomeInstance;
   }
 }
+
+export default Home;
