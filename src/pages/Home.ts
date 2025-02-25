@@ -17,7 +17,14 @@ class Home extends Component {
     loginLink.href = "/login";
     loginLink.innerText = "To Login";
     loginLink.classList.add("text-blue-500", "font-bold");
-    const HomeInstance = new Home(header, loginLink);
+    const gameLink = document.createElement("a");
+    gameLink.href = "/pong";
+    gameLink.innerText = "To Pong";
+    gameLink.classList.add("text-blue-500", "font-bold");
+    const nav = document.createElement("nav");
+    nav.append(loginLink, gameLink);
+    nav.classList.add("flex", "gap-4");
+    const HomeInstance = new Home(header, nav);
     HomeInstance.renderChildren("beforeend");
     return HomeInstance;
   }

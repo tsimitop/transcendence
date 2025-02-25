@@ -2,11 +2,13 @@ import Dom from "./Dom";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import NotFound from "../pages/NotFound";
+import Pong from "../pages/Pong";
 
 abstract class Router {
   static routes = {
     "/": Home.create(),
     "/login": Login.create(),
+    "/pong": Pong.create(),
   };
 
   static renderPageBasedOnPath() {
