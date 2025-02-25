@@ -1,3 +1,4 @@
+import themeState from "../context/ThemeContext";
 import Component from "../models/Component";
 
 class Home extends Component {
@@ -12,7 +13,7 @@ class Home extends Component {
     if (!customElements.getName(Home)) {
       customElements.define("home-component", Home);
     }
-    const header = "<h1 class='text-center text-blue-900'>Homepage</h1>";
+    const h1 = "<h1 class='text-center text-blue-900'>Homepage</h1>";
     const loginLink = document.createElement("a");
     loginLink.href = "/login";
     loginLink.innerText = "To Login";
@@ -21,10 +22,31 @@ class Home extends Component {
     gameLink.href = "/pong";
     gameLink.innerText = "To Pong";
     gameLink.classList.add("text-blue-500", "font-bold");
+    const themeBtn = document.createElement("button");
+    themeBtn.innerText = `change theme to ${themeState.state}`;
+    themeBtn.addEventListener("click", () => {
+      const newTheme = themeState.state === "light" ? "dark" : "light";
+      themeState.subscribeListener((previousTheme, newTheme) => {
+        if (previousTheme !== newTheme) {
+          themeBtn.innerText = `change theme to ${newTheme}`;
+        }
+      });
+      themeState.state = newTheme;
+      console.log(themeState.state);
+    });
+    themeBtn.classList.add(
+      "bg-blue-900",
+      "p-2",
+      "text-stone-100",
+      "hover:bg-sky-700",
+      "hover:cursor-pointer"
+    );
+    const header = document.createElement("div");
     const nav = document.createElement("nav");
     nav.append(loginLink, gameLink);
     nav.classList.add("flex", "gap-4");
-    const HomeInstance = new Home(header, nav);
+    header.append(nav, themeBtn);
+    const HomeInstance = new Home(h1, header);
     HomeInstance.renderChildren("beforeend");
     return HomeInstance;
   }
