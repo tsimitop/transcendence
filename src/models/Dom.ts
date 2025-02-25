@@ -1,11 +1,15 @@
 abstract class Dom {
   private static _root: HTMLElement = document.getElementById("root")!;
 
-  static clearDOM = function (): void {
+  public static get root() {
+    return this._root;
+  }
+
+  public static clearDOM = function (): void {
     Dom._root.innerHTML = "";
   };
 
-  static updateDOM = function (component: HTMLElement): void {
+  public static updateDOM = function (component: HTMLElement): void {
     Dom._root.append(component);
   };
 }

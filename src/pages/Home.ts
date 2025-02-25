@@ -1,5 +1,6 @@
-import themeState from "../context/ThemeContext";
+import themeState, { ThemeType } from "../context/ThemeContext";
 import Component from "../models/Component";
+import { StateListener } from "../models/StateManager";
 
 class Home extends Component {
   constructor(
@@ -13,26 +14,35 @@ class Home extends Component {
     if (!customElements.getName(Home)) {
       customElements.define("home-component", Home);
     }
-    const h1 = "<h1 class='text-center text-blue-900'>Homepage</h1>";
+    const h1 =
+      "<h1 class='theme-light text-center text-blue-900'>Homepage</h1>";
     const loginLink = document.createElement("a");
     loginLink.href = "/login";
     loginLink.innerText = "To Login";
-    loginLink.classList.add("text-blue-500", "font-bold");
+    loginLink.classList.add("font-bold");
     const gameLink = document.createElement("a");
     gameLink.href = "/pong";
     gameLink.innerText = "To Pong";
-    gameLink.classList.add("text-blue-500", "font-bold");
+    gameLink.classList.add("font-bold");
     const themeBtn = document.createElement("button");
-    themeBtn.innerText = `change theme to ${themeState.state}`;
+    themeBtn.innerText = `change theme to ${
+      themeState.state === "light" ? "dark" : "light"
+    }`;
+
     themeBtn.addEventListener("click", () => {
       const newTheme = themeState.state === "light" ? "dark" : "light";
-      themeState.subscribeListener((previousTheme, newTheme) => {
-        if (previousTheme !== newTheme) {
-          themeBtn.innerText = `change theme to ${newTheme}`;
-        }
-      });
+      const newListener: StateListener<ThemeType> = {
+        name: "changeTheme",
+        listen: (previousTheme, newTheme) => {
+          if (previousTheme !== newTheme) {
+            themeBtn.innerText = `change theme to ${previousTheme}`;
+            themeState.dispatchChangeTheme();
+          }
+        },
+      };
+
+      themeState.subscribeListener(newListener);
       themeState.state = newTheme;
-      console.log(themeState.state);
     });
     themeBtn.classList.add(
       "bg-blue-900",
@@ -44,7 +54,7 @@ class Home extends Component {
     const header = document.createElement("div");
     const nav = document.createElement("nav");
     nav.append(loginLink, gameLink);
-    nav.classList.add("flex", "gap-4");
+    nav.classList.add("flex", "gap-4", "theme-light");
     header.append(nav, themeBtn);
     const HomeInstance = new Home(h1, header);
     HomeInstance.renderChildren("beforeend");

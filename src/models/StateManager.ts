@@ -1,4 +1,7 @@
-type StateListener<T> = (prevState: T, newState: T) => void;
+export type StateListener<T> = {
+  name: string;
+  listen: (prevState: T, newState: T) => void;
+};
 
 abstract class StateManager<T> {
   private _state: T;
@@ -15,15 +18,23 @@ abstract class StateManager<T> {
   public set state(newState: T) {
     const previousState = this._state;
     this._state = newState;
-    this.callListener(previousState, newState);
+    this.callListeners(previousState, newState);
   }
 
-  public subscribeListener(listener: StateListener<T>): void {
-    this._listeners.push(listener);
+  public subscribeListener(newListener: StateListener<T>): void {
+    const listenerExists = this._listeners.find(
+      listener => listener.name === newListener.name
+    );
+
+    if (listenerExists) {
+      return;
+    }
+
+    this._listeners.push(newListener);
   }
 
-  public callListener(prevState: T, newState: T): void {
-    this._listeners.forEach(listener => listener(prevState, newState));
+  public callListeners(prevState: T, newState: T): void {
+    this._listeners.forEach(listener => listener.listen(prevState, newState));
   }
 }
 

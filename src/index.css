@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+.theme-light {
+  background-color: lightcoral;
+  color: #000;
+}
+
+.theme-dark {
+  background-color: darkred;
+  color: #fff;
+}
