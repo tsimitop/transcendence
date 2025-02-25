@@ -15,7 +15,7 @@ class Home extends Component {
       customElements.define("home-component", Home);
     }
     const h1 =
-      "<h1 class='theme-light text-center text-blue-900'>Homepage</h1>";
+      "<h1 class='theme-primary-light text-center text-blue-900'>Homepage</h1>";
     const loginLink = document.createElement("a");
     loginLink.href = "/login";
     loginLink.innerText = "To Login";
@@ -45,16 +45,15 @@ class Home extends Component {
       themeState.state = newTheme;
     });
     themeBtn.classList.add(
-      "bg-blue-900",
+      "theme-secondary-light",
       "p-2",
-      "text-stone-100",
       "hover:bg-sky-700",
       "hover:cursor-pointer"
     );
     const header = document.createElement("div");
     const nav = document.createElement("nav");
     nav.append(loginLink, gameLink);
-    nav.classList.add("flex", "gap-4", "theme-light");
+    nav.classList.add("flex", "gap-4", "theme-primary-light");
     header.append(nav, themeBtn);
     const HomeInstance = new Home(h1, header);
     HomeInstance.renderChildren("beforeend");

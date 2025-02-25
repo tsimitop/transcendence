@@ -10,10 +10,20 @@ class ThemeContext extends StateManager<ThemeType> {
   public dispatchChangeTheme() {
     const newTheme = this.state;
     const previousTheme = newTheme === "light" ? "dark" : "light";
-    const elements = document.querySelectorAll(`.theme-${previousTheme}`);
-    for (const element of elements) {
-      element.classList.remove(`theme-${previousTheme}`);
-      element.classList.add(`theme-${newTheme}`);
+    const primaryElements = document.querySelectorAll(
+      `.theme-primary-${previousTheme}`
+    );
+    for (const primaryElement of primaryElements) {
+      primaryElement.classList.remove(`theme-primary-${previousTheme}`);
+      primaryElement.classList.add(`theme-primary-${newTheme}`);
+    }
+
+    const secondaryElements = document.querySelectorAll(
+      `.theme-secondary-${previousTheme}`
+    );
+    for (const secondaryElement of secondaryElements) {
+      secondaryElement.classList.remove(`theme-secondary-${previousTheme}`);
+      secondaryElement.classList.add(`theme-secondary-${newTheme}`);
     }
   }
 }

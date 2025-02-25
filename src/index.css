@@ -1,11 +1,21 @@
 @import "tailwindcss";
 
-.theme-light {
+.theme-primary-light {
   background-color: lightcoral;
   color: #000;
 }
 
-.theme-dark {
+.theme-secondary-light {
+  background-color: lightblue;
+  color: #2a780d;
+}
+
+.theme-primary-dark {
   background-color: darkred;
   color: #fff;
+}
+
+.theme-secondary-dark {
+  background-color: darkblue;
+  color: #f0e892;
 }
