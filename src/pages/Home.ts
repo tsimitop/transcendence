@@ -14,8 +14,7 @@ class Home extends Component {
     if (!customElements.getName(Home)) {
       customElements.define("home-component", Home);
     }
-    const h1 =
-      "<h1 class='theme-primary-light text-center text-blue-900'>Homepage</h1>";
+    const h1 = "<h1 class='theme-ternary-light text-center'>Homepage</h1>";
     const loginLink = document.createElement("a");
     loginLink.href = "/login";
     loginLink.innerText = "To Login";

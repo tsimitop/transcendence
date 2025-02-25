@@ -25,6 +25,14 @@ class ThemeContext extends StateManager<ThemeType> {
       secondaryElement.classList.remove(`theme-secondary-${previousTheme}`);
       secondaryElement.classList.add(`theme-secondary-${newTheme}`);
     }
+
+    const ternaryElements = document.querySelectorAll(
+      `.theme-ternary-${previousTheme}`
+    );
+    for (const ternaryElement of ternaryElements) {
+      ternaryElement.classList.remove(`theme-ternary-${previousTheme}`);
+      ternaryElement.classList.add(`theme-ternary-${newTheme}`);
+    }
   }
 }
 
