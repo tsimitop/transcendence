@@ -1,3 +1,4 @@
+import Footer from "../components/Footer";
 import Header from "../components/Header";
 import Component, {
   ChildElementType,
@@ -20,7 +21,8 @@ class Home extends Component {
 
     const HomeInstance = new Home(
       { html: h1, position: "beforeend" },
-      { element: Header.create(), position: "afterbegin" }
+      { element: Header.create(), position: "afterbegin" },
+      { element: Footer.create(), position: "beforeend" }
     );
     HomeInstance.insertChildren();
 
