@@ -1,11 +1,8 @@
 import Component from "../models/Component";
 
 class Pong extends Component {
-  constructor(
-    childrenString: string = "",
-    childrenElements: HTMLElement | null = null
-  ) {
-    super(childrenString, childrenElements);
+  constructor(childrenString: string = "", ...childrenElements: HTMLElement[]) {
+    super(childrenString, ...childrenElements);
   }
 
   static create() {

@@ -2,12 +2,9 @@ type Position = "afterbegin" | "afterend" | "beforebegin" | "beforeend";
 
 abstract class Component extends HTMLElement {
   private _childrenString: string;
-  private _childrenElements: HTMLElement | null;
+  private _childrenElements: HTMLElement[];
 
-  constructor(
-    childrenString: string = "",
-    childrenElements: HTMLElement | null = null
-  ) {
+  constructor(childrenString: string = "", ...childrenElements: HTMLElement[]) {
     super();
     this._childrenString = childrenString;
     this._childrenElements = childrenElements;
@@ -18,8 +15,10 @@ abstract class Component extends HTMLElement {
       this.insertAdjacentHTML(position, this._childrenString);
     }
 
-    if (this._childrenElements) {
-      this.insertAdjacentElement(position, this._childrenElements);
+    if (this._childrenElements.length) {
+      this._childrenElements.forEach(childElement => {
+        this.insertAdjacentElement(position, childElement);
+      });
     }
   }
 }

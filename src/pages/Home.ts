@@ -3,11 +3,8 @@ import Component from "../models/Component";
 import { StateListener } from "../models/StateManager";
 
 class Home extends Component {
-  constructor(
-    childrenString: string = "",
-    childrenElements: HTMLElement | null = null
-  ) {
-    super(childrenString, childrenElements);
+  constructor(childrenString: string = "", ...childrenElements: HTMLElement[]) {
+    super(childrenString, ...childrenElements);
   }
 
   static create(): Home {

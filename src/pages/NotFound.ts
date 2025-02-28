@@ -1,11 +1,8 @@
 import Component from "../models/Component";
 
 class NotFound extends Component {
-  constructor(
-    childrenString: string = "",
-    childrenElement: HTMLElement | null = null
-  ) {
-    super(childrenString, childrenElement);
+  constructor(childrenString: string = "", ...childrenElement: HTMLElement[]) {
+    super(childrenString, ...childrenElement);
   }
   static create() {
     if (!customElements.getName(NotFound)) {
