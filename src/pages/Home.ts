@@ -1,8 +1,14 @@
 import Header from "../components/Header";
-import Component from "../models/Component";
+import Component, {
+  ChildElementType,
+  ChildrenStringType,
+} from "../models/Component";
 
 class Home extends Component {
-  constructor(childrenString: string = "", ...childrenElements: HTMLElement[]) {
+  constructor(
+    childrenString: ChildrenStringType,
+    ...childrenElements: ChildElementType[]
+  ) {
     super(childrenString, ...childrenElements);
   }
 
@@ -12,8 +18,11 @@ class Home extends Component {
     }
     const h1 = "<h1 class='theme-ternary-light text-center'>Homepage</h1>";
 
-    const HomeInstance = new Home(h1, Header.create());
-    HomeInstance.insertChildren("beforeend", "afterbegin");
+    const HomeInstance = new Home(
+      { html: h1, position: "beforeend" },
+      { element: Header.create(), position: "afterbegin" }
+    );
+    HomeInstance.insertChildren();
 
     return HomeInstance;
   }

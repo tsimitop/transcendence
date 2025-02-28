@@ -1,8 +1,14 @@
-import Component from "../models/Component";
+import Component, {
+  ChildElementType,
+  ChildrenStringType,
+} from "../models/Component";
 
 class Login extends Component {
-  constructor(childrenString: string = "", ...childrenElements: HTMLElement[]) {
-    super(childrenString, ...childrenElements);
+  constructor(
+    childrenString: ChildrenStringType,
+    ...childElements: ChildElementType[]
+  ) {
+    super(childrenString, ...childElements);
   }
 
   static create() {
@@ -12,8 +18,11 @@ class Login extends Component {
     const header = "<h1>Login</h1>";
     const paragraph = document.createElement("p");
     paragraph.innerHTML = "<a href='/'>To Home</a>";
-    const LoginInstance = new Login(header, paragraph);
-    LoginInstance.insertChildren("beforeend", "beforeend");
+    const LoginInstance = new Login(
+      { html: header, position: "beforeend" },
+      { element: paragraph, position: "beforeend" }
+    );
+    LoginInstance.insertChildren();
     return LoginInstance;
   }
 }

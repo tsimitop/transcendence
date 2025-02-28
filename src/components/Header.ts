@@ -1,10 +1,16 @@
 import themeState, { ThemeType } from "../context/ThemeContext";
-import Component from "../models/Component";
+import Component, {
+  ChildElementType,
+  ChildrenStringType,
+} from "../models/Component";
 import { StateListener } from "../models/StateManager";
 
 class Header extends Component {
-  constructor(childrenString: string = "", ...childrenElements: HTMLElement[]) {
-    super(childrenString, ...childrenElements);
+  constructor(
+    childrenString: ChildrenStringType,
+    ...childElements: ChildElementType[]
+  ) {
+    super(childrenString, ...childElements);
   }
 
   public static createChildren() {
@@ -51,8 +57,14 @@ class Header extends Component {
     }
 
     const childrenElements = Header.createChildren();
-    const HeaderInstance = new Header("", childrenElements);
-    HeaderInstance.insertChildren("beforeend", "beforeend");
+    const HeaderInstance = new Header(
+      { html: "", position: "beforeend" },
+      {
+        element: childrenElements,
+        position: "beforeend",
+      }
+    );
+    HeaderInstance.insertChildren();
 
     return HeaderInstance;
   }

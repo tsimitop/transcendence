@@ -1,16 +1,25 @@
-import Component from "../models/Component";
+import Component, {
+  ChildElementType,
+  ChildrenStringType,
+} from "../models/Component";
 
 class NotFound extends Component {
-  constructor(childrenString: string = "", ...childrenElement: HTMLElement[]) {
-    super(childrenString, ...childrenElement);
+  constructor(
+    childrenString: ChildrenStringType,
+    ...childElement: ChildElementType[]
+  ) {
+    super(childrenString, ...childElement);
   }
   static create() {
     if (!customElements.getName(NotFound)) {
       customElements.define("not-found", NotFound);
     }
     const header = "<h1>Not Found</h1>";
-    const NotFoundInstance = new NotFound(header);
-    NotFoundInstance.insertChildren("beforeend", "beforeend");
+    const NotFoundInstance = new NotFound({
+      html: header,
+      position: "beforeend",
+    });
+    NotFoundInstance.insertChildren();
     return NotFoundInstance;
   }
 }

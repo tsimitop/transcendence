@@ -1,8 +1,14 @@
-import Component from "../models/Component";
+import Component, {
+  ChildElementType,
+  ChildrenStringType,
+} from "../models/Component";
 
 class Pong extends Component {
-  constructor(childrenString: string = "", ...childrenElements: HTMLElement[]) {
-    super(childrenString, ...childrenElements);
+  constructor(
+    childrenString: ChildrenStringType,
+    ...childElements: ChildElementType[]
+  ) {
+    super(childrenString, ...childElements);
   }
 
   static create() {
@@ -16,8 +22,8 @@ class Pong extends Component {
 				<a href='/'>To Home</a>
 			</div>
 		`;
-    const GameInstance = new Pong(container);
-    GameInstance.insertChildren("beforeend", "beforeend");
+    const GameInstance = new Pong({ html: container, position: "beforeend" });
+    GameInstance.insertChildren();
     return GameInstance;
   }
 }
