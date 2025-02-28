@@ -10,7 +10,7 @@ class NotFound extends Component {
     }
     const header = "<h1>Not Found</h1>";
     const NotFoundInstance = new NotFound(header);
-    NotFoundInstance.renderChildren("beforeend");
+    NotFoundInstance.insertChildren("beforeend", "beforeend");
     return NotFoundInstance;
   }
 }

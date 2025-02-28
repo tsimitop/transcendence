@@ -13,7 +13,7 @@ class Login extends Component {
     const paragraph = document.createElement("p");
     paragraph.innerHTML = "<a href='/'>To Home</a>";
     const LoginInstance = new Login(header, paragraph);
-    LoginInstance.renderChildren("beforeend");
+    LoginInstance.insertChildren("beforeend", "beforeend");
     return LoginInstance;
   }
 }

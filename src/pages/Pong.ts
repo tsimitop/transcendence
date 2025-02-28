@@ -17,7 +17,7 @@ class Pong extends Component {
 			</div>
 		`;
     const GameInstance = new Pong(container);
-    GameInstance.renderChildren("beforeend");
+    GameInstance.insertChildren("beforeend", "beforeend");
     return GameInstance;
   }
 }

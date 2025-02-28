@@ -10,14 +10,17 @@ abstract class Component extends HTMLElement {
     this._childrenElements = childrenElements;
   }
 
-  protected renderChildren(position: Position): void {
+  protected insertChildren(
+    childrenStringPosition: Position,
+    childrenElementsPosition: Position
+  ): void {
     if (this._childrenString) {
-      this.insertAdjacentHTML(position, this._childrenString);
+      this.insertAdjacentHTML(childrenStringPosition, this._childrenString);
     }
 
     if (this._childrenElements.length) {
       this._childrenElements.forEach(childElement => {
-        this.insertAdjacentElement(position, childElement);
+        this.insertAdjacentElement(childrenElementsPosition, childElement);
       });
     }
   }
