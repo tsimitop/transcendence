@@ -41,34 +41,42 @@
   --ternary-dark-foreground: #000;
 }
 
-.theme-primary-light {
+.theme-primary-light-full {
   background-color: var(--primary-light-background);
   color: var(--primary-light-foreground);
 }
 
-.theme-secondary-light {
+.theme-secondary-light-full {
   background-color: var(--secondary-light-background);
   color: var(--secondary-light-foreground);
 }
 
-.theme-ternary-light {
+.theme-ternary-light-full {
   background-color: var(--ternary-light-background);
   color: var(--ternary-light-foreground);
 }
 
-.theme-primary-dark {
+.theme-ternary-light-foreground {
+  color: var(--ternary-light-background);
+}
+
+.theme-primary-dark-full {
   background-color: var(--primary-dark-background);
   color: var(--primary-dark-foreground);
 }
 
-.theme-secondary-dark {
+.theme-secondary-dark-full {
   background-color: var(--secondary-dark-background);
   color: var(--secondary-dark-foreground);
 }
 
-.theme-ternary-dark {
+.theme-ternary-dark-full {
   background-color: var(--ternary-dark-background);
   color: var(--ternary-dark-foreground);
+}
+
+.theme-ternary-dark-foreground {
+  color: var(--ternary-dark-background);
 }
 
 * {
@@ -86,9 +94,5 @@
 
   .page {
     @apply min-h-screen flex flex-col;
-  }
-
-  .current-nav-link {
-    color: var(--ternary-light-background);
   }
 }

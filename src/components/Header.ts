@@ -31,8 +31,8 @@ class Header extends Component {
     HeaderInstance.classList.add(
       `${
         themeState.state === "light"
-          ? "theme-secondary-light"
-          : "theme-secondary-dark"
+          ? "theme-secondary-light-full"
+          : "theme-secondary-dark-full"
       }`,
       "h-18",
       "flex",
@@ -48,14 +48,14 @@ class Header extends Component {
 			<nav class="flex items-center">
 				<p>transcendence</p>
 				<ul class="flex grow justify-center gap-10">
-					<li><a class="nav-link " href="/">Home</a></li>
-					<li><a class="nav-link " href="/login">Login</a></li>
-					<li><a class="nav-link " href="/pong">Pong</a></li>
+					<li><a class="nav-link" href="/">Home</a></li>
+					<li><a class="nav-link" href="/login">Login</a></li>
+					<li><a class="nav-link" href="/pong">Pong</a></li>
 				</ul>	
 				<button class="${
           themeState.state === "light"
-            ? "theme-ternary-light"
-            : "theme-ternary-dark"
+            ? "theme-ternary-light-full"
+            : "theme-ternary-dark-full"
         } theme-btn px-4 py-2 cursor-pointer
 				">${themeState.state === "light" ? "dark" : "light"}
 				</button>
@@ -104,7 +104,11 @@ class Header extends Component {
           return;
         }
         const activeLink = document.querySelector(`a[href="${newPath.path}"]`);
-        activeLink?.classList.add("current-nav-link");
+        const newClassName =
+          themeState.state === "light"
+            ? "theme-ternary-light-foreground"
+            : "theme-ternary-dark-foreground";
+        activeLink?.classList.add(newClassName);
       },
     };
 

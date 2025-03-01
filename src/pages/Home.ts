@@ -21,8 +21,8 @@ class Home extends Component {
     const html = `
 			<main class="${
         themeState.state === "light"
-          ? "theme-primary-light"
-          : "theme-primary-dark"
+          ? "theme-primary-light-full"
+          : "theme-primary-dark-full"
       } main-container layout-padding">
 				<h1>Home</h1>
 			</main>

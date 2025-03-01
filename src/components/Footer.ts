@@ -23,8 +23,8 @@ class Footer extends Component {
     FooterInstance.classList.add(
       `${
         themeState.state === "light"
-          ? "theme-secondary-light"
-          : "theme-secondary-dark"
+          ? "theme-secondary-light-full"
+          : "theme-secondary-dark-full"
       }`,
       "layout-padding",
       "h-18",

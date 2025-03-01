@@ -21,8 +21,8 @@ class Login extends Component {
     const html = `
 			<main class="main-container layout-padding ${
         themeState.state === "light"
-          ? "theme-primary-light"
-          : "theme-primary-dark"
+          ? "theme-primary-light-full"
+          : "theme-primary-dark-full"
       }">
 				<h1>Login</h1>
 			</main>
