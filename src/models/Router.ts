@@ -42,7 +42,7 @@ abstract class Router {
     window.history.pushState({}, "", target.href);
     const routeToGo = window.location.pathname;
     const toRender =
-      Router.routes[routeToGo as keyof typeof Router.routes].create() ||
+      Router.routes[routeToGo as keyof typeof Router.routes]?.create() ||
       NotFound.create();
     Dom.clearDOM();
     Dom.updateDOM(toRender);

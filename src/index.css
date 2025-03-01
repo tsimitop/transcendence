@@ -87,4 +87,8 @@
   .page {
     @apply min-h-screen flex flex-col;
   }
+
+  .current-nav-link {
+    color: var(--ternary-light-background);
+  }
 }
