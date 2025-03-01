@@ -32,7 +32,6 @@ class Login extends Component {
       { element: Header.create(), position: "afterbegin" },
       { element: Footer.create(), position: "beforeend" }
     );
-    console.log("New LoginInstance");
     LoginInstance.insertChildren();
     LoginInstance.classList.add("flex", "min-h-screen", "block", "flex-col");
     return LoginInstance;

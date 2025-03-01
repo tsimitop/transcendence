@@ -33,7 +33,6 @@ class Pong extends Component {
       { element: Header.create(), position: "afterbegin" },
       { element: Footer.create(), position: "beforeend" }
     );
-    console.log("New PongInstance");
     PongInstance.insertChildren();
     PongInstance.classList.add("flex", "min-h-screen", "block", "flex-col");
     return PongInstance;

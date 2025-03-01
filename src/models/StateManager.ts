@@ -22,21 +22,14 @@ abstract class StateManager<T> {
   }
 
   public subscribeListener(newListener: StateListener<T>): void {
-    const listenerExists = this._listeners.find(
-      listener => listener.name === newListener.name
+    this._listeners = this._listeners.filter(
+      listener => listener.name !== newListener.name
     );
 
-    if (listenerExists) {
-      console.log("listener exists");
-      return;
-    }
-
-    console.log("listener added");
     this._listeners.push(newListener);
   }
 
   public callListeners(prevState: T, newState: T): void {
-    console.log(this._listeners);
     this._listeners.forEach(listener => listener.listen(prevState, newState));
   }
 }

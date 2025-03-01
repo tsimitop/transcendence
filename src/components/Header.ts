@@ -37,19 +37,13 @@ class Header extends Component {
       const target = event.target as HTMLElement;
       const targetClassName = "theme-btn";
       if (target.classList.contains(targetClassName)) {
-        const themeBtn = document.querySelector(
-          `.${targetClassName}`
-        ) as HTMLButtonElement;
         const newTheme = themeState.state === "light" ? "dark" : "light";
 
         const newListener: StateListener<ThemeType> = {
           name: "changeTheme",
           listen: (previousTheme, newTheme) => {
             if (previousTheme !== newTheme) {
-              console.log("prev:", previousTheme);
-              console.log("new:", newTheme);
-              themeBtn.innerText = `change theme to ${previousTheme}`;
-              console.log(themeBtn);
+              target.innerText = `change theme to ${previousTheme}`;
               themeState.dispatchChangeTheme();
             }
           },
@@ -59,7 +53,6 @@ class Header extends Component {
         themeState.state = newTheme;
       }
     });
-    console.log("new button");
     return header;
   }
 
@@ -75,7 +68,6 @@ class Header extends Component {
         position: "beforeend",
       }
     );
-    console.log("new HeaderInstance");
     HeaderInstance.insertChildren();
     HeaderInstance.classList.add(
       "h-24",
