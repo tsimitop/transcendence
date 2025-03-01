@@ -1,18 +1,43 @@
 @import "tailwindcss";
 
 :root {
-  --primary-light-background: #fafafa;
+  /* --primary-light-background: #e5e5e5;
   --primary-light-foreground: #111;
-  --secondary-light-background: #333;
-  --secondary-light-foreground: #fafafa;
-  --ternary-light-background: #ecdcbf;
+  --secondary-light-background: #14213d;
+  --secondary-light-foreground: #fff;
+  --ternary-light-background: #fca311;
+  --ternary-light-foreground: #111; */
+
+  --primary-light-background: #f1faee;
+  /* 
+		#f2fbf0	#f5fcf3	#f8fdf6	#fbfefa	#fefffd
+	*/
+  --primary-light-foreground: #111;
+  --secondary-light-background: #1d3557;
+  /* 
+		#314767	#5a6d87	#8695a9	#b5becb	#e6e9ed
+	*/
+  --secondary-light-foreground: #fff;
+  --ternary-light-background: #a8dadc;
+  /* 
+		#b1dedf	#c3e5e6	#d4eded	#e5f4f4	#f6fbfb
+	*/
   --ternary-light-foreground: #111;
 
-  --primary-dark-background: #111;
+  --primary-dark-background: #023047;
+  /* 
+		#1e4258	#4d697b #7d919f #afbcc5 #e4e8eb
+	*/
   --primary-dark-foreground: #fff;
-  --secondary-dark-background: #2b2b2b;
-  --secondary-dark-foreground: #fff;
+  --secondary-dark-background: #8ecae6;
+  /* 
+		#ffbf41	#ffce77	#ffdda1	#ffebc8	#fff8ed
+	*/
+  --secondary-dark-foreground: #000;
   --ternary-dark-background: #ffb703;
+  /* 
+		#9acfe9	#b1daee	#c7e5f3	#deeff8	#f4fafd
+	*/
   --ternary-dark-foreground: #000;
 }
 
@@ -33,7 +58,6 @@
 
 .theme-ternary-light-foreground {
   color: var(--ternary-light-background);
-  font-weight: bold;
 }
 
 .theme-primary-dark-full {
@@ -53,7 +77,6 @@
 
 .theme-ternary-dark-foreground {
   color: var(--ternary-dark-background);
-  font-weight: bold;
 }
 
 * {

@@ -103,12 +103,7 @@ class Header extends Component {
         if (previousPath === newPath) {
           return;
         }
-        const activeLink = document.querySelector(`a[href="${newPath.path}"]`);
-        const newClassName =
-          themeState.state === "light"
-            ? "theme-ternary-light-foreground"
-            : "theme-ternary-dark-foreground";
-        activeLink?.classList.add(newClassName);
+        Header.highlightActiveNavLink();
       },
     };
 
@@ -120,6 +115,17 @@ class Header extends Component {
     } else {
       urlState.state = { ...urlState.state, path: "" };
     }
+  }
+
+  public static highlightActiveNavLink() {
+    const activeLink = document.querySelector(
+      `a[href="${window.location.pathname}"]`
+    );
+    const newClassName =
+      themeState.state === "light"
+        ? "theme-ternary-light-foreground"
+        : "theme-ternary-dark-foreground";
+    activeLink?.classList.add(newClassName);
   }
 }
 

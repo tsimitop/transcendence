@@ -3,6 +3,7 @@ import Home from "../pages/Home";
 import Login from "../pages/Login";
 import NotFound from "../pages/NotFound";
 import Pong from "../pages/Pong";
+import Header from "../components/Header";
 
 abstract class Router {
   static routes = {
@@ -18,11 +19,14 @@ abstract class Router {
       NotFound.create();
     Dom.clearDOM();
     Dom.updateDOM(toRender);
+    Header.highlightActiveNavLink();
     return toRender;
   }
 
   static listenForRouteChange() {
-    const allLinks = document.querySelectorAll("a");
+    const allLinks = document.querySelectorAll(
+      "a.nav-link"
+    ) as NodeListOf<HTMLAnchorElement>;
     for (const link of allLinks) {
       link.addEventListener("click", Router.handleChangeRoute);
     }
