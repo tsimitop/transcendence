@@ -1,3 +1,6 @@
+import Footer from "../components/Footer";
+import Header from "../components/Header";
+import themeState from "../context/ThemeContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
@@ -14,12 +17,24 @@ class NotFound extends Component {
     if (!customElements.getName(NotFound)) {
       customElements.define("not-found", NotFound);
     }
-    const header = "<h1>Not Found</h1>";
-    const NotFoundInstance = new NotFound({
-      html: header,
-      position: "beforeend",
-    });
+
+    const html = `
+			<main class="${
+        themeState.state === "light"
+          ? "theme-primary-light-full"
+          : "theme-primary-dark-full"
+      } main-container layout-padding">
+				<h1>Not Found! 404</h1>
+			</main>
+		`;
+
+    const NotFoundInstance = new NotFound(
+      { html, position: "beforeend" },
+      { element: Header.create(), position: "afterbegin" },
+      { element: Footer.create(), position: "beforeend" }
+    );
     NotFoundInstance.insertChildren();
+    NotFoundInstance.classList.add("page");
     return NotFoundInstance;
   }
 }
