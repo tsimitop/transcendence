@@ -1,5 +1,6 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import themeState from "../context/ThemeContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
@@ -18,16 +19,20 @@ class Home extends Component {
       customElements.define("home-component", Home);
     }
     const html = `
-			<main class="grow theme-primary-light">
+			<main class="main-container grow ${
+        themeState.state === "light"
+          ? "theme-primary-light"
+          : "theme-primary-dark"
+      }">
 				<h1>Home</h1>
 			</main>
 		`;
-
     const HomeInstance = new Home(
       { html, position: "beforeend" },
       { element: Header.create(), position: "afterbegin" },
       { element: Footer.create(), position: "beforeend" }
     );
+    console.log("new HomeInstance");
     HomeInstance.insertChildren();
     HomeInstance.classList.add("flex", "min-h-screen", "block", "flex-col");
     return HomeInstance;

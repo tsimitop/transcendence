@@ -27,13 +27,16 @@ abstract class StateManager<T> {
     );
 
     if (listenerExists) {
+      console.log("listener exists");
       return;
     }
 
+    console.log("listener added");
     this._listeners.push(newListener);
   }
 
   public callListeners(prevState: T, newState: T): void {
+    console.log(this._listeners);
     this._listeners.forEach(listener => listener.listen(prevState, newState));
   }
 }

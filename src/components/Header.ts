@@ -21,7 +21,11 @@ class Header extends Component {
 					<li><a href="/login">Login</a></li>
 					<li><a href="/pong">Pong</a></li>
 				</ul>
-				<button class="theme-ternary-light theme-btn">change theme to 
+				<button class="theme-btn ${
+          themeState.state === "light"
+            ? "theme-ternary-light"
+            : "theme-ternary-dark"
+        }">change theme to 
 				${themeState.state === "light" ? "dark" : "light"}</button>
 			</nav>
 		`;
@@ -33,22 +37,29 @@ class Header extends Component {
       const target = event.target as HTMLElement;
       const targetClassName = "theme-btn";
       if (target.classList.contains(targetClassName)) {
-        const themeBtn = document.querySelector(`.${targetClassName}`)!;
+        const themeBtn = document.querySelector(
+          `.${targetClassName}`
+        ) as HTMLButtonElement;
         const newTheme = themeState.state === "light" ? "dark" : "light";
+
         const newListener: StateListener<ThemeType> = {
           name: "changeTheme",
           listen: (previousTheme, newTheme) => {
             if (previousTheme !== newTheme) {
-              themeBtn.innerHTML = `change theme to ${previousTheme}`;
+              console.log("prev:", previousTheme);
+              console.log("new:", newTheme);
+              themeBtn.innerText = `change theme to ${previousTheme}`;
+              console.log(themeBtn);
               themeState.dispatchChangeTheme();
             }
           },
         };
+
         themeState.subscribeListener(newListener);
         themeState.state = newTheme;
       }
     });
-
+    console.log("new button");
     return header;
   }
 
@@ -56,7 +67,6 @@ class Header extends Component {
     if (!customElements.getName(Header)) {
       customElements.define("header-component", Header);
     }
-
     const childrenElements = Header.createChildren();
     const HeaderInstance = new Header(
       { html: "", position: "beforeend" },
@@ -65,8 +75,17 @@ class Header extends Component {
         position: "beforeend",
       }
     );
+    console.log("new HeaderInstance");
     HeaderInstance.insertChildren();
-    HeaderInstance.classList.add("h-24", "theme-secondary-light", "block");
+    HeaderInstance.classList.add(
+      "h-24",
+      `${
+        themeState.state === "light"
+          ? "theme-secondary-light"
+          : "theme-secondary-dark"
+      }`,
+      "block"
+    );
 
     return HeaderInstance;
   }

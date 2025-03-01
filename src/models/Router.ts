@@ -6,15 +6,16 @@ import Pong from "../pages/Pong";
 
 abstract class Router {
   static routes = {
-    "/": Home.create(),
-    "/login": Login.create(),
-    "/pong": Pong.create(),
+    "/": Home,
+    "/login": Login,
+    "/pong": Pong,
   };
 
   static renderPageBasedOnPath() {
     const path = window.location.pathname;
     const toRender =
-      Router.routes[path as keyof typeof Router.routes] || NotFound.create();
+      Router.routes[path as keyof typeof Router.routes].create() ||
+      NotFound.create();
     Dom.clearDOM();
     Dom.updateDOM(toRender);
     return toRender;
@@ -41,7 +42,7 @@ abstract class Router {
     window.history.pushState({}, "", target.href);
     const routeToGo = window.location.pathname;
     const toRender =
-      Router.routes[routeToGo as keyof typeof Router.routes] ||
+      Router.routes[routeToGo as keyof typeof Router.routes].create() ||
       NotFound.create();
     Dom.clearDOM();
     Dom.updateDOM(toRender);
