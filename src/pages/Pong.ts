@@ -1,3 +1,5 @@
+import Footer from "../components/Footer";
+import Header from "../components/Header";
 import Component, {
   ChildElementType,
   ChildrenStringType,
@@ -13,18 +15,22 @@ class Pong extends Component {
 
   static create() {
     if (!customElements.getName(Pong)) {
-      customElements.define("game-component", Pong);
+      customElements.define("pong-component", Pong);
     }
 
-    const container = `
-			<div>
+    const html = `
+			<main class="grow theme-primary-light">
 				<h1>Pong</h1>
-				<a href='/'>To Home</a>
-			</div>
+			</main>
 		`;
-    const GameInstance = new Pong({ html: container, position: "beforeend" });
-    GameInstance.insertChildren();
-    return GameInstance;
+    const PongInstance = new Pong(
+      { html, position: "beforeend" },
+      { element: Header.create(), position: "afterbegin" },
+      { element: Footer.create(), position: "beforeend" }
+    );
+    PongInstance.insertChildren();
+    PongInstance.classList.add("flex", "min-h-screen", "block", "flex-col");
+    return PongInstance;
   }
 }
 

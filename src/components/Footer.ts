@@ -19,6 +19,7 @@ class Footer extends Component {
     const html = `<footer>Footer</footer>`;
     const FooterInstance = new Footer({ html, position: "beforeend" });
     FooterInstance.insertChildren();
+    FooterInstance.classList.add("h-12", "theme-secondary-light", "block");
     return FooterInstance;
   }
 }

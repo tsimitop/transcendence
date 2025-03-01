@@ -17,15 +17,19 @@ class Home extends Component {
     if (!customElements.getName(Home)) {
       customElements.define("home-component", Home);
     }
-    const h1 = "<h1 class='theme-ternary-light text-center'>Homepage</h1>";
+    const html = `
+			<main class="grow theme-primary-light">
+				<h1>Home</h1>
+			</main>
+		`;
 
     const HomeInstance = new Home(
-      { html: h1, position: "beforeend" },
+      { html, position: "beforeend" },
       { element: Header.create(), position: "afterbegin" },
       { element: Footer.create(), position: "beforeend" }
     );
     HomeInstance.insertChildren();
-
+    HomeInstance.classList.add("flex", "min-h-screen", "block", "flex-col");
     return HomeInstance;
   }
 }

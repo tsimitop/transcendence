@@ -29,12 +29,12 @@
 		#1e4258	#4d697b #7d919f #afbcc5 #e4e8eb
 	*/
   --primary-dark-foreground: #fff;
-  --secondary-dark-background: #ffb703;
+  --secondary-dark-background: #8ecae6;
   /* 
 		#ffbf41	#ffce77	#ffdda1	#ffebc8	#fff8ed
 	*/
   --secondary-dark-foreground: #000;
-  --ternary-dark-background: #8ecae6;
+  --ternary-dark-background: #ffb703;
   /* 
 		#9acfe9	#b1daee	#c7e5f3	#deeff8	#f4fafd
 	*/

@@ -17,10 +17,11 @@ class Header extends Component {
     const html = `
 			<nav>
 				<ul>
+					<li><a href="/">Home</a></li>
 					<li><a href="/login">Login</a></li>
 					<li><a href="/pong">Pong</a></li>
 				</ul>
-				<button class="theme-secondary-light theme-btn">change theme to 
+				<button class="theme-ternary-light theme-btn">change theme to 
 				${themeState.state === "light" ? "dark" : "light"}</button>
 			</nav>
 		`;
@@ -65,6 +66,7 @@ class Header extends Component {
       }
     );
     HeaderInstance.insertChildren();
+    HeaderInstance.classList.add("h-24", "theme-secondary-light", "block");
 
     return HeaderInstance;
   }

@@ -1,3 +1,5 @@
+import Footer from "../components/Footer";
+import Header from "../components/Header";
 import Component, {
   ChildElementType,
   ChildrenStringType,
@@ -15,14 +17,18 @@ class Login extends Component {
     if (!customElements.getName(Login)) {
       customElements.define("login-component", Login);
     }
-    const header = "<h1>Login</h1>";
-    const paragraph = document.createElement("p");
-    paragraph.innerHTML = "<a href='/'>To Home</a>";
+    const html = `
+			<main class="grow theme-primary-light">
+				<h1>Login</h1>
+			</main>
+		`;
     const LoginInstance = new Login(
-      { html: header, position: "beforeend" },
-      { element: paragraph, position: "beforeend" }
+      { html, position: "beforeend" },
+      { element: Header.create(), position: "afterbegin" },
+      { element: Footer.create(), position: "beforeend" }
     );
     LoginInstance.insertChildren();
+    LoginInstance.classList.add("flex", "min-h-screen", "block", "flex-col");
     return LoginInstance;
   }
 }
