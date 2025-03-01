@@ -19,7 +19,7 @@ class Login extends Component {
       customElements.define("login-component", Login);
     }
     const html = `
-			<main class="main-container grow ${
+			<main class="main-container layout-padding ${
         themeState.state === "light"
           ? "theme-primary-light"
           : "theme-primary-dark"
@@ -33,7 +33,7 @@ class Login extends Component {
       { element: Footer.create(), position: "beforeend" }
     );
     LoginInstance.insertChildren();
-    LoginInstance.classList.add("flex", "min-h-screen", "block", "flex-col");
+    LoginInstance.classList.add("page");
     return LoginInstance;
   }
 }

@@ -19,11 +19,11 @@ class Home extends Component {
       customElements.define("home-component", Home);
     }
     const html = `
-			<main class="main-container grow ${
+			<main class="${
         themeState.state === "light"
           ? "theme-primary-light"
           : "theme-primary-dark"
-      }">
+      } main-container layout-padding">
 				<h1>Home</h1>
 			</main>
 		`;
@@ -33,7 +33,7 @@ class Home extends Component {
       { element: Footer.create(), position: "beforeend" }
     );
     HomeInstance.insertChildren();
-    HomeInstance.classList.add("flex", "min-h-screen", "block", "flex-col");
+    HomeInstance.classList.add("page");
     return HomeInstance;
   }
 }

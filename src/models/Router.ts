@@ -14,7 +14,7 @@ abstract class Router {
   static renderPageBasedOnPath() {
     const path = window.location.pathname;
     const toRender =
-      Router.routes[path as keyof typeof Router.routes].create() ||
+      Router.routes[path as keyof typeof Router.routes]?.create() ||
       NotFound.create();
     Dom.clearDOM();
     Dom.updateDOM(toRender);

@@ -74,3 +74,17 @@
 * {
   box-sizing: border-box;
 }
+
+@layer components {
+  .layout-padding {
+    @apply px-24;
+  }
+
+  .main-container {
+    @apply grow;
+  }
+
+  .page {
+    @apply min-h-screen flex flex-col;
+  }
+}

@@ -21,13 +21,15 @@ class Footer extends Component {
     const FooterInstance = new Footer({ html, position: "beforeend" });
     FooterInstance.insertChildren();
     FooterInstance.classList.add(
-      "h-12",
       `${
         themeState.state === "light"
           ? "theme-secondary-light"
           : "theme-secondary-dark"
       }`,
-      "block"
+      "layout-padding",
+      "h-18",
+      "flex",
+      "items-center"
     );
     return FooterInstance;
   }

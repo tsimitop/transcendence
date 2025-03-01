@@ -1,5 +1,5 @@
 export type StateListener<T> = {
-  name: string;
+  id: string;
   listen: (prevState: T, newState: T) => void;
 };
 
@@ -23,7 +23,7 @@ abstract class StateManager<T> {
 
   public subscribeListener(newListener: StateListener<T>): void {
     this._listeners = this._listeners.filter(
-      listener => listener.name !== newListener.name
+      listener => listener.id !== newListener.id
     );
 
     this._listeners.push(newListener);

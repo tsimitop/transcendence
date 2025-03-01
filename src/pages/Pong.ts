@@ -20,7 +20,7 @@ class Pong extends Component {
     }
 
     const html = `
-			<main class="main-container grow ${
+			<main class="main-container layout-padding ${
         themeState.state === "light"
           ? "theme-primary-light"
           : "theme-primary-dark"
@@ -34,7 +34,7 @@ class Pong extends Component {
       { element: Footer.create(), position: "beforeend" }
     );
     PongInstance.insertChildren();
-    PongInstance.classList.add("flex", "min-h-screen", "block", "flex-col");
+    PongInstance.classList.add("page");
     return PongInstance;
   }
 }
