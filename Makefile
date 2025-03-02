@@ -6,13 +6,6 @@ nginxrun:
 
 nginx: nginxbuild nginxrun
 
-nginxremovecontainer:
-	docker stop nginx
-	docker container rm nginx
-
-nginxremoveimage: nginxremovecontainer
-	docker image rm nginx:default
-
 removeallimages:
 	docker rmi $$(docker images -aq)
 
@@ -27,7 +20,19 @@ frontendshell:
 	docker exec -it frontend-dev /bin/bash
 
 nginxshell:
-	docker exec -it nginx /bin/zsh
+	docker exec -it nginx /bin/bash
 
-run:
+build:
+	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence build
+
+up:
 	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence up
+
+down:
+	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence down
+
+start:
+	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence start
+
+stop:
+	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence stop
