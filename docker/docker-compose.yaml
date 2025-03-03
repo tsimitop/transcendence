@@ -19,3 +19,11 @@ services:
       - ../frontend/dist:/usr/share/nginx/html
     ports:
       - 80:80
+  backend:
+    container_name: backend
+    build:
+      context: ../
+      dockerfile: ./docker/backend/Dockerfile
+    image: backend
+    volumes:
+      - ../backend:/app

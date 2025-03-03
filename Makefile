@@ -22,6 +22,9 @@ frontendshell:
 nginxshell:
 	docker exec -it nginx /bin/bash
 
+backendshell:
+	docker exec -it backend /bin/bash
+
 build:
 	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence build
 
