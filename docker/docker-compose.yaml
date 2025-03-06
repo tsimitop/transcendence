@@ -2,7 +2,7 @@ services:
   frontend-dev:
     container_name: frontend-dev
     build: ./frontend-dev/.
-    image: node:22.14.0
+    image: frontend-dev:latest
     volumes:
       - ../frontend:/app
     ports:
@@ -14,7 +14,7 @@ services:
     build:
       context: ../
       dockerfile: ./docker/nginx/Dockerfile
-    image: nginx:1.27.4
+    image: nginx-web-server:latest
     volumes:
       - ../frontend/dist:/usr/share/nginx/html
     ports:
@@ -24,6 +24,8 @@ services:
     build:
       context: ../
       dockerfile: ./docker/backend/Dockerfile
-    image: backend
+    image: backend:latest
     volumes:
       - ../backend:/app
+    ports:
+      - 3000:3000

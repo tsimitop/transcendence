@@ -1,3 +1,5 @@
+buildandup: build up
+
 nginxbuild:
 	docker build --file ./docker/nginx/Dockerfile -t nginx:default .
 
