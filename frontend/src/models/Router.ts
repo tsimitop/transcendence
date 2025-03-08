@@ -5,6 +5,7 @@ import NotFound from "../pages/NotFound";
 import Pong from "../pages/Pong";
 import Header from "../components/Header";
 import Component from "./Component";
+import { urlState } from "../context/UrlContext";
 
 abstract class Router {
   static routes = {
@@ -57,6 +58,9 @@ abstract class Router {
     window.addEventListener("popstate", () => {
       const viewToRender = Router.findViewToRender();
       Router.renderPageBasedOnPath(viewToRender);
+      urlState.state = { path: window.location.pathname };
+      console.log(urlState.state);
+      Header.highlightActiveNavLink();
     });
   }
 }
