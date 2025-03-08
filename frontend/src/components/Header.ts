@@ -19,11 +19,11 @@ class Header extends Component {
     if (!customElements.getName(Header)) {
       customElements.define("header-component", Header);
     }
-    const childrenElements = Header.createChildren();
+    const childElements = Header.createChildren();
     const HeaderInstance = new Header(
       { html: "", position: "beforeend" },
       {
-        element: childrenElements,
+        element: childElements,
         position: "beforeend",
       }
     );

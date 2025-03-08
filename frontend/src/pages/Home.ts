@@ -9,9 +9,9 @@ import Component, {
 class Home extends Component {
   constructor(
     childrenString: ChildrenStringType,
-    ...childrenElements: ChildElementType[]
+    ...childElements: ChildElementType[]
   ) {
-    super(childrenString, ...childrenElements);
+    super(childrenString, ...childElements);
   }
 
   static create(): Home {

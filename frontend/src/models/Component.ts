@@ -12,7 +12,7 @@ export type ChildrenStringType = {
 
 abstract class Component extends HTMLElement {
   private _childrenString: ChildrenStringType;
-  private _childrenElements: ChildElementType[];
+  private _childElements: ChildElementType[];
 
   constructor(
     childrenString: ChildrenStringType,
@@ -20,7 +20,7 @@ abstract class Component extends HTMLElement {
   ) {
     super();
     this._childrenString = childrenString;
-    this._childrenElements = childElements;
+    this._childElements = childElements;
   }
 
   protected insertChildren(): void {
@@ -31,8 +31,8 @@ abstract class Component extends HTMLElement {
       );
     }
 
-    if (this._childrenElements.length) {
-      this._childrenElements.forEach(childElement => {
+    if (this._childElements.length) {
+      this._childElements.forEach(childElement => {
         this.insertAdjacentElement(childElement.position, childElement.element);
       });
     }
