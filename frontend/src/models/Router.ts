@@ -58,7 +58,7 @@ abstract class Router {
     window.addEventListener("popstate", () => {
       const viewToRender = Router.findViewToRender();
       Router.renderPageBasedOnPath(viewToRender);
-      urlState.state = { path: window.location.pathname };
+      urlState.setState({ path: window.location.pathname });
       console.log(urlState.state);
       Header.highlightActiveNavLink();
     });

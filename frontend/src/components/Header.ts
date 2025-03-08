@@ -93,7 +93,7 @@ class Header extends Component {
     };
 
     themeState.subscribeListener(newListener);
-    themeState.state = newTheme;
+    themeState.setState(newTheme);
   }
 
   public static handleClickNavLink(_target: HTMLElement) {
@@ -111,9 +111,9 @@ class Header extends Component {
     const urlPath = window.location.pathname;
     const validPath = PAGES.find(page => page === urlPath);
     if (validPath) {
-      urlState.state = { ...urlState.state, path: urlPath };
+      urlState.setState({ ...urlState.state, path: urlPath });
     } else {
-      urlState.state = { ...urlState.state, path: "" };
+      urlState.setState({ ...urlState.state, path: "" });
     }
   }
 

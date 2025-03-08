@@ -15,7 +15,11 @@ abstract class StateManager<T> {
     return this._state;
   }
 
-  public set state(newState: T) {
+  protected set state(newState: T) {
+    this._state = newState;
+  }
+
+  public setState(newState: T) {
     const previousState = this._state;
     this._state = newState;
     this.callListeners(previousState, newState);
