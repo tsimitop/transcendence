@@ -10,6 +10,7 @@ class ThemeContext extends StateManager<ThemeType> {
   public dispatchChangeTheme() {
     const newTheme = this.state;
     const previousTheme = newTheme === "light" ? "dark" : "light";
+		
     const primaryElements = document.querySelectorAll(
       `.theme-primary-${previousTheme}-full`
     );

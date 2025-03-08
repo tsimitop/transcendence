@@ -16,7 +16,6 @@ abstract class Router {
   static renderPageBasedOnPath(viewToRender: Component) {
     Dom.clearDOM();
     Dom.updateDOM(viewToRender);
-    Header.highlightActiveNavLink();
     return viewToRender;
   }
 

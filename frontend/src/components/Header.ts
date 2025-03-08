@@ -103,6 +103,7 @@ class Header extends Component {
         if (previousPath === newPath) {
           return;
         }
+        Header.highlightActiveNavLink();
       },
     };
 
@@ -118,7 +119,8 @@ class Header extends Component {
 
   public static highlightActiveNavLink() {
     const activeLink = document.querySelector(
-      `a[href="${window.location.pathname}"]`
+      // `a[href="${window.location.pathname}"]`
+      `a[href="${urlState.state.path}"]`
     );
     const newClassName =
       themeState.state === "light"
