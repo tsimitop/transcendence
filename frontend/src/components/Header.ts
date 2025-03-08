@@ -103,7 +103,6 @@ class Header extends Component {
         if (previousPath === newPath) {
           return;
         }
-        Header.highlightActiveNavLink();
       },
     };
 

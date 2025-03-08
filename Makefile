@@ -41,3 +41,6 @@ start:
 
 stop:
 	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence stop
+
+buildfrontend:
+	cd ./frontend && npm run build

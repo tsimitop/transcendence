@@ -1,7 +1,8 @@
 import Router from "./models/Router";
 
 const renderApp = function (): void {
-  Router.renderPageBasedOnPath();
+  const viewToRender = Router.findViewToRender();
+  Router.renderPageBasedOnPath(viewToRender);
   Router.listenForRouteChange();
   Router.handleBackAndForward();
 };

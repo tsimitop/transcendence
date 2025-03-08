@@ -4,6 +4,7 @@ import Login from "../pages/Login";
 import NotFound from "../pages/NotFound";
 import Pong from "../pages/Pong";
 import Header from "../components/Header";
+import Component from "./Component";
 
 abstract class Router {
   static routes = {
@@ -12,15 +13,19 @@ abstract class Router {
     "/pong": Pong,
   };
 
-  static renderPageBasedOnPath() {
-    const path = window.location.pathname;
-    const toRender =
-      Router.routes[path as keyof typeof Router.routes]?.create() ||
-      NotFound.create();
+  static renderPageBasedOnPath(viewToRender: Component) {
     Dom.clearDOM();
-    Dom.updateDOM(toRender);
+    Dom.updateDOM(viewToRender);
     Header.highlightActiveNavLink();
-    return toRender;
+    return viewToRender;
+  }
+
+  static findViewToRender() {
+    const routeToGo = window.location.pathname;
+    const viewToRender =
+      Router.routes[routeToGo as keyof typeof Router.routes]?.create() ||
+      NotFound.create();
+    return viewToRender;
   }
 
   static listenForRouteChange() {
@@ -44,18 +49,15 @@ abstract class Router {
     Router.removeRouteChangeListeners();
     const target = event.target as HTMLAnchorElement;
     window.history.pushState({}, "", target.href);
-    const routeToGo = window.location.pathname;
-    const toRender =
-      Router.routes[routeToGo as keyof typeof Router.routes]?.create() ||
-      NotFound.create();
-    Dom.clearDOM();
-    Dom.updateDOM(toRender);
+    const viewToRender = Router.findViewToRender();
+    Router.renderPageBasedOnPath(viewToRender);
     Router.listenForRouteChange();
   }
 
   static handleBackAndForward() {
     window.addEventListener("popstate", () => {
-      Router.renderPageBasedOnPath();
+      const viewToRender = Router.findViewToRender();
+      Router.renderPageBasedOnPath(viewToRender);
     });
   }
 }
