@@ -1,22 +1,27 @@
 import StateManager from "../models/StateManager";
-import { PAGES } from "../constants";
+import { PAGES, ValidUrlPathsType } from "../constants";
 
-export type UrlState = {
-  path: string;
+export type UrlStateType = {
+  path: string | undefined;
   // query: string;
 };
 
-class UrlContext extends StateManager<UrlState> {
-  constructor(initialState: UrlState) {
-    super(initialState);
+class UrlContext extends StateManager<UrlStateType> {
+  constructor(state: UrlStateType) {
+    super(state);
+  }
+
+  public static getValidUrlPath(): ValidUrlPathsType | undefined {
+    const urlPath = window.location.pathname;
+    const validUrlPath = PAGES.find(page => page === urlPath);
+    return validUrlPath;
   }
 }
 
-const urlPath = window.location.pathname;
-const validPath = PAGES.find(page => page === urlPath);
+const validUrlPath = UrlContext.getValidUrlPath();
 
-export const urlState = new UrlContext({
-  path: validPath ? urlPath : "",
+export const urlContext = new UrlContext({
+  path: validUrlPath,
 });
 
 export default UrlContext;

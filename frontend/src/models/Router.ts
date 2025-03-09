@@ -5,10 +5,13 @@ import NotFound from "../pages/NotFound";
 import Pong from "../pages/Pong";
 import Header from "../components/Header";
 import Component from "./Component";
-import { urlState } from "../context/UrlContext";
+import UrlContext, { urlContext } from "../context/UrlContext";
+import { ValidUrlPathsType } from "../constants";
+
+type RoutesType = Record<ValidUrlPathsType, any>;
 
 abstract class Router {
-  static routes = {
+  static routes: RoutesType = {
     "/": Home,
     "/login": Login,
     "/pong": Pong,
@@ -58,8 +61,8 @@ abstract class Router {
     window.addEventListener("popstate", () => {
       const viewToRender = Router.findViewToRender();
       Router.renderPageBasedOnPath(viewToRender);
-      urlState.setState({ path: window.location.pathname });
-      console.log(urlState.state);
+      const validUrlPath = UrlContext.getValidUrlPath();
+      urlContext.setState({ ...urlContext.state, path: validUrlPath });
       Header.highlightActiveNavLink();
     });
   }

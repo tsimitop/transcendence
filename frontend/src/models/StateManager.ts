@@ -6,8 +6,8 @@ export type StateListener<T> = {
 abstract class StateManager<T> {
   private _state: T;
   private _listeners: StateListener<T>[];
-  constructor(initialState: T) {
-    this._state = initialState;
+  constructor(state: T) {
+    this._state = state;
     this._listeners = [];
   }
 

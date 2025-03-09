@@ -1,5 +1,5 @@
 import themeState, { ThemeType } from "../context/ThemeContext";
-import { UrlState, urlState } from "../context/UrlContext";
+import { UrlStateType, urlContext } from "../context/UrlContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
@@ -97,7 +97,7 @@ class Header extends Component {
   }
 
   public static handleClickNavLink(_target: HTMLElement) {
-    const newListener: StateListener<UrlState> = {
+    const newListener: StateListener<UrlStateType> = {
       id: "changeUrl",
       listen(previousPath, newPath) {
         if (previousPath === newPath) {
@@ -107,20 +107,20 @@ class Header extends Component {
       },
     };
 
-    urlState.subscribeListener(newListener);
+    urlContext.subscribeListener(newListener);
     const urlPath = window.location.pathname;
     const validPath = PAGES.find(page => page === urlPath);
     if (validPath) {
-      urlState.setState({ ...urlState.state, path: urlPath });
+      urlContext.setState({ ...urlContext.state, path: urlPath });
     } else {
-      urlState.setState({ ...urlState.state, path: "" });
+      urlContext.setState({ ...urlContext.state, path: "" });
     }
   }
 
   public static highlightActiveNavLink() {
     const activeLink = document.querySelector(
       // `a[href="${window.location.pathname}"]`
-      `a[href="${urlState.state.path}"]`
+      `a[href="${urlContext.state.path}"]`
     );
     const newClassName =
       themeState.state === "light"

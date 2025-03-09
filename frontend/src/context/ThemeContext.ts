@@ -3,14 +3,14 @@ import StateManager from "../models/StateManager";
 export type ThemeType = "light" | "dark";
 
 class ThemeContext extends StateManager<ThemeType> {
-  constructor(initialState: ThemeType) {
-    super(initialState);
+  constructor(state: ThemeType) {
+    super(state);
   }
 
   public dispatchChangeTheme() {
     const newTheme = this.state;
     const previousTheme = newTheme === "light" ? "dark" : "light";
-		
+
     const primaryElements = document.querySelectorAll(
       `.theme-primary-${previousTheme}-full`
     );
