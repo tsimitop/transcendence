@@ -5,7 +5,7 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 import { StateListener } from "../models/StateManager";
-import { PAGES } from "../constants";
+import { PAGES, ROUTER_CLASS_NAME } from "../constants";
 
 class Header extends Component {
   constructor(
@@ -48,9 +48,13 @@ class Header extends Component {
 			<nav class="flex items-center">
 				<p>transcendence</p>
 				<ul class="flex grow justify-center gap-10">
-					<li><a class="nav-link" href="/">Home</a></li>
-					<li><a class="nav-link" href="/login">Login</a></li>
-					<li><a class="nav-link" href="/pong">Pong</a></li>
+					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/">Home</a></li>
+					${
+            true
+              ? `<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/signup">Sign up</a></li>`
+              : ""
+          }
+					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/pong">Pong</a></li>
 				</ul>	
 				<button class="${
           themeState.state === "light"

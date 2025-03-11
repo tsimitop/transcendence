@@ -1,3 +1,5 @@
-export type ValidUrlPathsType = "/" | "/login" | "/pong";
+export const ROUTER_CLASS_NAME = "router-link";
 
-export const PAGES: ValidUrlPathsType[] = ["/", "/login", "/pong"];
+export type ValidUrlPathsType = "/" | "/signup" | "/pong" | "/signin";
+
+export const PAGES: ValidUrlPathsType[] = ["/", "/signup", "/pong"];

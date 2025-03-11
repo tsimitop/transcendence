@@ -1,19 +1,21 @@
 import Dom from "./Dom";
 import Home from "../pages/Home";
-import Login from "../pages/Login";
+import SignUp from "../pages/Signup";
 import NotFound from "../pages/NotFound";
 import Pong from "../pages/Pong";
 import Header from "../components/Header";
 import Component from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
-import { ValidUrlPathsType } from "../constants";
+import { ROUTER_CLASS_NAME, ValidUrlPathsType } from "../constants";
+import SignIn from "../pages/SignIn";
 
 type RoutesType = Record<ValidUrlPathsType, any>;
 
 abstract class Router {
   static routes: RoutesType = {
     "/": Home,
-    "/login": Login,
+    "/signup": SignUp,
+    "/signin": SignIn,
     "/pong": Pong,
   };
 
@@ -33,7 +35,7 @@ abstract class Router {
 
   static listenForRouteChange() {
     const allLinks = document.querySelectorAll(
-      "a.nav-link"
+      `.${ROUTER_CLASS_NAME}`
     ) as NodeListOf<HTMLAnchorElement>;
     for (const link of allLinks) {
       link.addEventListener("click", Router.handleChangeRoute);
@@ -41,7 +43,9 @@ abstract class Router {
   }
 
   static removeRouteChangeListeners() {
-    const allLinks = document.querySelectorAll("a");
+    const allLinks = document.querySelectorAll(
+      `.${ROUTER_CLASS_NAME}`
+    ) as NodeListOf<HTMLAnchorElement>;
     for (const link of allLinks) {
       link.removeEventListener("click", Router.handleChangeRoute);
     }

@@ -1,12 +1,13 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import { ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
 } from "../models/Component";
 
-class Login extends Component {
+class SignUp extends Component {
   constructor(
     childrenString: ChildrenStringType,
     ...childElements: ChildElementType[]
@@ -15,8 +16,8 @@ class Login extends Component {
   }
 
   static create() {
-    if (!customElements.getName(Login)) {
-      customElements.define("login-component", Login);
+    if (!customElements.getName(SignUp)) {
+      customElements.define("signup-component", SignUp);
     }
 
     const main = document.createElement("main");
@@ -30,36 +31,44 @@ class Login extends Component {
       }`
     );
 
-    main.addEventListener("click", Login.handleClick);
+    main.addEventListener("click", SignUp.handleClick);
 
     const html = `
-				<h1>Login</h1>
+				<h1>Sign Up</h1>
 				<form>
-					<label for="name">Name</label>
-					<input type="text" name="name" id="name" placeholder="name" class="border-2" />
-					<button type="submit" class="login-submit-btn cursor-pointer border-2">Submit</button>
+					<label for="email">Email</label>
+					<input type="email" name="email" id="email" placeholder="email" class="border-2" />
+					<label for="username">Username</label>
+					<input type="text" username="username" id="username" placeholder="username" class="border-2" />
+					<label for="password">Password</label>
+					<input type="password" name="password" id="password" placeholder="password" class="border-2" />
+					<button type="submit" class="signup-submit-btn cursor-pointer border-2">Sign up</button>
+					<p>
+						<span>Already have an account?</span>
+						<a class=${ROUTER_CLASS_NAME} href="/signin">Sign in</a>
+					</p>
 				</form>
 		`;
 
     main.insertAdjacentHTML("beforeend", html);
 
-    const LoginInstance = new Login(
+    const SignUpInstance = new SignUp(
       { html: "", position: "beforeend" },
       { element: Header.create(), position: "afterbegin" },
       { element: main, position: "beforeend" },
       { element: Footer.create(), position: "beforeend" }
     );
-    LoginInstance.insertChildren();
-    LoginInstance.classList.add("page");
+    SignUpInstance.insertChildren();
+    SignUpInstance.classList.add("page");
 
-    return LoginInstance;
+    return SignUpInstance;
   }
 
   public static handleClick(event: MouseEvent) {
-    event.preventDefault();
     const target = event.target as HTMLButtonElement;
-    if (target.className.includes("login-submit-btn")) {
-      Login.handleSubmit();
+    if (target.className.includes("signup-submit-btn")) {
+      event.preventDefault();
+      SignUp.handleSubmit();
     }
   }
 
@@ -82,4 +91,4 @@ class Login extends Component {
   }
 }
 
-export default Login;
+export default SignUp;
