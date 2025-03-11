@@ -6,8 +6,10 @@ const fastify = Fastify({
 });
 
 fastify.post("/api", function (request, reply) {
-  console.log("request received");
-  reply.send("test\n");
+  console.log("-----------------------------------");
+  console.log(request.body);
+  console.log("-----------------------------------");
+  reply.send(request.body);
 });
 
 fastify.listen({ port: 3000, host: "0.0.0.0" }, function (err, address) {

@@ -30,18 +30,7 @@ class Login extends Component {
       }`
     );
 
-    main.addEventListener("click", event => {
-      event.preventDefault();
-      const target = event.target as HTMLButtonElement;
-      if (target.className.includes("login-submit-btn")) {
-        fetch("http://localhost:80/api", { method: "POST" })
-          .then(response => {
-            console.log(response);
-            return response.json();
-          })
-          .then(data => console.log(data));
-      }
-    });
+    main.addEventListener("click", Login.handleClick);
 
     const html = `
 				<h1>Login</h1>
@@ -64,6 +53,32 @@ class Login extends Component {
     LoginInstance.classList.add("page");
 
     return LoginInstance;
+  }
+
+  public static handleClick(event: MouseEvent) {
+    event.preventDefault();
+    const target = event.target as HTMLButtonElement;
+    if (target.className.includes("login-submit-btn")) {
+      Login.handleSubmit();
+    }
+  }
+
+  public static handleSubmit() {
+    fetch("http://localhost:80/api", {
+      // fetch("http://172.18.0.2:80/api", {
+      // fetch("http://nginx:80/api", {
+      // fetch("http://nginx.ft_transcendence_default:80/api", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name: "test" }),
+    })
+      .then(response => {
+        console.log(response);
+        return response.json();
+      })
+      .then(data => console.log(data));
   }
 }
 
