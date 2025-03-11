@@ -36,14 +36,14 @@ class SignIn extends Component {
     const html = `
 				<h1>Sign In</h1>
 				<form>
-					<label for="username">Username</label>
-					<input type="text" username="username" id="username" placeholder="username" class="border-2" />
+					<label for="username">Username or Email</label>
+					<input type="text" username="username" id="username" placeholder="username or email" class="username-signin-input border-2" />
 					<label for="password">Password</label>
-					<input type="password" name="password" id="password" placeholder="password" class="border-2" />
-					<button type="submit" class="signin-submit-btn cursor-pointer border-2">Sign in</button>
+					<input type="password" name="password" id="password" placeholder="password" class="password-signin-input border-2" />
+					<button type="submit" class="signin-btn cursor-pointer border-2">Sign in</button>
 					<p>
 						<span>Don't have an account?</span>
-						<a class=${ROUTER_CLASS_NAME} href="/signup">Sign up</a>
+						<a class=${ROUTER_CLASS_NAME} href="/sign-up">Sign up</a>
 					</p>
 				</form>
 		`;
@@ -63,8 +63,43 @@ class SignIn extends Component {
   }
 
   public static handleClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (target.classList.contains("signin-btn")) SignIn.handleSignIn(event);
+  }
+
+  public static handleSignIn(event: MouseEvent) {
     event.preventDefault();
-    console.log(event);
+
+    const username = (
+      document.querySelector(".username-signin-input") as HTMLInputElement
+    ).value;
+    const password = (
+      document.querySelector(".password-signin-input") as HTMLInputElement
+    ).value;
+
+    if (!username.trim() || !password.trim()) {
+      console.log("field is reuqired");
+      return;
+    }
+
+    SignIn.postSignInData(username, password);
+  }
+
+  public static async postSignInData(username: string, password: string) {
+    try {
+      const response = await fetch("http://localhost:80/api/sign-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
 

@@ -51,7 +51,7 @@ class Header extends Component {
 					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/">Home</a></li>
 					${
             true
-              ? `<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/signup">Sign up</a></li>`
+              ? `<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/sign-up">Sign up</a></li>`
               : ""
           }
 					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/pong">Pong</a></li>

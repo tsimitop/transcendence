@@ -14,8 +14,8 @@ type RoutesType = Record<ValidUrlPathsType, any>;
 abstract class Router {
   static routes: RoutesType = {
     "/": Home,
-    "/signup": SignUp,
-    "/signin": SignIn,
+    "/sign-up": SignUp,
+    "/sign-in": SignIn,
     "/pong": Pong,
   };
 

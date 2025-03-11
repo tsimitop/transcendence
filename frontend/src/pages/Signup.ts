@@ -42,10 +42,10 @@ class SignUp extends Component {
 					<input type="text" username="username" id="username" placeholder="username" class="border-2" />
 					<label for="password">Password</label>
 					<input type="password" name="password" id="password" placeholder="password" class="border-2" />
-					<button type="submit" class="signup-submit-btn cursor-pointer border-2">Sign up</button>
+					<button type="submit" class="signup-btn cursor-pointer border-2">Sign up</button>
 					<p>
 						<span>Already have an account?</span>
-						<a class=${ROUTER_CLASS_NAME} href="/signin">Sign in</a>
+						<a class=${ROUTER_CLASS_NAME} href="/sign-in">Sign in</a>
 					</p>
 				</form>
 		`;
@@ -66,7 +66,7 @@ class SignUp extends Component {
 
   public static handleClick(event: MouseEvent) {
     const target = event.target as HTMLButtonElement;
-    if (target.className.includes("signup-submit-btn")) {
+    if (target.className.includes("signup-btn")) {
       event.preventDefault();
       SignUp.handleSubmit();
     }
