@@ -2,6 +2,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
+import { userContext } from "../context/UserContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
@@ -37,11 +38,11 @@ class SignUp extends Component {
 				<h1>Sign Up</h1>
 				<form>
 					<label for="email">Email</label>
-					<input type="email" name="email" id="email" placeholder="email" class="border-2" />
+					<input type="email" name="email" id="email" placeholder="email" class="email-signup-input border-2" />
 					<label for="username">Username</label>
-					<input type="text" username="username" id="username" placeholder="username" class="border-2" />
+					<input type="text" username="username" id="username" placeholder="username" class="username-signup-input border-2" />
 					<label for="password">Password</label>
-					<input type="password" name="password" id="password" placeholder="password" class="border-2" />
+					<input type="password" name="password" id="password" placeholder="password" class="password-signup-input border-2" />
 					<button type="submit" class="signup-btn cursor-pointer border-2">Sign up</button>
 					<p>
 						<span>Already have an account?</span>
@@ -73,7 +74,22 @@ class SignUp extends Component {
   }
 
   public static handleSubmit() {
-    fetch("http://localhost:80/api", {
+    const email = (
+      document.querySelector(".email-signup-input") as HTMLInputElement
+    ).value;
+    const username = (
+      document.querySelector(".username-signup-input") as HTMLInputElement
+    ).value;
+    const password = (
+      document.querySelector(".password-signup-input") as HTMLInputElement
+    ).value;
+
+    if (!email.trim() || !username.trim() || !password.trim()) {
+      console.log("required field*");
+      return;
+    }
+
+    fetch("http://localhost:80/api/sign-up", {
       // fetch("http://172.18.0.2:80/api", {
       // fetch("http://nginx:80/api", {
       // fetch("http://nginx.ft_transcendence_default:80/api", {
@@ -81,13 +97,21 @@ class SignUp extends Component {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name: "test" }),
+      body: JSON.stringify({ email, username, password }),
     })
       .then(response => {
         console.log(response);
         return response.json();
       })
-      .then(data => console.log(data));
+      .then(data => {
+        userContext.setState({
+          ...userContext.state,
+          email: data.email,
+          username: data.username,
+          isSignedIn: true,
+        });
+        console.log("signed up successfully", userContext.state);
+      });
   }
 }
 

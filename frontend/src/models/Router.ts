@@ -1,6 +1,6 @@
 import Dom from "./Dom";
 import Home from "../pages/Home";
-import SignUp from "../pages/Signup";
+import SignUp from "../pages/SignUp";
 import NotFound from "../pages/NotFound";
 import Pong from "../pages/Pong";
 import Header from "../components/Header";
