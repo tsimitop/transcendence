@@ -100,7 +100,6 @@ class SignUp extends Component {
       body: JSON.stringify({ email, username, password }),
     })
       .then(response => {
-        console.log(response);
         return response.json();
       })
       .then(data => {
@@ -110,7 +109,6 @@ class SignUp extends Component {
           username: data.username,
           isSignedIn: true,
         });
-        console.log("signed up successfully", userContext.state);
       });
   }
 }
