@@ -1,6 +1,7 @@
 import { FastifyRequest } from "fastify";
 import { fastify } from "./sign-in";
 import Database from "better-sqlite3";
+import { Query } from "../queries";
 
 type SignUpDataType = {
   email: string;
@@ -9,10 +10,17 @@ type SignUpDataType = {
 };
 
 const createNewUser = function (user: SignUpDataType) {
-  console.log("----------------- new user: -----------------");
-  console.log(Database);
-  console.log(user);
-  console.log("---------------------------------------------");
+  console.log("********************* new user: *********************");
+  // backend Dockerfile changes the path to /app and runs CMD form /app:
+  const db = new Database("database/test.db");
+  db.prepare(Query.CREATE_TABLE).run();
+
+  const newUserStatement = db.prepare(Query.INSERT_NEW_USER);
+  newUserStatement.run(user.email, user.username, user.password);
+
+  const result = db.prepare(Query.SELECT_USER_TABLE).all();
+  console.log(result);
+  console.log("*****************************************************");
 };
 
 fastify.post(
