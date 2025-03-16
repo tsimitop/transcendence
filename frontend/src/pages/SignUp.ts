@@ -98,18 +98,28 @@ class SignUp extends Component {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, username, password }),
+      signal: AbortSignal.timeout(5000),
     })
       .then(response => {
         return response.json();
       })
       .then(data => {
-        userContext.setState({
-          ...userContext.state,
-          email: data.email,
-          username: data.username,
-          isSignedIn: true,
-        });
-      });
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        // userContext.setState({
+        //   ...userContext.state,
+        //   email: data.email,
+        //   username: data.username,
+        //   isSignedIn: true,
+        // });
+
+        console.log(
+          `The user with the email "${email}" and the username "${data.username}" is added to the database.`
+        );
+      })
+      .catch(error => console.log("sign up error:\n", error));
   }
 }
 

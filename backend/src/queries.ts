@@ -1,6 +1,6 @@
 const table = "test_users";
 
-export enum Query {
+export enum QueryUser {
   CREATE_TABLE = `CREATE TABLE IF NOT EXISTS ${table}(
 		id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 		email TEXT NOT NULL,

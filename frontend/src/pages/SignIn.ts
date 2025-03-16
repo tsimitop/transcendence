@@ -93,6 +93,7 @@ class SignIn extends Component {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password }),
+        signal: AbortSignal.timeout(5000),
       });
 
       const data = await response.json();

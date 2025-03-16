@@ -1,7 +1,7 @@
 import { FastifyRequest } from "fastify";
 import { fastify } from "./sign-in";
-import Database from "better-sqlite3";
-import { Query } from "../queries";
+import Database, { Database as DbType } from "better-sqlite3";
+import { QueryUser } from "../queries";
 
 type SignUpDataType = {
   email: string;
@@ -9,18 +9,54 @@ type SignUpDataType = {
   password: string;
 };
 
-const createNewUser = function (user: SignUpDataType) {
-  console.log("********************* new user: *********************");
+const openUserDb = function (userDbPath: string) {
   // backend Dockerfile changes the path to /app and runs CMD form /app:
-  const db = new Database("database/test.db");
-  db.prepare(Query.CREATE_TABLE).run();
+  const userDb = new Database(userDbPath);
+  return userDb;
+};
 
-  const newUserStatement = db.prepare(Query.INSERT_NEW_USER);
+const createUserTableInUserDb = function (userDb: DbType) {
+  userDb.prepare(QueryUser.CREATE_TABLE).run();
+};
+
+const createNewUserInUserDb = function (userDb: DbType, user: SignUpDataType) {
+  console.log("********************* new user: *********************");
+
+  const newUserStatement = userDb.prepare(QueryUser.INSERT_NEW_USER);
   newUserStatement.run(user.email, user.username, user.password);
 
-  const result = db.prepare(Query.SELECT_USER_TABLE).all();
-  console.log(result);
+  const userTable = userDb.prepare(QueryUser.SELECT_USER_TABLE).all();
+  console.log(userTable);
   console.log("*****************************************************");
+};
+
+const userExistsInUserDb = function (
+  userDb: DbType,
+  email: string,
+  username: string
+): { found: boolean; email: string; username: string } {
+  // const stmt = userDb.prepare(
+  //   "SELECT email, username FROM test_users WHERE email = ? OR username = ?"
+  // );
+  const findEmail = userDb.prepare(
+    "SELECT email FROM test_users WHERE email = ?"
+  );
+
+  const findUsername = userDb.prepare(
+    "SELECT username FROM test_users WHERE username = ?"
+  );
+
+  const hasEmail = findEmail.all(email);
+  const hasUsername = findUsername.all(username);
+  const found = hasEmail.length || hasUsername.length;
+  console.log(`------------- SEARCHING FOR ${username} -------------`);
+  console.log(hasEmail);
+  console.log(`-----------------------------------------------------`);
+  return {
+    found: !!found,
+    email: hasEmail.length ? email : "",
+    username: hasUsername.length ? username : "",
+  };
 };
 
 fastify.post(
@@ -32,7 +68,28 @@ fastify.post(
       return;
     }
 
-    createNewUser(request.body);
+    const userDb = openUserDb("database/test.db");
+    createUserTableInUserDb(userDb);
+
+    const result = userExistsInUserDb(userDb, email, username);
+    console.log(result);
+    if (result.found && result.username && result.email) {
+      console.log(`${username} already exists, please choose a new username`);
+      reply.send({
+        error: `The username "${username}" and email "${email}" already exist`,
+      });
+      return;
+    } else if (result.found && result.username) {
+      console.log(`${username} already exists, please choose a new username`);
+      reply.send({ error: `The username "${username}" already exists` });
+      return;
+    } else if (result.found && result.email) {
+      console.log(`${email} already exists, please choose a new email`);
+      reply.send({ error: `The email "${email}" already exists` });
+      return;
+    }
+
+    createNewUserInUserDb(userDb, request.body);
     reply.send(request.body);
   }
 );
