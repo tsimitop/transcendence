@@ -20,7 +20,7 @@ class SignUpValidation {
   }
 
   isUsernameValid() {
-    const usernameRegex = /^(?=(.*[a-zA-Z]))[a-zA-Z0-9]{4,12}$/;
+    const usernameRegex = /^(?=(.*[a-zA-Z]))[a-zA-Z0-9]{4,20}$/;
     return usernameRegex.test(this._username);
   }
 

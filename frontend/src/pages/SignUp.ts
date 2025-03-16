@@ -40,7 +40,7 @@ class SignUp extends Component {
 					<label for="email">Email</label>
 					<input required type="email" name="email" id="email" placeholder="email" class="email-signup-input border-2" />
 					<label for="username">Username</label>
-					<input required type="text" username="username" id="username" placeholder="username" class="username-signup-input border-2" />
+					<input required minlength="4" maxlength="20" type="text" username="username" id="username" placeholder="username" class="username-signup-input border-2" />
 					<label for="password">Password</label>
 					<input required type="password" name="password" id="password" placeholder="password" class="password-signup-input border-2" />
 					<button type="submit" class="signup-btn cursor-pointer border-2">Sign up</button>
