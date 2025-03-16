@@ -67,29 +67,19 @@ fastify.post(
     const userAlreadyExists = userExistsInUserDb(userDb, email, username);
     const validation = new SignUpValidation(email, username, password);
 
-    const { validEmail, validPassword } = validation.isFormValid();
+    const { validEmail, validUsername, validPassword } =
+      validation.isFormValid();
 
-    if (!validEmail && !validPassword) {
+    if (!validEmail || !validUsername || !validPassword) {
       reply.send({
         errorMessage: SignUpValidation.errorMessage,
-        passwordError: SignUpValidation.passwordError,
-        emailError: SignUpValidation.emailError,
-      });
-      return;
-    }
-
-    if (!validPassword) {
-      reply.send({
-        errorMessage: SignUpValidation.errorMessage,
-        passwordError: SignUpValidation.passwordError,
-      });
-      return;
-    }
-
-    if (!validEmail) {
-      reply.send({
-        errorMessage: SignUpValidation.errorMessage,
-        emailError: SignUpValidation.emailError,
+        emailError: !validEmail ? SignUpValidation.emailError : undefined,
+        usernameError: !validUsername
+          ? SignUpValidation.usernameError
+          : undefined,
+        passwordError: !validPassword
+          ? SignUpValidation.passwordError
+          : undefined,
       });
       return;
     }

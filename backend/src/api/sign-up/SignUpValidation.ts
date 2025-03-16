@@ -9,13 +9,9 @@ class SignUpValidation {
 
   static passwordError =
     "Password must be between 8 and 30 characters, and include at least 1 lowercase and one uppercase letters, and 1 special character @$!%*?&";
+  static usernameError =
+    "username must be between 4 and 12 characters, including only letters and numbers, and at least one letter";
   static emailError = "Email address is not valid";
-
-  isPasswordValid() {
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,30}$/;
-    return passwordRegex.test(this._password);
-  }
 
   isEmailValid() {
     const emailRegex =
@@ -23,11 +19,22 @@ class SignUpValidation {
     return emailRegex.test(this._email);
   }
 
+  isUsernameValid() {
+    const usernameRegex = /^(?=(.*[a-zA-Z]))[a-zA-Z0-9]{4,12}$/;
+    return usernameRegex.test(this._username);
+  }
+
+  isPasswordValid() {
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,30}$/;
+    return passwordRegex.test(this._password);
+  }
+
   isFormValid() {
     const validEmail = this.isEmailValid();
+    const validUsername = this.isUsernameValid();
     const validPassword = this.isPasswordValid();
-
-    return { validEmail, validPassword };
+    return { validEmail, validUsername, validPassword };
   }
 }
 
