@@ -20,14 +20,10 @@ const createUserTableInUserDb = function (userDb: DbType) {
 };
 
 const createNewUserInUserDb = function (userDb: DbType, user: SignUpDataType) {
-  console.log("********************* new user: *********************");
-
   const newUserStatement = userDb.prepare(QueryUser.INSERT_NEW_USER);
   newUserStatement.run(user.email, user.username, user.password);
 
-  const userTable = userDb.prepare(QueryUser.SELECT_USER_TABLE).all();
-  console.log(userTable);
-  console.log("*****************************************************");
+  // const userTable = userDb.prepare(QueryUser.SELECT_USER_TABLE).all();
 };
 
 const userExistsInUserDb = function (
@@ -38,24 +34,16 @@ const userExistsInUserDb = function (
   // const stmt = userDb.prepare(
   //   "SELECT email, username FROM test_users WHERE email = ? OR username = ?"
   // );
-  const findEmail = userDb.prepare(
-    "SELECT email FROM test_users WHERE email = ?"
-  );
+  const findEmailStatement = userDb.prepare(QueryUser.FIND_EMAIL);
+  const findUsernameStatement = userDb.prepare(QueryUser.FIND_USERNAME);
 
-  const findUsername = userDb.prepare(
-    "SELECT username FROM test_users WHERE username = ?"
-  );
-
-  const hasEmail = findEmail.all(email);
-  const hasUsername = findUsername.all(username);
-  const found = hasEmail.length || hasUsername.length;
-  console.log(`------------- SEARCHING FOR ${username} -------------`);
-  console.log(hasEmail);
-  console.log(`-----------------------------------------------------`);
+  const emailsList = findEmailStatement.all(email);
+  const usernamesList = findUsernameStatement.all(username);
+  const found = emailsList.length || usernamesList.length;
   return {
     found: !!found,
-    email: hasEmail.length ? email : "",
-    username: hasUsername.length ? username : "",
+    email: emailsList.length ? email : "",
+    username: usernamesList.length ? username : "",
   };
 };
 
