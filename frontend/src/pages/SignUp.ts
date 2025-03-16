@@ -32,17 +32,17 @@ class SignUp extends Component {
       }`
     );
 
-    main.addEventListener("click", SignUp.handleClick);
+    main.addEventListener("submit", SignUp.handleSubmit);
 
     const html = `
 				<h1>Sign Up</h1>
-				<form>
+				<form class="sign-up-form">
 					<label for="email">Email</label>
-					<input type="email" name="email" id="email" placeholder="email" class="email-signup-input border-2" />
+					<input required type="email" name="email" id="email" placeholder="email" class="email-signup-input border-2" />
 					<label for="username">Username</label>
-					<input type="text" username="username" id="username" placeholder="username" class="username-signup-input border-2" />
+					<input required type="text" username="username" id="username" placeholder="username" class="username-signup-input border-2" />
 					<label for="password">Password</label>
-					<input type="password" name="password" id="password" placeholder="password" class="password-signup-input border-2" />
+					<input required type="password" name="password" id="password" placeholder="password" class="password-signup-input border-2" />
 					<button type="submit" class="signup-btn cursor-pointer border-2">Sign up</button>
 					<p>
 						<span>Already have an account?</span>
@@ -65,15 +65,13 @@ class SignUp extends Component {
     return SignUpInstance;
   }
 
-  public static handleClick(event: MouseEvent) {
+  public static handleSubmit(event: SubmitEvent) {
     const target = event.target as HTMLButtonElement;
-    if (target.className.includes("signup-btn")) {
-      event.preventDefault();
-      SignUp.handleSubmit();
+    event.preventDefault();
+    if (!target.className.includes("sign-up-form")) {
+      return;
     }
-  }
 
-  public static handleSubmit() {
     const email = (
       document.querySelector(".email-signup-input") as HTMLInputElement
     ).value;
