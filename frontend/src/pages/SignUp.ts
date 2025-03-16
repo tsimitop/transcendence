@@ -2,7 +2,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
-import { userContext } from "../context/UserContext";
+// import { userContext } from "../context/UserContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
@@ -105,7 +105,7 @@ class SignUp extends Component {
       })
       .then(data => {
         if (data.error) {
-          throw new Error(data.error);
+          throw data;
         }
 
         // userContext.setState({
@@ -116,7 +116,7 @@ class SignUp extends Component {
         // });
 
         console.log(
-          `The user with the email "${email}" and the username "${data.username}" is added to the database.`
+          `The user with the email "${data.email?.toLowerCase()}" and the username "${data.username?.toLowerCase()}" is added to the database.`
         );
       })
       .catch(error => console.log("sign up error:\n", error));
