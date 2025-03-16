@@ -1,7 +1,8 @@
 import { FastifyRequest } from "fastify";
-import { fastify } from "./sign-in";
+import { fastify } from "../sign-in";
 import Database, { Database as DbType } from "better-sqlite3";
-import { QueryUser } from "../queries";
+import { QueryUser } from "../../queries";
+import SignUpValidation from "./SignUpValidation";
 
 type SignUpDataType = {
   email: string;
@@ -51,25 +52,6 @@ const userExistsInUserDb = function (
   };
 };
 
-const isPasswordValid = function (password: string) {
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,30}$/;
-  return passwordRegex.test(password);
-};
-
-const isEmailValid = function (email: string) {
-  const emailRegex =
-    /^(?!\.)[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/;
-  return emailRegex.test(email);
-};
-
-const isFormValid = function (email: string, password: string) {
-  const validEmail = isEmailValid(email);
-  const validPassword = isPasswordValid(password);
-
-  return { validEmail, validPassword };
-};
-
 fastify.post(
   "/api/sign-up",
   function (request: FastifyRequest<{ Body: SignUpDataType }>, reply) {
@@ -83,29 +65,32 @@ fastify.post(
     createUserTableInUserDb(userDb);
 
     const userAlreadyExists = userExistsInUserDb(userDb, email, username);
+    const validation = new SignUpValidation(email, username, password);
 
-    const { validEmail, validPassword } = isFormValid(email, password);
+    const { validEmail, validPassword } = validation.isFormValid();
 
     if (!validEmail && !validPassword) {
       reply.send({
-        error: "invalid input",
-        passwordError:
-          "Password must be between 8 and 30 characters, and include at least 1 lowercase and one uppercase letters, and 1 special character @$!%*?&",
-        emailError: "Email address is not valid",
+        errorMessage: SignUpValidation.errorMessage,
+        passwordError: SignUpValidation.passwordError,
+        emailError: SignUpValidation.emailError,
       });
       return;
     }
 
     if (!validPassword) {
       reply.send({
-        error:
-          "Password must be between 8 and 30 characters, and include at least 1 lowercase and one uppercase letters, and 1 special character @$!%*?&",
+        errorMessage: SignUpValidation.errorMessage,
+        passwordError: SignUpValidation.passwordError,
       });
       return;
     }
 
     if (!validEmail) {
-      reply.send({ error: "Email address is not valid" });
+      reply.send({
+        errorMessage: SignUpValidation.errorMessage,
+        emailError: SignUpValidation.emailError,
+      });
       return;
     }
 
@@ -115,17 +100,17 @@ fastify.post(
       userAlreadyExists.email
     ) {
       reply.send({
-        error: `The username "${username.toLocaleLowerCase()}" and email "${email.toLowerCase()}" already exist`,
+        errorMessage: `The username "${username.toLocaleLowerCase()}" and email "${email.toLowerCase()}" already exist`,
       });
       return;
     } else if (userAlreadyExists.found && userAlreadyExists.username) {
       reply.send({
-        error: `The username "${username.toLowerCase()}" already exists`,
+        errorMessage: `The username "${username.toLowerCase()}" already exists`,
       });
       return;
     } else if (userAlreadyExists.found && userAlreadyExists.email) {
       reply.send({
-        error: `The email "${email.toLowerCase()}" already exists`,
+        errorMessage: `The email "${email.toLowerCase()}" already exists`,
       });
       return;
     }

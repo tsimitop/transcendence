@@ -102,7 +102,7 @@ class SignUp extends Component {
         return response.json();
       })
       .then(data => {
-        if (data.error) {
+        if (data.errorMessage) {
           throw data;
         }
 
