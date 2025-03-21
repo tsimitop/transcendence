@@ -1,6 +1,7 @@
 import { FastifyRequest } from "fastify";
-import { fastify } from "../sign-in";
 import Database, { Database as DbType } from "better-sqlite3";
+import bcrypt from "bcrypt";
+import { fastify } from "../sign-in";
 import { QueryUser } from "../../queries";
 import SignUpValidation from "./SignUpValidation";
 
@@ -22,11 +23,26 @@ const createUserTableInUserDb = function (userDb: DbType) {
 
 const createNewUserInUserDb = function (userDb: DbType, user: SignUpDataType) {
   const newUserStatement = userDb.prepare(QueryUser.INSERT_NEW_USER);
-  newUserStatement.run(
-    user.email.toLowerCase(),
-    user.username.toLowerCase(),
-    user.password
-  );
+  const saltRounds = 10;
+  const password = user.password;
+  bcrypt.genSalt(saltRounds, (error, salt) => {
+    if (error) {
+      throw error;
+    }
+
+    bcrypt.hash(password, salt, (error, hashedPassword) => {
+      if (error) {
+        console.log(error);
+        throw error;
+      }
+
+      newUserStatement.run(
+        user.email.toLowerCase(),
+        user.username.toLowerCase(),
+        hashedPassword
+      );
+    });
+  });
 
   // const userTable = userDb.prepare(QueryUser.SELECT_USER_TABLE).all();
 };

@@ -5,6 +5,7 @@ services:
     image: frontend-dev:latest
     volumes:
       - ../frontend:/app
+      - /app/node_modules
     ports:
       - 5173:5173
     working_dir: /app
@@ -33,6 +34,7 @@ services:
     image: backend:latest
     volumes:
       - ../backend:/app
+      - /app/node_modules
     ports:
       - 3000:3000
     networks:
