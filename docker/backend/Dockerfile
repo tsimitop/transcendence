@@ -6,4 +6,4 @@ RUN apt-get update -y && apt-get upgrade -y \
 
 WORKDIR /app
 
-CMD [ "sh", "-c", "npm install && npm run dev" ]
+CMD [ "sh", "-c", "mkdir -p database && npm install && npm run dev" ]

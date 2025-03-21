@@ -10,7 +10,7 @@ class SignUpValidation {
   static passwordError =
     "Password must be between 8 and 30 characters, and include at least 1 lowercase and one uppercase letters, and 1 special character @$!%*?&";
   static usernameError =
-    "username must be between 4 and 12 characters, including only letters and numbers, and at least one letter";
+    "username must be between 4 and 20 characters, including only letters and numbers, and at least one letter";
   static emailError = "Email address is not valid";
 
   isEmailValid() {
