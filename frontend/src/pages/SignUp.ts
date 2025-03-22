@@ -117,7 +117,9 @@ class SignUp extends Component {
           `The user with the email "${data.email?.toLowerCase()}" and the username "${data.username?.toLowerCase()}" is added to the database.`
         );
       })
-      .catch(error => console.log("sign up error:\n", error));
+      .catch(error => {
+        console.log("sign up error:\n", error);
+      });
   }
 }
 

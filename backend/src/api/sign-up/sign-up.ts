@@ -32,7 +32,6 @@ const createNewUserInUserDb = function (userDb: DbType, user: SignUpDataType) {
 
     bcrypt.hash(password, salt, (error, hashedPassword) => {
       if (error) {
-        console.log(error);
         throw error;
       }
 
@@ -121,7 +120,15 @@ fastify.post(
       return;
     }
 
-    createNewUserInUserDb(userDb, request.body);
+    try {
+      createNewUserInUserDb(userDb, request.body);
+    } catch (error) {
+      console.log(error);
+      reply.send({
+        errorMessage: "User could not be inserted in database.",
+      });
+      return;
+    }
     reply.send(request.body);
   }
 );
