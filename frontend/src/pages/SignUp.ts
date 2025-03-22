@@ -74,15 +74,15 @@ class SignUp extends Component {
 
     const email = (
       document.querySelector(".email-signup-input") as HTMLInputElement
-    ).value;
+    ).value.trim();
     const username = (
       document.querySelector(".username-signup-input") as HTMLInputElement
-    ).value;
+    ).value.trim();
     const password = (
       document.querySelector(".password-signup-input") as HTMLInputElement
     ).value;
 
-    if (!email.trim() || !username.trim() || !password.trim()) {
+    if (!email || !username || !password.trim()) {
       console.log("required field*");
       return;
     }

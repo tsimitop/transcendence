@@ -37,8 +37,8 @@ class SignIn extends Component {
     const html = `
 				<h1>Sign In</h1>
 				<form class="sign-in-form">
-					<label for="username">Username or Email</label>
-					<input required type="text" username="username" id="username" placeholder="username or email" class="username-signin-input border-2" />
+					<label for="username-or-email">Username or Email</label>
+					<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="username-signin-input border-2" />
 					<label for="password">Password</label>
 					<input required type="password" name="password" id="password" placeholder="password" class="password-signin-input border-2" />
 					<button type="submit" class="signin-btn cursor-pointer border-2">Sign in</button>
@@ -75,29 +75,32 @@ class SignIn extends Component {
       return;
     }
 
-    const username = (
+    const usernameOrEmail = (
       document.querySelector(".username-signin-input") as HTMLInputElement
-    ).value;
+    ).value.trim();
     const password = (
       document.querySelector(".password-signin-input") as HTMLInputElement
-    ).value;
+    ).value.trim();
 
-    if (!username.trim() || !password.trim()) {
+    if (!usernameOrEmail || !password) {
       console.log("field is reuqired");
       return;
     }
 
-    SignIn.postSignInData(username, password);
+    SignIn.postSignInData(usernameOrEmail, password);
   }
 
-  public static async postSignInData(username: string, password: string) {
+  public static async postSignInData(
+    usernameOrEmail: string,
+    password: string
+  ) {
     try {
       const response = await fetch("http://localhost:80/api/sign-in", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ usernameOrEmail, password }),
         signal: AbortSignal.timeout(5000),
       });
 

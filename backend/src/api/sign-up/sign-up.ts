@@ -36,8 +36,8 @@ const createNewUserInUserDb = function (userDb: DbType, user: SignUpDataType) {
       }
 
       newUserStatement.run(
-        user.email.toLowerCase(),
-        user.username.toLowerCase(),
+        user.email.trim().toLowerCase(),
+        user.username.trim(),
         hashedPassword
       );
     });
@@ -58,7 +58,7 @@ const userExistsInUserDb = function (
   const findUsernameStatement = userDb.prepare(QueryUser.FIND_USERNAME);
 
   const emailsList = findEmailStatement.all(email.toLowerCase());
-  const usernamesList = findUsernameStatement.all(username.toLocaleLowerCase());
+  const usernamesList = findUsernameStatement.all(username.toLowerCase());
   const found = emailsList.length || usernamesList.length;
   return {
     found: !!found,
@@ -72,7 +72,7 @@ fastify.post(
   function (request: FastifyRequest<{ Body: SignUpDataType }>, reply) {
     const { email, username, password } = request.body;
     if (!email?.trim() || !username?.trim() || !password?.trim()) {
-      reply.send({ error: "invalid input" });
+      reply.send({ errorMessage: "Invalid input" });
       return;
     }
 
