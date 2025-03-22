@@ -66,7 +66,7 @@ class SignUp extends Component {
   }
 
   public static handleSubmit(event: SubmitEvent) {
-    const target = event.target as HTMLButtonElement;
+    const target = event.target as HTMLFormElement;
     event.preventDefault();
     if (!target.className.includes("sign-up-form")) {
       return;

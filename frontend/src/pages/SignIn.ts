@@ -31,15 +31,16 @@ class SignIn extends Component {
       }`
     );
 
-    main.addEventListener("click", SignIn.handleClick);
+    // main.addEventListener("click", SignIn.handleClick);
+    main.addEventListener("submit", SignIn.handleSignIn);
 
     const html = `
 				<h1>Sign In</h1>
-				<form>
+				<form class="sign-in-form">
 					<label for="username">Username or Email</label>
-					<input type="text" username="username" id="username" placeholder="username or email" class="username-signin-input border-2" />
+					<input required type="text" username="username" id="username" placeholder="username or email" class="username-signin-input border-2" />
 					<label for="password">Password</label>
-					<input type="password" name="password" id="password" placeholder="password" class="password-signin-input border-2" />
+					<input required type="password" name="password" id="password" placeholder="password" class="password-signin-input border-2" />
 					<button type="submit" class="signin-btn cursor-pointer border-2">Sign in</button>
 					<p>
 						<span>Don't have an account?</span>
@@ -62,13 +63,17 @@ class SignIn extends Component {
     return SignInInstance;
   }
 
-  public static handleClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (target.classList.contains("signin-btn")) SignIn.handleSignIn(event);
-  }
+  // public static handleClick(event: MouseEvent) {
+  //   const target = event.target as HTMLElement;
+  //   if (target.classList.contains("signin-btn")) SignIn.handleSignIn(event);
+  // }
 
-  public static handleSignIn(event: MouseEvent) {
+  public static handleSignIn(event: SubmitEvent) {
+    const target = event.target as HTMLFormElement;
     event.preventDefault();
+    if (!target.className.includes("sign-in-form")) {
+      return;
+    }
 
     const username = (
       document.querySelector(".username-signin-input") as HTMLInputElement
