@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import { ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
 import { urlContext } from "../context/UrlContext";
+import { userContext, UserStateType } from "../context/UserContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
@@ -106,8 +107,15 @@ class SignIn extends Component {
         signal: AbortSignal.timeout(5000),
       });
 
-      const data = await response.json();
-      console.log(data);
+      const data = (await response.json()) as UserStateType;
+      const { email, username, isSignedIn } = data;
+      userContext.setState({
+        ...userContext.state,
+        email,
+        username,
+        isSignedIn,
+      });
+      console.log(userContext.state);
       urlContext.setState({ ...urlContext.state, path: "/" });
       const viewToRender = Router.findViewToRender();
       Router.renderPageBasedOnPath(viewToRender);

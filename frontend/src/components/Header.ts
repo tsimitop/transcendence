@@ -6,6 +6,7 @@ import Component, {
 } from "../models/Component";
 import { StateListener } from "../models/StateManager";
 import { PAGES, ROUTER_CLASS_NAME } from "../constants";
+import { userContext } from "../context/UserContext";
 
 class Header extends Component {
   constructor(
@@ -50,7 +51,7 @@ class Header extends Component {
 				<ul class="flex grow justify-center gap-10">
 					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/">Home</a></li>
 					${
-            true
+            !userContext.state.isSignedIn
               ? `<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/sign-up">Sign up</a></li>`
               : ""
           }
@@ -101,6 +102,8 @@ class Header extends Component {
   }
 
   public static handleClickNavLink(_target: HTMLElement) {
+    void _target;
+
     const newListener: StateListener<UrlStateType> = {
       id: "changeUrl",
       listen(previousPath, newPath) {

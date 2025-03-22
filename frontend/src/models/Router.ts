@@ -4,12 +4,20 @@ import SignUp from "../pages/SignUp";
 import NotFound from "../pages/NotFound";
 import Pong from "../pages/Pong";
 import Header from "../components/Header";
-import Component from "./Component";
+import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
 import { ROUTER_CLASS_NAME, ValidUrlPathsType } from "../constants";
 import SignIn from "../pages/SignIn";
 
-type RoutesType = Record<ValidUrlPathsType, any>;
+type ComponentType = {
+  new (
+    _childrenString: ChildrenStringType,
+    _childElements: ChildElementType
+  ): Component;
+  create: () => Component;
+};
+
+type RoutesType = Record<ValidUrlPathsType, ComponentType>;
 
 abstract class Router {
   static routes: RoutesType = {

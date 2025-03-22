@@ -1,6 +1,6 @@
 import StateManager from "../models/StateManager";
 
-type UserStateType = {
+export type UserStateType = {
   email: string;
   username: string;
   isSignedIn: boolean;

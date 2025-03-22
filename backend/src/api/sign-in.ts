@@ -104,18 +104,18 @@ fastify.post(
     }
 
     const userDb = openUserDb("database/test.db");
-    const { email, username, isSignedIn } = await isUserAndPasswordValid(
+    const user = await isUserAndPasswordValid(
       userDb,
       usernameOrEmail,
       password
     );
 
-    if (!isSignedIn) {
+    if (!user.isSignedIn) {
       reply.send({
         errorMessage: "Invalid username or password!",
       });
       return;
     }
-    reply.send({ message: "You are logged in successfully", email, username });
+    reply.send(user);
   }
 );
