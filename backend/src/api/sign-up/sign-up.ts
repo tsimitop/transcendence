@@ -5,7 +5,7 @@ import { fastify } from "../../server";
 import { QueryUser } from "../../queries";
 import SignUpValidation from "./SignUpValidation";
 
-type SignUpDataType = {
+type SignUpType = {
   email: string;
   username: string;
   password: string;
@@ -21,7 +21,7 @@ const createUserTableInUserDb = function (userDb: DbType) {
   userDb.prepare(QueryUser.CREATE_TABLE).run();
 };
 
-const createNewUserInUserDb = function (userDb: DbType, user: SignUpDataType) {
+const createNewUserInUserDb = function (userDb: DbType, user: SignUpType) {
   const newUserStatement = userDb.prepare(QueryUser.INSERT_NEW_USER);
   const saltRounds = 10;
   const password = user.password;
@@ -54,8 +54,10 @@ const userExistsInUserDb = function (
   // const stmt = userDb.prepare(
   //   "SELECT email, username FROM test_users WHERE email = ? OR username = ?"
   // );
-  const findEmailStatement = userDb.prepare(QueryUser.FIND_EMAIL);
-  const findUsernameStatement = userDb.prepare(QueryUser.FIND_USERNAME);
+  const findEmailStatement = userDb.prepare(QueryUser.FIND_EMAIL_BY_EMAIL);
+  const findUsernameStatement = userDb.prepare(
+    QueryUser.FIND_USERNAME_BY_USERNAME
+  );
 
   const emailsList = findEmailStatement.all(email.toLowerCase());
   const usernamesList = findUsernameStatement.all(username.toLowerCase());
@@ -69,7 +71,7 @@ const userExistsInUserDb = function (
 
 fastify.post(
   "/api/sign-up",
-  function (request: FastifyRequest<{ Body: SignUpDataType }>, reply) {
+  function (request: FastifyRequest<{ Body: SignUpType }>, reply) {
     const { email, username, password } = request.body;
     if (!email?.trim() || !username?.trim() || !password?.trim()) {
       reply.send({ errorMessage: "Invalid input" });

@@ -32,7 +32,7 @@ class SignUp extends Component {
       }`
     );
 
-    main.addEventListener("submit", SignUp.handleSubmit);
+    main.addEventListener("submit", SignUp.handleSignUp);
 
     const html = `
 				<h1>Sign Up</h1>
@@ -65,7 +65,7 @@ class SignUp extends Component {
     return SignUpInstance;
   }
 
-  public static handleSubmit(event: SubmitEvent) {
+  public static handleSignUp(event: SubmitEvent) {
     const target = event.target as HTMLFormElement;
     event.preventDefault();
     if (!target.className.includes("sign-up-form")) {
