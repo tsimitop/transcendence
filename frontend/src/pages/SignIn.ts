@@ -2,10 +2,12 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
+import { urlContext } from "../context/UrlContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
 } from "../models/Component";
+import Router from "../models/Router";
 
 class SignIn extends Component {
   constructor(
@@ -106,6 +108,11 @@ class SignIn extends Component {
 
       const data = await response.json();
       console.log(data);
+      urlContext.setState({ ...urlContext.state, path: "/" });
+      const viewToRender = Router.findViewToRender();
+      Router.renderPageBasedOnPath(viewToRender);
+      Router.removeRouteChangeListeners();
+      Router.listenForRouteChange();
     } catch (error) {
       console.log(error);
     }

@@ -2,7 +2,7 @@ import StateManager from "../models/StateManager";
 import { PAGES, ValidUrlPathsType } from "../constants";
 
 export type UrlStateType = {
-  path: string | undefined;
+  path: ValidUrlPathsType | undefined;
   // query: string;
 };
 
@@ -15,6 +15,17 @@ class UrlContext extends StateManager<UrlStateType> {
     const urlPath = window.location.pathname;
     const validUrlPath = PAGES.find(page => page === urlPath);
     return validUrlPath;
+  }
+
+  public setState(newState: UrlStateType): void {
+    super.setState(newState);
+    if (newState.path) {
+      window.history.pushState(
+        {},
+        "",
+        `${window.location.origin}${newState.path}`
+      );
+    }
   }
 }
 

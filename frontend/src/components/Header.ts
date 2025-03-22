@@ -115,9 +115,9 @@ class Header extends Component {
     const urlPath = window.location.pathname;
     const validPath = PAGES.find(page => page === urlPath);
     if (validPath) {
-      urlContext.setState({ ...urlContext.state, path: urlPath });
+      urlContext.setState({ ...urlContext.state, path: validPath });
     } else {
-      urlContext.setState({ ...urlContext.state, path: "" });
+      urlContext.setState({ ...urlContext.state, path: undefined });
     }
   }
 
