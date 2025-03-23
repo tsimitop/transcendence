@@ -109,13 +109,16 @@ class SignIn extends Component {
 
       const data = (await response.json()) as UserStateType;
       const { email, username, isSignedIn } = data;
+      if (!isSignedIn) {
+        throw new Error("Invalid username or password");
+      }
       userContext.setState({
         ...userContext.state,
         email,
         username,
         isSignedIn,
       });
-      console.log(userContext.state);
+      console.log("userContext.state:\n", userContext.state);
       urlContext.setState({ ...urlContext.state, path: "/" });
       const viewToRender = Router.findViewToRender();
       Router.renderPageBasedOnPath(viewToRender);
