@@ -55,13 +55,18 @@ const userExistsInUserDb = function (
   //   "SELECT email, username FROM test_users WHERE email = ? OR username = ?"
   // );
   const findEmailStatement = userDb.prepare(QueryUser.FIND_EMAIL_BY_EMAIL);
-  const findUsernameStatement = userDb.prepare(
-    QueryUser.FIND_USERNAME_BY_USERNAME
-  );
+  const findUsernameStatement = userDb.prepare(QueryUser.SELECT_ALL_USERNAMES);
 
   const emailsList = findEmailStatement.all(email.toLowerCase());
-  const usernamesList = findUsernameStatement.all(username.toLowerCase());
-  const found = emailsList.length || usernamesList.length;
+  const usernamesList = findUsernameStatement.all() as { username: string }[];
+  let isUsernameNew = true;
+  for (const usernameInDb of usernamesList) {
+    if (usernameInDb.username.toLowerCase() === username.toLowerCase()) {
+      isUsernameNew = false;
+      break;
+    }
+  }
+  const found = emailsList.length || !isUsernameNew;
   return {
     found: !!found,
     email: emailsList.length ? email : "",
