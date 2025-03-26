@@ -107,8 +107,12 @@ class SignIn extends Component {
         signal: AbortSignal.timeout(5000),
       });
 
-      const data = (await response.json()) as UserStateType;
-      const { email, username, isSignedIn } = data;
+      const data = (await response.json()) as {
+        user: UserStateType;
+        jwtAccessToken: string;
+        jwtRefreshToken: string;
+      };
+      const { email, username, isSignedIn } = data.user;
       if (!isSignedIn) {
         throw new Error("Invalid username or password");
       }

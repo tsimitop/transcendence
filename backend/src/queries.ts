@@ -5,7 +5,8 @@ export enum QueryUser {
 		id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 		email TEXT NOT NULL,
 		username TEXT NOT NULL,
-		password TEXT NOT NULL
+		password TEXT NOT NULL,
+		jwt_refresh_token TEXT
 	);`,
   INSERT_NEW_USER = `INSERT INTO ${table}(email, username, password)
 	VALUES(?, ?, ?);`,
@@ -18,5 +19,6 @@ export enum QueryUser {
   FIND_ID_BY_EMAIL = `SELECT id FROM ${table} WHERE email = ?`,
   FIND_ID_BY_USERNAME = `SELECT id FROM ${table} WHERE username = ?`,
   SELECT_ALL_USERNAMES = `SELECT username FROM ${table};`,
+  UPDATE_JWT_REFRESH_TOKEN = `UPDATE ${table} SET jwt_refresh_token = ? WHERE id = ?`,
   SELECT_USER_TABLE = `SELECT * FROM ${table};`,
 }

@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { fastify } from "../../server";
 import { QueryUser } from "../../queries";
 import "./jwt";
+import { signJwtAccessToken, signJwtRefreshToken } from "./jwt";
 
 type SignInType = {
   usernameOrEmail: string;
@@ -23,7 +24,7 @@ const openUserDb = function (userDbPath: string) {
   return userDb;
 };
 
-const isUserAndPasswordValid = async function (
+const findUserInDb = async function (
   userDb: DbType,
   usernameOrEmail: string,
   password: string
@@ -120,11 +121,7 @@ fastify.post(
     }
 
     const userDb = openUserDb("database/test.db");
-    const user = await isUserAndPasswordValid(
-      userDb,
-      usernameOrEmail,
-      password
-    );
+    const user = await findUserInDb(userDb, usernameOrEmail, password);
 
     if (!user.isSignedIn) {
       reply.send({
@@ -132,6 +129,13 @@ fastify.post(
       });
       return;
     }
-    reply.send(user);
+    const jwtAccessToken = signJwtAccessToken(user.id);
+    const jwtRefreshToken = signJwtRefreshToken(user.id);
+    const updateUserJwtStatement = userDb.prepare(
+      QueryUser.UPDATE_JWT_REFRESH_TOKEN
+    );
+    updateUserJwtStatement.run(jwtRefreshToken, user.id);
+
+    reply.send({ user, jwtAccessToken, jwtRefreshToken });
   }
 );
