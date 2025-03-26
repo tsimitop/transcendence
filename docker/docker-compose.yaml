@@ -39,6 +39,8 @@ services:
       - 3000:3000
     networks:
       - ft_transcendence
+    env_file:
+      - ../.env
 
 networks:
   ft_transcendence:

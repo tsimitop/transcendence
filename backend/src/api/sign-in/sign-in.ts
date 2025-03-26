@@ -1,8 +1,9 @@
 import { FastifyRequest } from "fastify";
 import Database, { Database as DbType } from "better-sqlite3";
 import bcrypt from "bcrypt";
-import { fastify } from "../server";
-import { QueryUser } from "../queries";
+import { fastify } from "../../server";
+import { QueryUser } from "../../queries";
+import "./jwt";
 
 type SignInType = {
   usernameOrEmail: string;
