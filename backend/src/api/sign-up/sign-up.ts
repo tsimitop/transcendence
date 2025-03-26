@@ -70,7 +70,7 @@ const userExistsInUserDb = function (
   return {
     found: !!found,
     email: emailsList.length ? email : "",
-    username: usernamesList.length ? username : "",
+    username: !isUsernameNew ? username : "",
   };
 };
 
