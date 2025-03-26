@@ -11,6 +11,7 @@ type SignInType = {
 };
 
 type UserStateType = {
+  id: string;
   email: string;
   username: string;
   isSignedIn: boolean;
@@ -46,7 +47,7 @@ const isUserAndPasswordValid = async function (
   const isLoginByUsername = usernamesList.length;
   const foundUser = isLoginByEmail || isLoginByUsername;
   if (!foundUser) {
-    return { email: "", username: "", isSignedIn: false };
+    return { email: "", username: "", isSignedIn: false, id: "" };
   }
 
   const findPasswordStatement = userDb.prepare(
@@ -71,7 +72,21 @@ const isUserAndPasswordValid = async function (
     QueryUser.FIND_USERNAME_BY_EMAIL
   );
 
+  const findIdByUsernameStatement = userDb.prepare(
+    QueryUser.FIND_ID_BY_USERNAME
+  );
+  const findIdByEmailStatement = userDb.prepare(QueryUser.FIND_ID_BY_EMAIL);
+
   const user: UserStateType = {
+    id: isLoginByEmail
+      ? (
+          findIdByEmailStatement.all(emailsList[0]?.email) as [{ id: string }]
+        )[0].id
+      : (
+          findIdByUsernameStatement.all(usernamesList[0]?.username) as [
+            { id: string }
+          ]
+        )[0].id,
     email:
       emailsList[0]?.email ||
       (

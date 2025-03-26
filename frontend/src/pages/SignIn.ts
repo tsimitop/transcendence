@@ -118,7 +118,8 @@ class SignIn extends Component {
         username,
         isSignedIn,
       });
-      console.log("userContext.state:\n", userContext.state);
+      // console.log("userContext.state:\n", userContext.state);
+      console.log(data);
       urlContext.setState({ ...urlContext.state, path: "/" });
       const viewToRender = Router.findViewToRender();
       Router.renderPageBasedOnPath(viewToRender);
