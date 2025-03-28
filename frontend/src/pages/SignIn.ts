@@ -108,10 +108,14 @@ class SignIn extends Component {
       });
 
       const data = (await response.json()) as {
-        user: UserStateType;
+        errorMessage: string;
+        user: UserStateType | null;
         jwtAccessToken: string;
         jwtRefreshToken: string;
       };
+      if (!data.user) {
+        throw new Error("Invalid username or password");
+      }
       const { email, username, isSignedIn } = data.user;
       if (!isSignedIn) {
         throw new Error("Invalid username or password");

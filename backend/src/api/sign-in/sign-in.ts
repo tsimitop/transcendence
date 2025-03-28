@@ -116,6 +116,9 @@ fastify.post(
     if (!usernameOrEmail.trim() || !password.trim()) {
       reply.send({
         errorMessage: "Invalid input",
+        user: null,
+        jwtAccessToken: "",
+        jwtRefreshToken: "",
       });
       return;
     }
@@ -126,6 +129,9 @@ fastify.post(
     if (!user.isSignedIn) {
       reply.send({
         errorMessage: "Invalid username or password!",
+        user: null,
+        jwtAccessToken: "",
+        jwtRefreshToken: "",
       });
       return;
     }
@@ -136,6 +142,6 @@ fastify.post(
     );
     updateUserJwtStatement.run(jwtRefreshToken, user.id);
 
-    reply.send({ user, jwtAccessToken, jwtRefreshToken });
+    reply.send({ errorMessage: "", user, jwtAccessToken, jwtRefreshToken });
   }
 );
