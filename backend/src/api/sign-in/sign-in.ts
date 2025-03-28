@@ -118,7 +118,6 @@ fastify.post(
         errorMessage: "Invalid input",
         user: null,
         jwtAccessToken: "",
-        jwtRefreshToken: "",
       });
       return;
     }
@@ -131,7 +130,6 @@ fastify.post(
         errorMessage: "Invalid username or password!",
         user: null,
         jwtAccessToken: "",
-        jwtRefreshToken: "",
       });
       return;
     }
@@ -142,6 +140,15 @@ fastify.post(
     );
     updateUserJwtStatement.run(jwtRefreshToken, user.id);
 
-    reply.send({ errorMessage: "", user, jwtAccessToken, jwtRefreshToken });
+    reply.cookie("refreshtoken", jwtRefreshToken, {
+      domain: "localhost",
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      // maxAge: 7 * 24 * 60 * 60 * 1000,
+      expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    });
+
+    reply.send({ errorMessage: "", user, jwtAccessToken });
   }
 );

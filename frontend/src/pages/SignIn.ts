@@ -100,6 +100,7 @@ class SignIn extends Component {
     try {
       const response = await fetch("http://localhost:80/api/sign-in", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -111,7 +112,6 @@ class SignIn extends Component {
         errorMessage: string;
         user: UserStateType | null;
         jwtAccessToken: string;
-        jwtRefreshToken: string;
       };
       if (!data.user) {
         throw new Error("Invalid username or password");
