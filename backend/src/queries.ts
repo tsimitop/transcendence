@@ -18,6 +18,7 @@ export enum QueryUser {
   FIND_PASSWORD_BY_EMAIL = `SELECT password FROM ${table} WHERE email = ?`,
   FIND_ID_BY_EMAIL = `SELECT id FROM ${table} WHERE email = ?`,
   FIND_ID_BY_USERNAME = `SELECT id FROM ${table} WHERE username = ?`,
+  FIND_JWT_REFRESH_TOKEN_BY_ID = `SELECT jwt_refresh_token FROM ${table} WHERE id = ?`,
   SELECT_ALL_USERNAMES = `SELECT username FROM ${table};`,
   UPDATE_JWT_REFRESH_TOKEN = `UPDATE ${table} SET jwt_refresh_token = ? WHERE id = ?`,
   SELECT_USER_TABLE = `SELECT * FROM ${table};`,
