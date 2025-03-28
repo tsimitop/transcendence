@@ -11,7 +11,7 @@ type SignInType = {
   password: string;
 };
 
-type UserStateType = {
+export type UserStateType = {
   id: string;
   email: string;
   username: string;
