@@ -108,6 +108,29 @@ const findUserInDb = async function (
   return user;
 };
 
+const hashRefreshTokenAndUpdateDb = function (
+  userDb: DbType,
+  userId: string,
+  refreshtoken: string
+) {
+  const saltRounds = 10;
+  bcrypt.genSalt(saltRounds, (error, salt) => {
+    if (error) {
+      throw error;
+    }
+
+    bcrypt.hash(refreshtoken, salt, (error, hashedRefreshToken) => {
+      if (error) {
+        throw error;
+      }
+      const updateUserJwtStatement = userDb.prepare(
+        QueryUser.UPDATE_JWT_REFRESH_TOKEN
+      );
+      updateUserJwtStatement.run(hashedRefreshToken, userId);
+    });
+  });
+};
+
 fastify.post(
   "/api/sign-in",
   async function (request: FastifyRequest<{ Body: SignInType }>, reply) {
@@ -135,10 +158,12 @@ fastify.post(
     }
     const jwtAccessToken = signJwtAccessToken(user.id);
     const jwtRefreshToken = signJwtRefreshToken(user.id);
-    const updateUserJwtStatement = userDb.prepare(
-      QueryUser.UPDATE_JWT_REFRESH_TOKEN
-    );
-    updateUserJwtStatement.run(jwtRefreshToken, user.id);
+
+    try {
+      hashRefreshTokenAndUpdateDb(userDb, user.id, jwtRefreshToken);
+    } catch (error) {
+      console.log(error);
+    }
 
     reply.cookie("refreshtoken", jwtRefreshToken, {
       // domain: "localhost",
