@@ -23,6 +23,16 @@ fastify.post(
   async (request: FastifyRequest<{ Body: ValidationType }>, reply) => {
     const userDbInstance = new UserDb("database/test.db");
     const userDb = userDbInstance.openDb();
+    if (!request.body || request.body.user) {
+      reply.send({
+        errorMessage: "User is not signed in!",
+        isRefreshTokenValid: false,
+        isAccessTokenValid: false,
+        isNewAccessTokenNeeded: false,
+        encoded: null,
+      });
+      return;
+    }
     const { user: userString } = request.body;
     const user = JSON.parse(userString) as UserStateType;
 

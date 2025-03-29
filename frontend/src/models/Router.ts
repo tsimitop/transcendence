@@ -26,6 +26,22 @@ abstract class Router {
     "/sign-in": SignIn,
     "/pong": Pong,
   };
+  static protectedRoutes: ValidUrlPathsType[] = ["/pong"];
+  static guestUsersRoutes: ValidUrlPathsType[] = ["/sign-in", "/sign-up"];
+
+  static isProtectedRoute(route: string) {
+    const foundRoute = Router.protectedRoutes.find(
+      protectedRoute => protectedRoute === route
+    );
+    return !!foundRoute;
+  }
+
+  static isGuestRoute(route: string) {
+    const foundRoute = Router.guestUsersRoutes.find(
+      guestRoute => guestRoute === route
+    );
+    return !!foundRoute;
+  }
 
   static renderPageBasedOnPath(viewToRender: Component) {
     Dom.clearDOM();
