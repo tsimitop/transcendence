@@ -173,7 +173,7 @@ fastify.post(
       // maxAge: 7 * 24 * 60 * 60 * 1000,
       // maxAge: 10 * 1000,
       // expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      expires: new Date(Date.now() + 10 * 1000),
+      expires: new Date(Date.now() + 10 * 60 * 1000),
     });
 
     reply.send({ errorMessage: "", user, jwtAccessToken });
