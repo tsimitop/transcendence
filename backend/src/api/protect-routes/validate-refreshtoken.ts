@@ -1,21 +1,15 @@
 import dotenv from "dotenv";
 import { FastifyRequest } from "fastify/types/request";
 import jwt from "jsonwebtoken";
-import Database from "better-sqlite3";
 import bcrypt from "bcrypt";
 import { fastify } from "../../server";
 import { UserStateType } from "../sign-in/sign-in";
-import { QueryUser } from "../../queries";
+import UserDb from "../../user-database/UserDb";
 
 dotenv.config({ path: "./env" });
 
 type ValidationType = {
   user: string;
-};
-
-const openUserDb = function (userDbPath: string) {
-  const userDb = new Database(userDbPath);
-  return userDb;
 };
 
 const validateAccessToken = async function (accessTokenInHeader: string) {
@@ -27,15 +21,12 @@ const validateAccessToken = async function (accessTokenInHeader: string) {
 fastify.post(
   "/api/refresh-token",
   async (request: FastifyRequest<{ Body: ValidationType }>, reply) => {
-    const userDb = openUserDb("database/test.db");
+    const userDbInstance = new UserDb("database/test.db");
+    const userDb = userDbInstance.openDb();
     const { user: userString } = request.body;
     const user = JSON.parse(userString) as UserStateType;
-    const findRefreshTokenStatement = userDb.prepare(
-      QueryUser.FIND_JWT_REFRESH_TOKEN_BY_ID
-    );
-    const refreshTokensList = findRefreshTokenStatement.all(user.id) as [
-      { jwt_refresh_token: string }
-    ];
+
+    const refreshTokensList = userDbInstance.findRefreshToken(userDb, user);
 
     if (!refreshTokensList.length) {
       reply.send({

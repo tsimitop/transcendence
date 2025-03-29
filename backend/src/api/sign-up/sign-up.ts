@@ -1,77 +1,12 @@
 import { FastifyRequest } from "fastify";
-import Database, { Database as DbType } from "better-sqlite3";
-import bcrypt from "bcrypt";
 import { fastify } from "../../server";
-import { QueryUser } from "../../queries";
 import SignUpValidation from "./SignUpValidation";
+import UserDb from "../../user-database/UserDb";
 
-type SignUpType = {
+export type SignUpType = {
   email: string;
   username: string;
   password: string;
-};
-
-const openUserDb = function (userDbPath: string) {
-  // backend Dockerfile changes the path to /app and runs CMD form /app:
-  const userDb = new Database(userDbPath);
-  return userDb;
-};
-
-const createUserTableInUserDb = function (userDb: DbType) {
-  userDb.prepare(QueryUser.CREATE_TABLE).run();
-};
-
-const createNewUserInUserDb = function (userDb: DbType, user: SignUpType) {
-  const newUserStatement = userDb.prepare(QueryUser.INSERT_NEW_USER);
-  const saltRounds = 10;
-  const password = user.password;
-  bcrypt.genSalt(saltRounds, (error, salt) => {
-    if (error) {
-      throw error;
-    }
-
-    bcrypt.hash(password, salt, (error, hashedPassword) => {
-      if (error) {
-        throw error;
-      }
-
-      newUserStatement.run(
-        user.email.trim().toLowerCase(),
-        user.username.trim(),
-        hashedPassword
-      );
-    });
-  });
-
-  // const userTable = userDb.prepare(QueryUser.SELECT_USER_TABLE).all();
-};
-
-const userExistsInUserDb = function (
-  userDb: DbType,
-  email: string,
-  username: string
-): { found: boolean; email: string; username: string } {
-  // const stmt = userDb.prepare(
-  //   "SELECT email, username FROM test_users WHERE email = ? OR username = ?"
-  // );
-  const findEmailStatement = userDb.prepare(QueryUser.FIND_EMAIL_BY_EMAIL);
-  const findUsernameStatement = userDb.prepare(QueryUser.SELECT_ALL_USERNAMES);
-
-  const emailsList = findEmailStatement.all(email.toLowerCase());
-  const usernamesList = findUsernameStatement.all() as { username: string }[];
-  let isUsernameNew = true;
-  for (const usernameInDb of usernamesList) {
-    if (usernameInDb.username.toLowerCase() === username.toLowerCase()) {
-      isUsernameNew = false;
-      break;
-    }
-  }
-  const found = emailsList.length || !isUsernameNew;
-  return {
-    found: !!found,
-    email: emailsList.length ? email : "",
-    username: !isUsernameNew ? username : "",
-  };
 };
 
 fastify.post(
@@ -83,10 +18,16 @@ fastify.post(
       return;
     }
 
-    const userDb = openUserDb("database/test.db");
-    createUserTableInUserDb(userDb);
+    // backend Dockerfile changes the path to /app and runs CMD form /app:
+    const userDbInstance = new UserDb("database/test.db");
+    const userDb = userDbInstance.openDb();
+    userDbInstance.createUserTableInUserDb(userDb);
 
-    const userAlreadyExists = userExistsInUserDb(userDb, email, username);
+    const userAlreadyExists = userDbInstance.userExistsInUserDb(
+      userDb,
+      email,
+      username
+    );
     const validation = new SignUpValidation(email, username, password);
 
     const { validEmail, validUsername, validPassword } =
@@ -128,7 +69,7 @@ fastify.post(
     }
 
     try {
-      createNewUserInUserDb(userDb, request.body);
+      userDbInstance.createNewUserInUserDb(userDb, request.body);
     } catch (error) {
       console.log(error);
       reply.send({
