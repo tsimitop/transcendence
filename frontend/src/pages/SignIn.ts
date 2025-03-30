@@ -117,6 +117,7 @@ class SignIn extends Component {
         throw new Error("Invalid username or password");
       }
       const { id, email, username, isSignedIn } = data.user;
+      const { jwtAccessToken } = data;
       if (!isSignedIn) {
         throw new Error("Invalid username or password");
       }
@@ -126,11 +127,13 @@ class SignIn extends Component {
         email,
         username,
         isSignedIn,
+        jwtAccessToken: jwtAccessToken,
       });
-      console.log("userContext.state:\n", userContext.state);
-      console.log(data);
+      // console.log("userContext.state:\n", userContext.state);
+      // console.log(data);
       urlContext.setState({ ...urlContext.state, path: "/" });
-      const viewToRender = Router.findViewToRender();
+      const routeToGo = Router.findRouteToGo();
+      const viewToRender = await Router.findViewToRender(routeToGo);
       Router.renderPageBasedOnPath(viewToRender);
       Router.removeRouteChangeListeners();
       Router.listenForRouteChange();

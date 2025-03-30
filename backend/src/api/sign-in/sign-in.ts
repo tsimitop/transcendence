@@ -1,4 +1,5 @@
 import { FastifyRequest } from "fastify";
+import bcrypt from "bcrypt";
 import { fastify } from "../../server";
 import "./jwt";
 import { signJwtAccessToken, signJwtRefreshToken } from "./jwt";
@@ -46,14 +47,17 @@ fastify.post(
       });
       return;
     }
+
     const jwtAccessToken = signJwtAccessToken(user.id);
     const jwtRefreshToken = signJwtRefreshToken(user.id);
-
     try {
-      userDbInstance.hashRefreshTokenAndUpdateDb(
+      const saltRounds = 10;
+      const salt = await bcrypt.genSalt(saltRounds);
+      const hashedRefreshToken = await bcrypt.hash(jwtRefreshToken, salt);
+      await userDbInstance.updateHashedRefreshToken(
         userDb,
         user.id,
-        jwtRefreshToken
+        hashedRefreshToken
       );
     } catch (error) {
       console.log(error);

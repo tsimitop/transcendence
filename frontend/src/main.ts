@@ -1,8 +1,9 @@
 import Header from "./components/Header";
 import Router from "./models/Router";
 
-const renderApp = function (): void {
-  const viewToRender = Router.findViewToRender();
+const renderApp = async function () {
+  const routeToGo = Router.findRouteToGo();
+  const viewToRender = await Router.findViewToRender(routeToGo);
   Router.renderPageBasedOnPath(viewToRender);
   Header.highlightActiveNavLink();
   Router.listenForRouteChange();

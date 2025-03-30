@@ -8,11 +8,7 @@ import UserDb from "../../user-database/UserDb";
 
 dotenv.config({ path: "./env" });
 
-type ValidationType = {
-  user: string;
-};
-
-const validateAccessToken = async function (accessTokenInHeader: string) {
+const validateAccessToken = function (accessTokenInHeader: string) {
   const accessTokenSecret = process.env.ACCESS_TOKEN as jwt.Secret;
   const decoded = jwt.verify(accessTokenInHeader, accessTokenSecret);
   return decoded;
@@ -20,25 +16,34 @@ const validateAccessToken = async function (accessTokenInHeader: string) {
 
 fastify.post(
   "/api/validate-access-token",
-  async (request: FastifyRequest<{ Body: ValidationType }>, reply) => {
+  async (request: FastifyRequest<{ Body: { user: UserStateType } }>, reply) => {
     const userDbInstance = new UserDb("database/test.db");
     const userDb = userDbInstance.openDb();
-    if (!request.body || request.body.user) {
+    const cookieRefreshToken = request.cookies.refreshtoken;
+    // if (!request.body || !request.body?.user || !request.body?.user?.id) {
+    if (!cookieRefreshToken) {
       reply.send({
         errorMessage: "User is not signed in!",
         isRefreshTokenValid: false,
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: false,
         encoded: null,
+        refreshtoken: cookieRefreshToken,
       });
       return;
     }
-    const { user: userString } = request.body;
-    const user = JSON.parse(userString) as UserStateType;
+    // const { user } = request.body;
+    const hashedRefreshToken =
+      await userDbInstance.findHashedRefreshTokenByCookieRefreshToken(
+        userDb,
+        cookieRefreshToken
+      );
+    // const refreshTokensList = userDbInstance.findRefreshTokenByUserId(
+    //   userDb,
+    //   user
+    // );
 
-    const refreshTokensList = userDbInstance.findRefreshToken(userDb, user);
-
-    if (!refreshTokensList.length) {
+    if (!hashedRefreshToken) {
       reply.send({
         errorMessage:
           "No hashed refresh token found in database! Redirecting to the homepage",
@@ -46,11 +51,11 @@ fastify.post(
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: false,
         encoded: null,
+        refreshtoken: cookieRefreshToken,
       });
       return;
     }
-    const hashedRefreshToken = refreshTokensList[0].jwt_refresh_token;
-    const refreshTokenInCookie = request.cookies.refreshtoken;
+    const refreshTokenInCookie = cookieRefreshToken;
     if (!request.cookies || !refreshTokenInCookie) {
       reply.send({
         errorMessage: "No cookies or no refresh token!",
@@ -58,10 +63,12 @@ fastify.post(
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: false,
         encoded: null,
+        refreshtoken: cookieRefreshToken,
+        hashedRefreshToken,
       });
       return;
     }
-
+    console.log(hashedRefreshToken);
     const doesRefreshTokenMatch = await bcrypt.compare(
       refreshTokenInCookie,
       hashedRefreshToken
@@ -75,33 +82,43 @@ fastify.post(
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: false,
         encoded: null,
+        refreshtoken: cookieRefreshToken,
+        hashedRefreshToken,
       });
       return;
     }
 
     const accessTokenInHeader =
       request.headers.authorization?.split(" ")[1] || null;
+    console.log(
+      "----------------accessTokenInHeader--------------:",
+      accessTokenInHeader
+    );
 
     if (!accessTokenInHeader) {
       reply.send({
         errorMessage:
-          "No access token in Authorization header! Redirecting to the homepage",
+          "No access token in Authorization header! Refresh token will be used to generate a new access token",
         isRefreshTokenValid: true,
         isAccessTokenValid: false,
-        isNewAccessTokenNeeded: false,
+        isNewAccessTokenNeeded: true,
         encoded: null,
+        refreshtoken: cookieRefreshToken,
+        hashedRefreshToken,
       });
       return;
     }
 
     try {
-      const encoded = await validateAccessToken(accessTokenInHeader);
+      const encoded = validateAccessToken(accessTokenInHeader);
       reply.send({
         errorMessage: "",
         isRefreshTokenValid: true,
         isAccessTokenValid: true,
         isNewAccessTokenNeeded: false,
         encoded: encoded,
+        refreshtoken: cookieRefreshToken,
+        hashedRefreshToken,
       });
       return;
     } catch (error) {
@@ -113,6 +130,8 @@ fastify.post(
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: true,
         encoded: null,
+        refreshtoken: cookieRefreshToken,
+        hashedRefreshToken,
       });
     }
   }

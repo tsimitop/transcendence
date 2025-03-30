@@ -8,6 +8,9 @@ import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
 import { ROUTER_CLASS_NAME, ValidUrlPathsType } from "../constants";
 import SignIn from "../pages/SignIn";
+import { userContext } from "../context/UserContext";
+
+import { AuthCheckType } from "../context/UserContext";
 
 type ComponentType = {
   new (
@@ -49,9 +52,75 @@ abstract class Router {
     return viewToRender;
   }
 
-  static findViewToRender() {
+  static findRouteToGo() {
     const routeToGo = window.location.pathname;
-    const viewToRender =
+    return routeToGo;
+  }
+
+  static async findViewToRender(routeToGo: string) {
+    let data = null;
+    let viewToRender = null;
+    try {
+      data = ((await userContext.isUserSignedIn()) as AuthCheckType) || null;
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+      viewToRender = NotFound.create();
+      return viewToRender;
+    }
+
+    let newJwtAccessToken = { newJwtAccessToken: "" };
+    if (data?.isNewAccessTokenNeeded) {
+      try {
+        const response = await fetch(
+          "http://localhost:80/api/generate-new-access-token",
+          {
+            method: "POST",
+            credentials: "include",
+            // headers: {
+            //   Authorization: `Bearer ${}`,
+            // },
+          }
+        );
+        newJwtAccessToken = await response.json();
+        if (!newJwtAccessToken.newJwtAccessToken) {
+          throw new Error(
+            "New access token could not be created! Refresh token might be expired"
+          );
+        }
+        userContext.setState({
+          ...userContext.state,
+          jwtAccessToken: newJwtAccessToken.newJwtAccessToken,
+        });
+        console.log(
+          "$$$$$$$$$$$$$$$$$$$$$$$$",
+          newJwtAccessToken.newJwtAccessToken
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    try {
+      data = ((await userContext.isUserSignedIn()) as AuthCheckType) || null;
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+      viewToRender = NotFound.create();
+      return viewToRender;
+    }
+
+    if (!data || !data.isAccessTokenValid) {
+      viewToRender = Router.isGuestRoute(routeToGo)
+        ? Router.routes[routeToGo as keyof typeof Router.routes]?.create()
+        : Router.isProtectedRoute(routeToGo)
+        ? Router.routes["/sign-in"].create()
+        : Router.routes[routeToGo as keyof typeof Router.routes]?.create() ||
+          NotFound.create();
+      return viewToRender;
+    }
+
+    viewToRender =
       Router.routes[routeToGo as keyof typeof Router.routes]?.create() ||
       NotFound.create();
     return viewToRender;
@@ -75,19 +144,21 @@ abstract class Router {
     }
   }
 
-  static handleChangeRoute(event: MouseEvent) {
+  static async handleChangeRoute(event: MouseEvent) {
     event.preventDefault();
     Router.removeRouteChangeListeners();
     const target = event.target as HTMLAnchorElement;
     window.history.pushState({}, "", target.href);
-    const viewToRender = Router.findViewToRender();
+    const routeToGo = Router.findRouteToGo();
+    const viewToRender = await Router.findViewToRender(routeToGo);
     Router.renderPageBasedOnPath(viewToRender);
     Router.listenForRouteChange();
   }
 
-  static handleBackAndForward() {
-    window.addEventListener("popstate", () => {
-      const viewToRender = Router.findViewToRender();
+  static async handleBackAndForward() {
+    window.addEventListener("popstate", async () => {
+      const routeToGo = Router.findRouteToGo();
+      const viewToRender = await Router.findViewToRender(routeToGo);
       Router.renderPageBasedOnPath(viewToRender);
       const validUrlPath = UrlContext.getValidUrlPath();
       urlContext.setState({ ...urlContext.state, path: validUrlPath });

@@ -15,25 +15,19 @@ class UserDb extends Sqlite {
     userDb.prepare(QueryUser.CREATE_TABLE).run();
   }
 
-  public createNewUserInUserDb(userDb: DbType, user: SignUpType) {
+  public async createNewUserInUserDb(
+    userDb: DbType,
+    user: SignUpType,
+    hashedPassword: string
+  ) {
     const newUserStatement = userDb.prepare(QueryUser.INSERT_NEW_USER);
-    const saltRounds = 10;
-    const password = user.password;
-    bcrypt.genSalt(saltRounds, (error, salt) => {
-      if (error) {
-        throw error;
-      }
-      bcrypt.hash(password, salt, (error, hashedPassword) => {
-        if (error) {
-          throw error;
-        }
-        newUserStatement.run(
-          user.email.trim().toLowerCase(),
-          user.username.trim(),
-          hashedPassword
-        );
-      });
-    });
+
+    newUserStatement.run(
+      user.email.trim().toLowerCase(),
+      user.username.trim(),
+      hashedPassword
+    );
+
     // const userTable = userDb.prepare(QueryUser.SELECT_USER_TABLE).all();
   }
 
@@ -144,29 +138,18 @@ class UserDb extends Sqlite {
     return user;
   };
 
-  public hashRefreshTokenAndUpdateDb(
+  public async updateHashedRefreshToken(
     userDb: DbType,
     userId: string,
-    refreshtoken: string
+    hashedRefreshToken: string
   ) {
-    const saltRounds = 10;
-    bcrypt.genSalt(saltRounds, (error, salt) => {
-      if (error) {
-        throw error;
-      }
-      bcrypt.hash(refreshtoken, salt, (error, hashedRefreshToken) => {
-        if (error) {
-          throw error;
-        }
-        const updateUserJwtStatement = userDb.prepare(
-          QueryUser.UPDATE_JWT_REFRESH_TOKEN
-        );
-        updateUserJwtStatement.run(hashedRefreshToken, userId);
-      });
-    });
+    const updateUserJwtStatement = userDb.prepare(
+      QueryUser.UPDATE_JWT_REFRESH_TOKEN
+    );
+    updateUserJwtStatement.run(hashedRefreshToken, userId);
   }
 
-  public findRefreshToken(userDb: DbType, user: UserStateType) {
+  public findHashedRefreshTokenByUserId(userDb: DbType, user: UserStateType) {
     const findRefreshTokenStatement = userDb.prepare(
       QueryUser.FIND_JWT_REFRESH_TOKEN_BY_ID
     );
@@ -174,6 +157,50 @@ class UserDb extends Sqlite {
       { jwt_refresh_token: string }
     ];
     return refreshTokensList;
+  }
+
+  public async findHashedRefreshTokenByCookieRefreshToken(
+    userDb: DbType,
+    cookieRefreshToken: string
+  ) {
+    const findRefreshTokenStatement = userDb.prepare(
+      QueryUser.GET_ALL_JWT_REFRESH_TOKENS
+    );
+    const hashedRefreshTokensList = findRefreshTokenStatement.all() as {
+      jwt_refresh_token: string;
+    }[];
+
+    let hashedRefreshToken = "";
+    try {
+      for (const tokenObject of hashedRefreshTokensList) {
+        const doTokensMatch = await bcrypt.compare(
+          cookieRefreshToken,
+          tokenObject.jwt_refresh_token
+        );
+        if (doTokensMatch) {
+          hashedRefreshToken = tokenObject.jwt_refresh_token;
+          break;
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    return hashedRefreshToken;
+  }
+
+  public findUserIdByHashedRefreshToken(
+    userDb: DbType,
+    hashedRefreshToken: string
+  ) {
+    const findIdStatement = userDb.prepare(
+      QueryUser.FIND_ID_BY_HASHED_REFRESH_TOKEN
+    );
+    const idsList = findIdStatement.all(hashedRefreshToken) as [{ id: string }];
+    if (!idsList.length) {
+      return "";
+    }
+
+    return idsList[0].id;
   }
 }
 

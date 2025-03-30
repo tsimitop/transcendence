@@ -1,4 +1,5 @@
 import { FastifyRequest } from "fastify";
+import bcrypt from "bcrypt";
 import { fastify } from "../../server";
 import SignUpValidation from "./SignUpValidation";
 import UserDb from "../../user-database/UserDb";
@@ -11,7 +12,7 @@ export type SignUpType = {
 
 fastify.post(
   "/api/sign-up",
-  function (request: FastifyRequest<{ Body: SignUpType }>, reply) {
+  async function (request: FastifyRequest<{ Body: SignUpType }>, reply) {
     const { email, username, password } = request.body;
     if (!email?.trim() || !username?.trim() || !password?.trim()) {
       reply.send({ errorMessage: "Invalid input" });
@@ -69,7 +70,14 @@ fastify.post(
     }
 
     try {
-      userDbInstance.createNewUserInUserDb(userDb, request.body);
+      const saltRounds = 10;
+      const salt = await bcrypt.genSalt(saltRounds);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      userDbInstance.createNewUserInUserDb(
+        userDb,
+        request.body,
+        hashedPassword
+      );
     } catch (error) {
       console.log(error);
       reply.send({

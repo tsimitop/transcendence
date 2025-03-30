@@ -1,18 +1,83 @@
-import { FastifyRequest } from "fastify";
+// import { FastifyRequest } from "fastify";
+import bcrypt from "bcrypt";
+import dotenv from "dotenv";
 import { fastify } from "../../server";
+import UserDb from "../../user-database/UserDb";
 import { signJwtAccessToken } from "../sign-in/jwt";
-import { UserStateType } from "../sign-in/sign-in";
+import { Secret, verify } from "jsonwebtoken";
+// import { UserStateType } from "../sign-in/sign-in";
 
-type RequestNewAccessTokenType = {
-  user: string;
-};
+// type RequestNewAccessTokenType = {
+//   user: string;
+// };
+
+dotenv.config({ path: "./.env" });
 
 fastify.post(
   "/api/generate-new-access-token",
-  (request: FastifyRequest<{ Body: RequestNewAccessTokenType }>, reply) => {
-    const { user: userString } = request.body;
-    const user = JSON.parse(userString) as UserStateType;
-    const newJwtAccessToken = signJwtAccessToken(user.id);
-    reply.send({ user, newJwtAccessToken });
+  // (request: FastifyRequest<{ Body: RequestNewAccessTokenType }>, reply) => {
+  async (request, reply) => {
+    const cookieRefreshToken = request.cookies.refreshtoken;
+    if (!cookieRefreshToken) {
+      reply.send({
+        errorMessage:
+          "No cookie refresh token. User is not signed in. Redirecting to homepage ...",
+      });
+      return;
+    }
+
+    const userDbInstance = new UserDb("database/test.db");
+    const userDb = userDbInstance.openDb();
+    const hashedRefreshToken =
+      await userDbInstance.findHashedRefreshTokenByCookieRefreshToken(
+        userDb,
+        cookieRefreshToken
+      );
+    if (!hashedRefreshToken) {
+      reply.send({
+        errorMessage:
+          "No hashed refresh token. User is not signed in. Redirecting to homepage ...",
+      });
+      return;
+    }
+
+    const refreshTokenSecret = process.env.REFRESH_TOKEN as Secret;
+    const encoded = verify(cookieRefreshToken, refreshTokenSecret);
+
+    if (!encoded) {
+      reply.send({
+        errorMessage:
+          "Refresh token is expired. User must sign in again. Redirecting to homepage ...",
+      });
+      return;
+    }
+
+    const doesRefreshTokenMatch = await bcrypt.compare(
+      cookieRefreshToken,
+      hashedRefreshToken
+    );
+
+    if (!doesRefreshTokenMatch) {
+      reply.send({
+        errorMessage:
+          "Hashed refresh token and cookie refresh token do not match. User is not signed in. Redirecting to homepage ...",
+      });
+      return;
+    }
+
+    const userId = userDbInstance.findUserIdByHashedRefreshToken(
+      userDb,
+      hashedRefreshToken
+    );
+    if (!userId) {
+      reply.send({
+        errorMessage:
+          "Hashed refresh token / cookie refresh token does not belong to any user!!! Redirecting to homepage ...",
+      });
+      return;
+    }
+    const newJwtAccessToken = signJwtAccessToken(userId);
+    console.log("*******************", newJwtAccessToken);
+    reply.send({ newJwtAccessToken });
   }
 );

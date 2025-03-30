@@ -12,6 +12,6 @@ export const signJwtAccessToken = function (userId: string) {
 export const signJwtRefreshToken = function (userId: string) {
   return sign({ userId }, process.env.REFRESH_TOKEN!, {
     algorithm: "HS256",
-    expiresIn: "1d",
+    expiresIn: 40,
   });
 };
