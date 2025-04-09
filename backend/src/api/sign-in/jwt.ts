@@ -5,14 +5,14 @@ dotenv.config({ path: "./env" });
 export const signJwtAccessToken = function (userId: string) {
   return sign({ userId }, process.env.ACCESS_TOKEN!, {
     algorithm: "HS256",
-    expiresIn: 10,
+    expiresIn: "15m",
   });
 };
 
 export const signJwtRefreshToken = function (userId: string) {
   return sign({ userId }, process.env.REFRESH_TOKEN!, {
     algorithm: "HS256",
-    expiresIn: 15,
+    expiresIn: "1d",
   });
 };
 

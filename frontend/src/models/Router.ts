@@ -4,10 +4,11 @@ import SignUp from "../pages/SignUp";
 import NotFound from "../pages/NotFound";
 import Pong from "../pages/Pong";
 import Header from "../components/Header";
+import Profile from "../pages/Profile";
+import SignIn from "../pages/SignIn";
 import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
 import { ROUTER_CLASS_NAME, ValidUrlPathsType } from "../constants";
-import SignIn from "../pages/SignIn";
 import { userContext } from "../context/UserContext";
 
 import { AuthCheckType } from "../context/UserContext";
@@ -28,9 +29,9 @@ abstract class Router {
     "/sign-up": SignUp,
     "/sign-in": SignIn,
     "/pong": Pong,
-    "/profile": Pong,
+    "/profile": Profile,
   };
-  static protectedRoutes: ValidUrlPathsType[] = ["/pong"];
+  static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile"];
   static guestUsersRoutes: ValidUrlPathsType[] = ["/sign-in", "/sign-up"];
 
   static isProtectedRoute(route: string) {

@@ -64,7 +64,7 @@ class Header extends Component {
                   themeState.state === "light"
                     ? "theme-ternary-light-full"
                     : "theme-ternary-dark-full"
-                } theme-btn px-4 py-2 cursor-pointer">
+                } px-4 py-2 cursor-pointer">
 							<a class="${ROUTER_CLASS_NAME}" href="/profile">Profile</a>
 							</button>`
               : ""
