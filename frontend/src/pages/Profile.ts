@@ -1,10 +1,13 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import themeState from "../context/ThemeContext";
+import { urlContext } from "../context/UrlContext";
+import { userContext } from "../context/UserContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
 } from "../models/Component";
+import Router from "../models/Router";
 
 class Profile extends Component {
   constructor(
@@ -26,9 +29,26 @@ class Profile extends Component {
       console.log("signing out");
       const response = await fetch("http://localhost:80/api/sign-out", {
         method: "POST",
+        credentials: "include",
       });
       const data = await response.json();
-      console.log(data);
+      if (!data.errorMessage) {
+        userContext.setState({
+          ...userContext.state,
+          id: "",
+          email: "",
+          username: "",
+          isSignedIn: false,
+          jwtAccessToken: "",
+        });
+        urlContext.setState({ ...urlContext.state, path: "/" });
+        const routeToGo = Router.findRouteToGo();
+        const viewToRender = await Router.findViewToRender(routeToGo);
+        Router.renderPageBasedOnPath(viewToRender);
+        Router.removeRouteChangeListeners();
+        Router.listenForRouteChange();
+        Header.highlightActiveNavLink();
+      }
     } catch (error) {
       console.log(error);
     }
