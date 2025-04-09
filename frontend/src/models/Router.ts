@@ -28,6 +28,7 @@ abstract class Router {
     "/sign-up": SignUp,
     "/sign-in": SignIn,
     "/pong": Pong,
+    "/profile": Pong,
   };
   static protectedRoutes: ValidUrlPathsType[] = ["/pong"];
   static guestUsersRoutes: ValidUrlPathsType[] = ["/sign-in", "/sign-up"];
@@ -129,6 +130,7 @@ abstract class Router {
 
     data = await Router.requestUserAuthStatus();
     if (!data) {
+      userContext.setState({ ...userContext.state, isSignedIn: false });
       viewToRender = NotFound.create();
       return viewToRender;
     }
@@ -137,6 +139,7 @@ abstract class Router {
       const newJwtAccessToken = await Router.requestNewAccessToken();
       console.log("newJwtAccessToken", newJwtAccessToken);
       if (!newJwtAccessToken) {
+        userContext.setState({ ...userContext.state, isSignedIn: false });
         viewToRender = Router.getViewForGuestUser(routeToGo);
         return viewToRender;
       } else {
@@ -146,10 +149,12 @@ abstract class Router {
 
     if (!data || !data.isAccessTokenValid) {
       console.log("data:", data);
+      userContext.setState({ ...userContext.state, isSignedIn: false });
       viewToRender = Router.getViewForGuestUser(routeToGo);
       return viewToRender;
     }
 
+    userContext.setState({ ...userContext.state, isSignedIn: true });
     viewToRender = Router.getViewForSignedInUser(routeToGo);
     return viewToRender;
   }

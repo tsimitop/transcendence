@@ -29,6 +29,7 @@ fastify.post(
         isNewAccessTokenNeeded: false,
         encoded: null,
         refreshtoken: cookieRefreshToken,
+        isSignedIn: false,
       });
       return;
     }
@@ -52,6 +53,7 @@ fastify.post(
         isNewAccessTokenNeeded: false,
         encoded: null,
         refreshtoken: cookieRefreshToken,
+        isSignedIn: false,
       });
       return;
     }
@@ -65,6 +67,7 @@ fastify.post(
         encoded: null,
         refreshtoken: cookieRefreshToken,
         hashedRefreshToken,
+        isSignedIn: false,
       });
       return;
     }
@@ -84,6 +87,7 @@ fastify.post(
         encoded: null,
         refreshtoken: cookieRefreshToken,
         hashedRefreshToken,
+        isSignedIn: false,
       });
       return;
     }
@@ -105,6 +109,7 @@ fastify.post(
         encoded: null,
         refreshtoken: cookieRefreshToken,
         hashedRefreshToken,
+        isSignedIn: false,
       });
       return;
     }
@@ -119,6 +124,7 @@ fastify.post(
         encoded: encoded,
         refreshtoken: cookieRefreshToken,
         hashedRefreshToken,
+        isSignedIn: true,
       });
       return;
     } catch (error) {
