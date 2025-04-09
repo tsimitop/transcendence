@@ -63,7 +63,7 @@ abstract class Router {
     let data = null;
     try {
       data = ((await userContext.isUserSignedIn()) as AuthCheckType) || null;
-      console.log(data);
+      // console.log(data);
       return data;
     } catch (error) {
       console.log(error);
@@ -94,10 +94,10 @@ abstract class Router {
         ...userContext.state,
         jwtAccessToken: newJwtAccessToken.newJwtAccessToken,
       });
-      console.log(
-        "$$$$$$$$$$$$$$$$$$$$$$$$",
-        newJwtAccessToken.newJwtAccessToken
-      );
+      // console.log(
+      //   "$$$$$$$$$$$$$$$$$$$$$$$$",
+      //   newJwtAccessToken.newJwtAccessToken
+      // );
       return newJwtAccessToken.newJwtAccessToken;
     } catch (error) {
       console.log(error);
@@ -138,7 +138,7 @@ abstract class Router {
 
     if (data?.isNewAccessTokenNeeded) {
       const newJwtAccessToken = await Router.requestNewAccessToken();
-      console.log("newJwtAccessToken", newJwtAccessToken);
+      // console.log("newJwtAccessToken", newJwtAccessToken);
       if (!newJwtAccessToken) {
         userContext.setState({ ...userContext.state, isSignedIn: false });
         viewToRender = Router.getViewForGuestUser(routeToGo);

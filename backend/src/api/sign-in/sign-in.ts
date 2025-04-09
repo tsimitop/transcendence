@@ -1,7 +1,6 @@
 import { FastifyRequest } from "fastify";
 import bcrypt from "bcrypt";
 import { fastify } from "../../server";
-import "./jwt";
 import { signJwtAccessToken, signJwtRefreshToken } from "./jwt";
 import UserDb from "../../user-database/UserDb";
 

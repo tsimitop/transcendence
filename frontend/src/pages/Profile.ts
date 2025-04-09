@@ -14,26 +14,66 @@ class Profile extends Component {
     super(childrenString, ...childElements);
   }
 
+  public static handleClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (target.classList.contains("sign-out-btn")) {
+      Profile.signOut();
+    }
+  }
+
+  public static async signOut() {
+    try {
+      console.log("signing out");
+      const response = await fetch("http://localhost:80/api/sign-out", {
+        method: "POST",
+      });
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   public static create() {
     if (!customElements.getName(Profile)) {
       customElements.define("signout-component", Profile);
     }
 
-    const html = `<main class="${
-      themeState.state === "light"
-        ? "theme-primary-light-full"
-        : "theme-primary-dark-full"
-    } main-container layout-padding">
+    const main = document.createElement("main");
+    main.classList.add(
+      "main-container",
+      "layout-padding",
+      `${
+        themeState.state === "light"
+          ? "theme-primary-light-full"
+          : "theme-primary-dark-full"
+      }`
+    );
+
+    main.addEventListener("click", Profile.handleClick);
+
+    const html = `
 				<h1>Profile</h1>
-			</main>`;
+				<button class="sign-out-btn ${
+          themeState.state === "light"
+            ? "theme-ternary-light-full"
+            : "theme-ternary-dark-full"
+        } px-4 py-2 cursor-pointer">
+					Sign out
+				</button>
+			`;
+
+    main.insertAdjacentHTML("beforeend", html);
 
     const SignOutInstance = new Profile(
-      { html, position: "beforeend" },
+      { html: "", position: "beforeend" },
       { element: Header.create(), position: "afterbegin" },
+      { element: main, position: "beforeend" },
       { element: Footer.create(), position: "beforeend" }
     );
     SignOutInstance.insertChildren();
     SignOutInstance.classList.add("page");
+
     return SignOutInstance;
   }
 }
