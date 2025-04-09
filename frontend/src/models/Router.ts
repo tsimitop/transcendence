@@ -113,6 +113,16 @@ abstract class Router {
     return viewToRender;
   }
 
+  static getViewForSignedInUser(routeToGo: string) {
+    const viewToRender =
+      routeToGo === "/sign-in" || routeToGo === "/sign-up"
+        ? Router.routes["/"].create()
+        : routeToGo in Router.routes
+        ? Router.routes[routeToGo as keyof typeof Router.routes]?.create()
+        : NotFound.create();
+    return viewToRender;
+  }
+
   static async findViewToRender(routeToGo: string) {
     let data = null;
     let viewToRender = null;
@@ -140,9 +150,7 @@ abstract class Router {
       return viewToRender;
     }
 
-    viewToRender =
-      Router.routes[routeToGo as keyof typeof Router.routes]?.create() ||
-      NotFound.create();
+    viewToRender = Router.getViewForSignedInUser(routeToGo);
     return viewToRender;
   }
 
