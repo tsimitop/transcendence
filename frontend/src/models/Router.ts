@@ -57,66 +57,86 @@ abstract class Router {
     return routeToGo;
   }
 
+  static async requestUserAuthStatus() {
+    let data = null;
+    try {
+      data = ((await userContext.isUserSignedIn()) as AuthCheckType) || null;
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
+
+  static async requestNewAccessToken(): Promise<string> {
+    let newJwtAccessToken = { newJwtAccessToken: "" };
+    try {
+      const response = await fetch(
+        "http://localhost:80/api/generate-new-access-token",
+        {
+          method: "POST",
+          credentials: "include",
+          // headers: {
+          //   Authorization: `Bearer ${}`,
+          // },
+        }
+      );
+      newJwtAccessToken = await response.json();
+      if (!newJwtAccessToken.newJwtAccessToken) {
+        throw new Error(
+          "New access token could not be created! Refresh token might be expired"
+        );
+      }
+      userContext.setState({
+        ...userContext.state,
+        jwtAccessToken: newJwtAccessToken.newJwtAccessToken,
+      });
+      console.log(
+        "$$$$$$$$$$$$$$$$$$$$$$$$",
+        newJwtAccessToken.newJwtAccessToken
+      );
+      return newJwtAccessToken.newJwtAccessToken;
+    } catch (error) {
+      console.log(error);
+      return "";
+    }
+  }
+
+  static getViewForGuestUser(routeToGo: string) {
+    const viewToRender = Router.isGuestRoute(routeToGo)
+      ? Router.routes[routeToGo as keyof typeof Router.routes]?.create()
+      : Router.isProtectedRoute(routeToGo)
+      ? Router.routes["/sign-in"].create()
+      : Router.routes[routeToGo as keyof typeof Router.routes]?.create() ||
+        NotFound.create();
+    return viewToRender;
+  }
+
   static async findViewToRender(routeToGo: string) {
     let data = null;
     let viewToRender = null;
-    try {
-      data = ((await userContext.isUserSignedIn()) as AuthCheckType) || null;
-      console.log(data);
-    } catch (error) {
-      console.log(error);
+
+    data = await Router.requestUserAuthStatus();
+    if (!data) {
       viewToRender = NotFound.create();
       return viewToRender;
     }
 
-    let newJwtAccessToken = { newJwtAccessToken: "" };
     if (data?.isNewAccessTokenNeeded) {
-      try {
-        const response = await fetch(
-          "http://localhost:80/api/generate-new-access-token",
-          {
-            method: "POST",
-            credentials: "include",
-            // headers: {
-            //   Authorization: `Bearer ${}`,
-            // },
-          }
-        );
-        newJwtAccessToken = await response.json();
-        if (!newJwtAccessToken.newJwtAccessToken) {
-          throw new Error(
-            "New access token could not be created! Refresh token might be expired"
-          );
-        }
-        userContext.setState({
-          ...userContext.state,
-          jwtAccessToken: newJwtAccessToken.newJwtAccessToken,
-        });
-        console.log(
-          "$$$$$$$$$$$$$$$$$$$$$$$$",
-          newJwtAccessToken.newJwtAccessToken
-        );
-      } catch (error) {
-        console.log(error);
+      const newJwtAccessToken = await Router.requestNewAccessToken();
+      console.log("newJwtAccessToken", newJwtAccessToken);
+      if (!newJwtAccessToken) {
+        viewToRender = Router.getViewForGuestUser(routeToGo);
+        return viewToRender;
+      } else {
+        data.isAccessTokenValid = true;
       }
     }
 
-    try {
-      data = ((await userContext.isUserSignedIn()) as AuthCheckType) || null;
-      console.log(data);
-    } catch (error) {
-      console.log(error);
-      viewToRender = NotFound.create();
-      return viewToRender;
-    }
-
     if (!data || !data.isAccessTokenValid) {
-      viewToRender = Router.isGuestRoute(routeToGo)
-        ? Router.routes[routeToGo as keyof typeof Router.routes]?.create()
-        : Router.isProtectedRoute(routeToGo)
-        ? Router.routes["/sign-in"].create()
-        : Router.routes[routeToGo as keyof typeof Router.routes]?.create() ||
-          NotFound.create();
+      console.log("data:", data);
+      viewToRender = Router.getViewForGuestUser(routeToGo);
       return viewToRender;
     }
 
@@ -153,6 +173,7 @@ abstract class Router {
     const viewToRender = await Router.findViewToRender(routeToGo);
     Router.renderPageBasedOnPath(viewToRender);
     Router.listenForRouteChange();
+    Header.highlightActiveNavLink();
   }
 
   static async handleBackAndForward() {
