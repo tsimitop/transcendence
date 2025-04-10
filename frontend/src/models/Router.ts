@@ -208,6 +208,7 @@ abstract class Router {
     Router.renderPageBasedOnPath(viewToRender);
     Router.removeRouteChangeListeners();
     Router.listenForRouteChange();
+    Header.highlightActiveNavLink();
   }
 }
 

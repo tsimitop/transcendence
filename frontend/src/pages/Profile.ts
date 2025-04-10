@@ -40,8 +40,8 @@ class Profile extends Component {
           isSignedIn: false,
           jwtAccessToken: "",
         });
-        Router.redirect("/");
-        Header.highlightActiveNavLink();
+        await Router.redirect("/");
+        // Header.highlightActiveNavLink();
       }
     } catch (error) {
       console.log(error);

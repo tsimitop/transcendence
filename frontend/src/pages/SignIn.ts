@@ -131,8 +131,8 @@ class SignIn extends Component {
       });
       // console.log("userContext.state:\n", userContext.state);
       // console.log(data);
-      Router.redirect("/");
-      Header.highlightActiveNavLink();
+      await Router.redirect("/");
+      // Header.highlightActiveNavLink();
     } catch (error) {
       console.log(error);
     }
