@@ -2,7 +2,6 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
-import { urlContext } from "../context/UrlContext";
 import { userContext, UserStateType } from "../context/UserContext";
 import Component, {
   ChildElementType,
@@ -36,6 +35,7 @@ class SignIn extends Component {
 
     // main.addEventListener("click", SignIn.handleClick);
     main.addEventListener("submit", SignIn.handleSignIn);
+    main.addEventListener("click", SignIn.handleClick);
 
     const html = `
 				<h1>Sign In</h1>
@@ -47,7 +47,7 @@ class SignIn extends Component {
 					<button type="submit" class="signin-btn cursor-pointer border-2">Sign in</button>
 					<p>
 						<span>Don't have an account?</span>
-						<a class=${ROUTER_CLASS_NAME} href="/sign-up">Sign up</a>
+						<a class="${ROUTER_CLASS_NAME}" href="/sign-up">Sign up</a>
 					</p>
 				</form>
 		`;
@@ -131,12 +131,8 @@ class SignIn extends Component {
       });
       // console.log("userContext.state:\n", userContext.state);
       // console.log(data);
-      urlContext.setState({ ...urlContext.state, path: "/" });
-      const routeToGo = Router.findRouteToGo();
-      const viewToRender = await Router.findViewToRender(routeToGo);
-      Router.renderPageBasedOnPath(viewToRender);
-      Router.removeRouteChangeListeners();
-      Router.listenForRouteChange();
+      Router.redirect("/");
+      Header.highlightActiveNavLink();
     } catch (error) {
       console.log(error);
     }

@@ -1,7 +1,6 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import themeState from "../context/ThemeContext";
-import { urlContext } from "../context/UrlContext";
 import { userContext } from "../context/UserContext";
 import Component, {
   ChildElementType,
@@ -41,12 +40,7 @@ class Profile extends Component {
           isSignedIn: false,
           jwtAccessToken: "",
         });
-        urlContext.setState({ ...urlContext.state, path: "/" });
-        const routeToGo = Router.findRouteToGo();
-        const viewToRender = await Router.findViewToRender(routeToGo);
-        Router.renderPageBasedOnPath(viewToRender);
-        Router.removeRouteChangeListeners();
-        Router.listenForRouteChange();
+        Router.redirect("/");
         Header.highlightActiveNavLink();
       }
     } catch (error) {

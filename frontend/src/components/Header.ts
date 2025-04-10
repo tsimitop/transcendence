@@ -5,7 +5,7 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 import { StateListener } from "../models/StateManager";
-import { PAGES, ROUTER_CLASS_NAME } from "../constants";
+import { NO_HIGHLIGHT_LINKS, PAGES, ROUTER_CLASS_NAME } from "../constants";
 import { userContext } from "../context/UserContext";
 
 class Header extends Component {
@@ -65,7 +65,7 @@ class Header extends Component {
                     ? "theme-ternary-light-full"
                     : "theme-ternary-dark-full"
                 } px-4 py-2 cursor-pointer">
-							<a class="${ROUTER_CLASS_NAME}" href="/profile">Profile</a>
+							<a class="profile-btn ${ROUTER_CLASS_NAME}" href="/profile">Profile</a>
 							</button>`
               : ""
           }
@@ -93,6 +93,8 @@ class Header extends Component {
       Header.handleChangeTheme(target);
     } else if (target.classList.contains("nav-link")) {
       Header.handleClickNavLink(target);
+    } else if (target.classList.contains("profile-btn")) {
+      Header.handleNavigateToProfile();
     }
   }
 
@@ -137,15 +139,27 @@ class Header extends Component {
   }
 
   public static highlightActiveNavLink() {
+    console.log(urlContext.state.path);
+    const noHighlightLink = NO_HIGHLIGHT_LINKS.find(
+      link => link === urlContext.state.path
+    );
+    if (noHighlightLink) {
+      return;
+    }
     const activeLink = document.querySelector(
       // `a[href="${window.location.pathname}"]`
       `a[href="${urlContext.state.path}"]`
     );
+    console.log("activeLink", activeLink);
     const newClassName =
       themeState.state === "light"
         ? "theme-ternary-light-foreground"
         : "theme-ternary-dark-foreground";
     activeLink?.classList.add(newClassName);
+  }
+
+  public static handleNavigateToProfile() {
+    urlContext.setState({ ...urlContext.state, path: "/profile" });
   }
 }
 

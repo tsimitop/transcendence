@@ -200,6 +200,15 @@ abstract class Router {
       Header.highlightActiveNavLink();
     });
   }
+
+  static async redirect(pathToRedirect: ValidUrlPathsType) {
+    urlContext.setState({ ...urlContext.state, path: pathToRedirect });
+    const routeToGo = Router.findRouteToGo();
+    const viewToRender = await Router.findViewToRender(routeToGo);
+    Router.renderPageBasedOnPath(viewToRender);
+    Router.removeRouteChangeListeners();
+    Router.listenForRouteChange();
+  }
 }
 
 export default Router;

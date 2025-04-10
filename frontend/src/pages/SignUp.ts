@@ -33,6 +33,7 @@ class SignUp extends Component {
     );
 
     main.addEventListener("submit", SignUp.handleSignUp);
+    main.addEventListener("click", SignUp.handleClick);
 
     const html = `
 				<h1>Sign Up</h1>
