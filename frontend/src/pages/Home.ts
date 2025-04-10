@@ -1,6 +1,7 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import themeState from "../context/ThemeContext";
+import { userContext } from "../context/UserContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
@@ -24,7 +25,7 @@ class Home extends Component {
           ? "theme-primary-light-full"
           : "theme-primary-dark-full"
       } main-container layout-padding">
-				<h1>Home</h1>
+				<h1>Welcome ${userContext.state.username || userContext.state.email}</h1>
 			</main>
 		`;
     const HomeInstance = new Home(

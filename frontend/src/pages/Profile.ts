@@ -68,6 +68,9 @@ class Profile extends Component {
 
     const html = `
 				<h1>Profile</h1>
+				<p>id: ${userContext.state.id}</p>
+				<p>email: ${userContext.state.email}</p>
+				<p>username: ${userContext.state.username}</p>
 				<button class="sign-out-btn ${
           themeState.state === "light"
             ? "theme-ternary-light-full"

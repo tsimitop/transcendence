@@ -76,8 +76,16 @@ fastify.post(
       });
       return;
     }
+    const email = userDbInstance.findEmailByHashedRefreshToken(
+      userDb,
+      hashedRefreshToken
+    );
+    const username = userDbInstance.findUsernameByHashedRefreshToken(
+      userDb,
+      hashedRefreshToken
+    );
     const newJwtAccessToken = signJwtAccessToken(userId);
-    console.log("*******************", newJwtAccessToken);
-    reply.send({ newJwtAccessToken });
+    // console.log("*******************", newJwtAccessToken);
+    reply.send({ newJwtAccessToken, userId, email, username });
   }
 );

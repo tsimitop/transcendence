@@ -45,7 +45,8 @@ class Header extends Component {
   }
 
   public static createChildren() {
-    console.log("************", userContext.state);
+    console.log("userState", userContext.state);
+    console.log("urlState", urlContext.state);
     const html = `
 			<nav class="flex items-center">
 				<p>transcendence</p>
@@ -61,7 +62,11 @@ class Header extends Component {
 				<div class="flex items-center gap-10">
 					${
             userContext.state.isSignedIn
-              ? `<a class="nav-link profile-link ${ROUTER_CLASS_NAME}" href="/profile">Profile</a>`
+              ? `<a class="nav-link profile-link ${ROUTER_CLASS_NAME}" href="/profile">${
+                  userContext.state.username ||
+                  userContext.state.email ||
+                  "profile"
+                }</a>`
               : ""
           }
 					<button class="${
@@ -134,7 +139,7 @@ class Header extends Component {
   }
 
   public static highlightActiveNavLink() {
-    console.log(urlContext.state.path);
+    // console.log(urlContext.state.path);
     const noHighlightLink = NO_HIGHLIGHT_LINKS.find(
       link => link === urlContext.state.path
     );
@@ -145,7 +150,7 @@ class Header extends Component {
       // `a[href="${window.location.pathname}"]`
       `a[href="${urlContext.state.path}"]`
     );
-    console.log("activeLink", activeLink);
+    // console.log("activeLink", activeLink);
     const newClassName =
       themeState.state === "light"
         ? "theme-ternary-light-foreground"

@@ -202,6 +202,40 @@ class UserDb extends Sqlite {
 
     return idsList[0].id;
   }
+
+  public findUsernameByHashedRefreshToken(
+    userDb: DbType,
+    hashedRefreshToken: string
+  ) {
+    const findUsernameStatement = userDb.prepare(
+      QueryUser.FIND_USERNAME_BY_HASHED_REFRESH_TOKEN
+    );
+    const usernamesList = findUsernameStatement.all(hashedRefreshToken) as [
+      { username: string }
+    ];
+    if (!usernamesList.length) {
+      return "";
+    }
+
+    return usernamesList[0].username;
+  }
+
+  public findEmailByHashedRefreshToken(
+    userDb: DbType,
+    hashedRefreshToken: string
+  ) {
+    const findEmailStatement = userDb.prepare(
+      QueryUser.FIND_EMAIL_BY_HASHED_REFRESH_TOKEN
+    );
+    const emailsList = findEmailStatement.all(hashedRefreshToken) as [
+      { email: string }
+    ];
+    if (!emailsList.length) {
+      return "";
+    }
+
+    return emailsList[0].email;
+  }
 }
 
 export default UserDb;

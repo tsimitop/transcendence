@@ -68,7 +68,7 @@ abstract class Router {
     let data = null;
     try {
       data = ((await userContext.isUserSignedIn()) as AuthCheckType) || null;
-      // console.log(data);
+      // console.log("data:", data);
       return data;
     } catch (error) {
       console.log(error);
@@ -77,7 +77,7 @@ abstract class Router {
   }
 
   static async requestNewAccessToken(): Promise<string> {
-    let newJwtAccessToken = { newJwtAccessToken: "" };
+    // let newJwtAccessToken = "";
     try {
       const response = await fetch(
         "http://localhost:80/api/generate-new-access-token",
@@ -89,21 +89,31 @@ abstract class Router {
           // },
         }
       );
-      newJwtAccessToken = await response.json();
-      if (!newJwtAccessToken.newJwtAccessToken) {
+      const data = (await response.json()) as {
+        newJwtAccessToken: string;
+        userId: string;
+        email: string;
+        username: string;
+      };
+      // console.log("data after new access token generation:", data);
+      const { newJwtAccessToken, userId, email, username } = data;
+      if (!newJwtAccessToken) {
         throw new Error(
           "New access token could not be created! Refresh token might be expired"
         );
       }
       userContext.setState({
         ...userContext.state,
-        jwtAccessToken: newJwtAccessToken.newJwtAccessToken,
+        id: userId,
+        email,
+        username,
+        jwtAccessToken: newJwtAccessToken,
       });
       // console.log(
       //   "$$$$$$$$$$$$$$$$$$$$$$$$",
       //   newJwtAccessToken.newJwtAccessToken
       // );
-      return newJwtAccessToken.newJwtAccessToken;
+      return newJwtAccessToken;
     } catch (error) {
       console.log(error);
       return "";
@@ -171,7 +181,7 @@ abstract class Router {
     }
 
     if (!data || !data.isAccessTokenValid) {
-      console.log("data:", data);
+      // console.log("data:", data);
       userContext.setState({ ...userContext.state, isSignedIn: false });
       viewToRender = Router.getViewForGuestUser(routeToGo);
       return viewToRender;
@@ -225,6 +235,7 @@ abstract class Router {
 
   static async redirect(pathToRedirect: ValidUrlPathsType) {
     urlContext.setState({ ...urlContext.state, path: pathToRedirect });
+    console.log("path to redirect:", pathToRedirect);
     const routeToGo = Router.findRouteToGo();
     const viewToRender = await Router.findViewToRender(routeToGo);
     Router.renderPageBasedOnPath(viewToRender);

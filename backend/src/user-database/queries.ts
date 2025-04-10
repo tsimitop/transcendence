@@ -19,6 +19,8 @@ export enum QueryUser {
   FIND_ID_BY_EMAIL = `SELECT id FROM ${table} WHERE email = ?`,
   FIND_ID_BY_USERNAME = `SELECT id FROM ${table} WHERE username = ?`,
   FIND_ID_BY_HASHED_REFRESH_TOKEN = `SELECT id FROM ${table} WHERE jwt_refresh_token = ?`,
+  FIND_USERNAME_BY_HASHED_REFRESH_TOKEN = `SELECT username FROM ${table} WHERE jwt_refresh_token = ?`,
+  FIND_EMAIL_BY_HASHED_REFRESH_TOKEN = `SELECT email FROM ${table} WHERE jwt_refresh_token = ?`,
   FIND_JWT_REFRESH_TOKEN_BY_ID = `SELECT jwt_refresh_token FROM ${table} WHERE id = ?`,
   GET_ALL_JWT_REFRESH_TOKENS = `SELECT jwt_refresh_token FROM ${table}`,
   SELECT_ALL_USERNAMES = `SELECT username FROM ${table};`,

@@ -71,7 +71,7 @@ fastify.post(
       });
       return;
     }
-    console.log(hashedRefreshToken);
+    // console.log(hashedRefreshToken);
     const doesRefreshTokenMatch = await bcrypt.compare(
       refreshTokenInCookie,
       hashedRefreshToken
@@ -94,10 +94,10 @@ fastify.post(
 
     const accessTokenInHeader =
       request.headers.authorization?.split(" ")[1] || null;
-    console.log(
-      "----------------accessTokenInHeader--------------:",
-      accessTokenInHeader
-    );
+    // console.log(
+    //   "----------------accessTokenInHeader--------------:",
+    //   accessTokenInHeader
+    // );
 
     if (!accessTokenInHeader) {
       reply.send({
@@ -114,6 +114,19 @@ fastify.post(
       return;
     }
 
+    const userId = userDbInstance.findUserIdByHashedRefreshToken(
+      userDb,
+      hashedRefreshToken
+    );
+    const email = userDbInstance.findEmailByHashedRefreshToken(
+      userDb,
+      hashedRefreshToken
+    );
+    const username = userDbInstance.findUsernameByHashedRefreshToken(
+      userDb,
+      hashedRefreshToken
+    );
+
     try {
       const encoded = validateAccessToken(accessTokenInHeader);
       reply.send({
@@ -125,6 +138,9 @@ fastify.post(
         refreshtoken: cookieRefreshToken,
         hashedRefreshToken,
         isSignedIn: true,
+        userId,
+        email,
+        username,
       });
       return;
     } catch (error) {
