@@ -8,7 +8,12 @@ import Profile from "../pages/Profile";
 import SignIn from "../pages/SignIn";
 import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
-import { ROUTER_CLASS_NAME, ValidUrlPathsType } from "../constants";
+import {
+  GUEST_USER_REDIRECTION_PATH,
+  ROUTER_CLASS_NAME,
+  SIGNED_IN_USER_REDIRECTION_PATH,
+  ValidUrlPathsType,
+} from "../constants";
 import { userContext } from "../context/UserContext";
 
 import { AuthCheckType } from "../context/UserContext";
@@ -109,19 +114,36 @@ abstract class Router {
     const viewToRender = Router.isGuestRoute(routeToGo)
       ? Router.routes[routeToGo as keyof typeof Router.routes]?.create()
       : Router.isProtectedRoute(routeToGo)
-      ? Router.routes["/sign-in"].create()
+      ? Router.routes[GUEST_USER_REDIRECTION_PATH].create()
       : Router.routes[routeToGo as keyof typeof Router.routes]?.create() ||
         NotFound.create();
+
+    if (Router.isProtectedRoute(routeToGo)) {
+      urlContext.setState({
+        ...urlContext.state,
+        path: GUEST_USER_REDIRECTION_PATH,
+      });
+    }
     return viewToRender;
   }
 
   static getViewForSignedInUser(routeToGo: string) {
+    const guestRoute = Router.guestUsersRoutes.find(
+      route => route === routeToGo
+    );
     const viewToRender =
-      routeToGo === "/sign-in" || routeToGo === "/sign-up"
-        ? Router.routes["/"].create()
+      routeToGo === guestRoute
+        ? Router.routes[SIGNED_IN_USER_REDIRECTION_PATH].create()
         : routeToGo in Router.routes
         ? Router.routes[routeToGo as keyof typeof Router.routes]?.create()
         : NotFound.create();
+
+    if (guestRoute) {
+      urlContext.setState({
+        ...urlContext.state,
+        path: SIGNED_IN_USER_REDIRECTION_PATH,
+      });
+    }
     return viewToRender;
   }
 

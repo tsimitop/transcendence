@@ -58,24 +58,20 @@ class Header extends Component {
           }
 					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/pong">Pong</a></li>
 				</ul>	
+				<div class="flex items-center gap-10">
 					${
             userContext.state.isSignedIn
-              ? `<button class="${
-                  themeState.state === "light"
-                    ? "theme-ternary-light-full"
-                    : "theme-ternary-dark-full"
-                } px-4 py-2 cursor-pointer">
-							<a class="profile-btn ${ROUTER_CLASS_NAME}" href="/profile">Profile</a>
-							</button>`
+              ? `<a class="nav-link profile-link ${ROUTER_CLASS_NAME}" href="/profile">Profile</a>`
               : ""
           }
-				<button class="${
-          themeState.state === "light"
-            ? "theme-ternary-light-full"
-            : "theme-ternary-dark-full"
-        } theme-btn px-4 py-2 cursor-pointer
-				">${themeState.state === "light" ? "dark" : "light"}
-				</button>
+					<button class="${
+            themeState.state === "light"
+              ? "theme-ternary-light-full"
+              : "theme-ternary-dark-full"
+          } theme-btn px-4 py-2 cursor-pointer
+					">${themeState.state === "light" ? "dark" : "light"}
+					</button>
+				</div>
 			</nav>
 		`;
 
@@ -88,12 +84,11 @@ class Header extends Component {
 
   public static handleClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    const targetClassName = "theme-btn";
-    if (target.classList.contains(targetClassName)) {
+    if (target.classList.contains("theme-btn")) {
       Header.handleChangeTheme(target);
     } else if (target.classList.contains("nav-link")) {
       Header.handleClickNavLink(target);
-    } else if (target.classList.contains("profile-btn")) {
+    } else if (target.classList.contains("profile-link")) {
       Header.handleNavigateToProfile();
     }
   }

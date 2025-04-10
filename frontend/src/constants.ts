@@ -15,4 +15,7 @@ export const PAGES: ValidUrlPathsType[] = [
   "/profile",
 ];
 
-export const NO_HIGHLIGHT_LINKS: ValidUrlPathsType[] = ["/profile"];
+export const NO_HIGHLIGHT_LINKS: ValidUrlPathsType[] = [];
+
+export const SIGNED_IN_USER_REDIRECTION_PATH: ValidUrlPathsType = "/";
+export const GUEST_USER_REDIRECTION_PATH: ValidUrlPathsType = "/sign-in";
