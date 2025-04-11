@@ -41,7 +41,13 @@ class SignIn extends Component {
     const clientId =
       "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
     const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-    const url = `${baseUrl}?response_type=code&client_id=${clientId}&scope=openid%20email&redirect_uri=${redirectUri}`;
+    const state =
+      Math.random().toString(36).substring(2) +
+      Date.now().toString() +
+      Math.random().toString(36).substring(2);
+    const url = `${baseUrl}?response_type=code&client_id=${clientId}&scope=openid%20email&redirect_uri=${redirectUri}&state=${state}`;
+
+    document.cookie = `oauth_state=${state}; secure=true; HttpOnly: true; SameSite=None; path=/api`;
 
     const html = `
 				<h1>Sign In</h1>
