@@ -45,7 +45,7 @@ class SignIn extends Component {
       Math.random().toString(36).substring(2) +
       Date.now().toString() +
       Math.random().toString(36).substring(2);
-    const url = `${baseUrl}?response_type=code&client_id=${clientId}&scope=openid%20email&redirect_uri=${redirectUri}&state=${state}`;
+    const url = `${baseUrl}?response_type=code&client_id=${clientId}&scope=openid%20email&redirect_uri=${redirectUri}&state=${state}&access_type=offline&prompt=consent`;
 
     document.cookie = `oauth_state=${state}; secure=true; HttpOnly: true; SameSite=None; path=/api`;
 

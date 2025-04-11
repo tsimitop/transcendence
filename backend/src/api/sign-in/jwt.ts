@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { sign, verify, Secret } from "jsonwebtoken";
-dotenv.config({ path: "./env" });
+dotenv.config({ path: "./.env" });
 
 export const signJwtAccessToken = function (userId: string) {
   return sign({ userId }, process.env.ACCESS_TOKEN!, {
