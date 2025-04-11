@@ -37,6 +37,12 @@ class SignIn extends Component {
     main.addEventListener("submit", SignIn.handleSignIn);
     main.addEventListener("click", SignIn.handleClick);
 
+    const redirectUri = "http://localhost:3000/api/oauth";
+    const clientId =
+      "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
+    const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+    const url = `${baseUrl}?response_type=code&client_id=${clientId}&scope=openid%20email&redirect_uri=${redirectUri}`;
+
     const html = `
 				<h1>Sign In</h1>
 				<form class="sign-in-form">
@@ -50,6 +56,7 @@ class SignIn extends Component {
 						<a class="${ROUTER_CLASS_NAME}" href="/sign-up">Sign up</a>
 					</p>
 				</form>
+				<button class="google-sign-in-btn cursor-pointer border-2"><a href=${url}>Sign in with Google</a></button>
 		`;
 
     main.insertAdjacentHTML("beforeend", html);
@@ -137,6 +144,27 @@ class SignIn extends Component {
       console.log(error);
     }
   }
+
+  // public static async handleClick(event: MouseEvent) {
+  //   super.handleClick(event);
+
+  //   const target = event.target as HTMLElement;
+  //   if (target.classList.contains("google-sign-in-btn")) {
+  //     console.log("google auth");
+  //     const googleRedirectUri = "http://localhost:80/api/google-auth";
+  //     const googleClientId =
+  //       "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
+  //     const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+  //     const url = `${baseUrl}?response_type=code&client_id=${googleClientId}&scope=openid%20email&redirect_uri=${googleRedirectUri}`;
+  //     try {
+  //       const response = await fetch(url);
+  //       const data = await response.json();
+  //       console.log(data);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   }
+  // }
 }
 
 export default SignIn;
