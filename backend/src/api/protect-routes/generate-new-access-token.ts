@@ -22,6 +22,11 @@ fastify.post(
       reply.send({
         errorMessage:
           "No cookie refresh token. User is not signed in. Redirecting to homepage ...",
+        newJwtAccessToken: "",
+        userId: "",
+        email: "",
+        username: "",
+        isSignedIn: false,
       });
       return;
     }
@@ -37,6 +42,11 @@ fastify.post(
       reply.send({
         errorMessage:
           "No hashed refresh token. User is not signed in. Redirecting to homepage ...",
+        newJwtAccessToken: "",
+        userId: "",
+        email: "",
+        username: "",
+        isSignedIn: false,
       });
       return;
     }
@@ -48,6 +58,11 @@ fastify.post(
       reply.send({
         errorMessage:
           "Refresh token is expired. User must sign in again. Redirecting to homepage ...",
+        newJwtAccessToken: "",
+        userId: "",
+        email: "",
+        username: "",
+        isSignedIn: false,
       });
       return;
     }
@@ -61,6 +76,11 @@ fastify.post(
       reply.send({
         errorMessage:
           "Hashed refresh token and cookie refresh token do not match. User is not signed in. Redirecting to homepage ...",
+        newJwtAccessToken: "",
+        userId: "",
+        email: "",
+        username: "",
+        isSignedIn: false,
       });
       return;
     }
@@ -73,6 +93,11 @@ fastify.post(
       reply.send({
         errorMessage:
           "Hashed refresh token / cookie refresh token does not belong to any user!!! Redirecting to homepage ...",
+        newJwtAccessToken: "",
+        userId: "",
+        email: "",
+        username: "",
+        isSignedIn: false,
       });
       return;
     }
@@ -86,6 +111,13 @@ fastify.post(
     );
     const newJwtAccessToken = signJwtAccessToken(userId);
     // console.log("*******************", newJwtAccessToken);
-    reply.send({ newJwtAccessToken, userId, email, username });
+    reply.send({
+      errorMessage: "",
+      newJwtAccessToken,
+      userId,
+      email,
+      username,
+      isSignedIn: true,
+    });
   }
 );

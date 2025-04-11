@@ -45,8 +45,6 @@ class Header extends Component {
   }
 
   public static createChildren() {
-    console.log("userState", userContext.state);
-    console.log("urlState", urlContext.state);
     const html = `
 			<nav class="flex items-center">
 				<p>transcendence</p>

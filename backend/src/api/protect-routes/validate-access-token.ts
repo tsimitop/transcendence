@@ -27,9 +27,10 @@ fastify.post(
         isRefreshTokenValid: false,
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: false,
-        encoded: null,
-        refreshtoken: cookieRefreshToken,
         isSignedIn: false,
+        userId: "",
+        email: "",
+        username: "",
       });
       return;
     }
@@ -51,9 +52,10 @@ fastify.post(
         isRefreshTokenValid: false,
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: false,
-        encoded: null,
-        refreshtoken: cookieRefreshToken,
         isSignedIn: false,
+        userId: "",
+        email: "",
+        username: "",
       });
       return;
     }
@@ -64,10 +66,10 @@ fastify.post(
         isRefreshTokenValid: false,
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: false,
-        encoded: null,
-        refreshtoken: cookieRefreshToken,
-        hashedRefreshToken,
         isSignedIn: false,
+        userId: "",
+        email: "",
+        username: "",
       });
       return;
     }
@@ -84,10 +86,10 @@ fastify.post(
         isRefreshTokenValid: false,
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: false,
-        encoded: null,
-        refreshtoken: cookieRefreshToken,
-        hashedRefreshToken,
         isSignedIn: false,
+        userId: "",
+        email: "",
+        username: "",
       });
       return;
     }
@@ -106,10 +108,10 @@ fastify.post(
         isRefreshTokenValid: true,
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: true,
-        encoded: null,
-        refreshtoken: cookieRefreshToken,
-        hashedRefreshToken,
         isSignedIn: false,
+        userId: "",
+        email: "",
+        username: "",
       });
       return;
     }
@@ -128,15 +130,12 @@ fastify.post(
     );
 
     try {
-      const encoded = validateAccessToken(accessTokenInHeader);
+      validateAccessToken(accessTokenInHeader);
       reply.send({
         errorMessage: "",
         isRefreshTokenValid: true,
         isAccessTokenValid: true,
         isNewAccessTokenNeeded: false,
-        encoded: encoded,
-        refreshtoken: cookieRefreshToken,
-        hashedRefreshToken,
         isSignedIn: true,
         userId,
         email,
@@ -151,9 +150,10 @@ fastify.post(
         isRefreshTokenValid: true,
         isAccessTokenValid: false,
         isNewAccessTokenNeeded: true,
-        encoded: null,
-        refreshtoken: cookieRefreshToken,
-        hashedRefreshToken,
+        isSignedIn: false,
+        userId: "",
+        email: "",
+        username: "",
       });
     }
   }

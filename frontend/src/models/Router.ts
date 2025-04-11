@@ -16,7 +16,16 @@ import {
 } from "../constants";
 import { userContext } from "../context/UserContext";
 
-import { AuthCheckType } from "../context/UserContext";
+import { ValidateAccessTokenResponseType } from "../context/UserContext";
+
+type NewAccessTokenResponseType = {
+  errorMessage: string;
+  newJwtAccessToken: string;
+  userId: string;
+  email: string;
+  username: string;
+  isSignedIn: boolean;
+};
 
 type ComponentType = {
   new (
@@ -65,9 +74,11 @@ abstract class Router {
   }
 
   static async requestUserAuthStatus() {
-    let data = null;
+    // let data: AuthCheckType | null = null;
     try {
-      data = ((await userContext.isUserSignedIn()) as AuthCheckType) || null;
+      const data =
+        ((await userContext.isUserSignedIn()) as ValidateAccessTokenResponseType) ||
+        null;
       // console.log("data:", data);
       return data;
     } catch (error) {
@@ -76,7 +87,7 @@ abstract class Router {
     }
   }
 
-  static async requestNewAccessToken(): Promise<string> {
+  static async requestNewAccessToken(): Promise<NewAccessTokenResponseType | null> {
     // let newJwtAccessToken = "";
     try {
       const response = await fetch(
@@ -89,14 +100,9 @@ abstract class Router {
           // },
         }
       );
-      const data = (await response.json()) as {
-        newJwtAccessToken: string;
-        userId: string;
-        email: string;
-        username: string;
-      };
+      const data = (await response.json()) as NewAccessTokenResponseType;
       // console.log("data after new access token generation:", data);
-      const { newJwtAccessToken, userId, email, username } = data;
+      const { newJwtAccessToken, userId, email, username, isSignedIn } = data;
       if (!newJwtAccessToken) {
         throw new Error(
           "New access token could not be created! Refresh token might be expired"
@@ -107,16 +113,14 @@ abstract class Router {
         id: userId,
         email,
         username,
+        isSignedIn,
         jwtAccessToken: newJwtAccessToken,
       });
-      // console.log(
-      //   "$$$$$$$$$$$$$$$$$$$$$$$$",
-      //   newJwtAccessToken.newJwtAccessToken
-      // );
-      return newJwtAccessToken;
+      // console.log("$$$$$$$$$$$$$$$$$$$$$$$$", newJwtAccessToken);
+      return data;
     } catch (error) {
       console.log(error);
-      return "";
+      return null;
     }
   }
 
@@ -158,21 +162,37 @@ abstract class Router {
   }
 
   static async findViewToRender(routeToGo: string) {
-    let data = null;
+    let data:
+      | ValidateAccessTokenResponseType
+      | (NewAccessTokenResponseType & { isAccessTokenValid?: boolean })
+      | null = null;
     let viewToRender = null;
 
     data = await Router.requestUserAuthStatus();
     if (!data) {
-      userContext.setState({ ...userContext.state, isSignedIn: false });
+      userContext.setState({
+        ...userContext.state,
+        id: "",
+        email: "",
+        username: "",
+        isSignedIn: false,
+      });
       viewToRender = NotFound.create();
       return viewToRender;
     }
 
     if (data?.isNewAccessTokenNeeded) {
-      const newJwtAccessToken = await Router.requestNewAccessToken();
+      console.log("getting new access token . . .");
+      data = await Router.requestNewAccessToken();
       // console.log("newJwtAccessToken", newJwtAccessToken);
-      if (!newJwtAccessToken) {
-        userContext.setState({ ...userContext.state, isSignedIn: false });
+      if (!data || !data.newJwtAccessToken) {
+        userContext.setState({
+          ...userContext.state,
+          id: "",
+          email: "",
+          username: "",
+          isSignedIn: false,
+        });
         viewToRender = Router.getViewForGuestUser(routeToGo);
         return viewToRender;
       } else {
@@ -182,12 +202,26 @@ abstract class Router {
 
     if (!data || !data.isAccessTokenValid) {
       // console.log("data:", data);
-      userContext.setState({ ...userContext.state, isSignedIn: false });
+      userContext.setState({
+        ...userContext.state,
+        id: "",
+        email: "",
+        username: "",
+        isSignedIn: false,
+      });
       viewToRender = Router.getViewForGuestUser(routeToGo);
       return viewToRender;
     }
 
-    userContext.setState({ ...userContext.state, isSignedIn: true });
+    const { userId, email, username, isSignedIn } = data;
+    console.log("data:", data);
+    userContext.setState({
+      ...userContext.state,
+      id: userId,
+      email,
+      username,
+      isSignedIn,
+    });
     viewToRender = Router.getViewForSignedInUser(routeToGo);
     return viewToRender;
   }
@@ -235,7 +269,7 @@ abstract class Router {
 
   static async redirect(pathToRedirect: ValidUrlPathsType) {
     urlContext.setState({ ...urlContext.state, path: pathToRedirect });
-    console.log("path to redirect:", pathToRedirect);
+    // console.log("path to redirect:", pathToRedirect);
     const routeToGo = Router.findRouteToGo();
     const viewToRender = await Router.findViewToRender(routeToGo);
     Router.renderPageBasedOnPath(viewToRender);

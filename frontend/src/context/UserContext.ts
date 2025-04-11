@@ -8,14 +8,15 @@ export type UserStateType = {
   jwtAccessToken: string;
 };
 
-export type AuthCheckType = {
+export type ValidateAccessTokenResponseType = {
   errorMessage: string;
   isRefreshTokenValid: boolean;
   isAccessTokenValid: boolean;
   isNewAccessTokenNeeded: boolean;
-  encoded: object | null;
-  refreshtoken: string;
-  hashedRefreshToken: string;
+  isSignedIn: boolean;
+  userId: string;
+  email: string;
+  username: string;
 };
 
 class UserContext extends StateManager<UserStateType> {
@@ -38,7 +39,7 @@ class UserContext extends StateManager<UserStateType> {
           signal: AbortSignal.timeout(5000),
         }
       );
-      const data = (await response.json()) as AuthCheckType;
+      const data = (await response.json()) as ValidateAccessTokenResponseType;
       return data;
     } catch (error) {
       console.log(error);
