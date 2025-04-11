@@ -144,8 +144,16 @@ class Header extends Component {
     if (noHighlightLink) {
       return;
     }
-    const activeLink = document.querySelector(
-      // `a[href="${window.location.pathname}"]`
+    // const activeLink = document.querySelector(
+    //   // `a[href="${window.location.pathname}"]`
+    //   `a[href="${urlContext.state.path}"]`
+    // );
+
+    const header = document.querySelector("header-component");
+    if (!header) {
+      return;
+    }
+    const activeLink = header.querySelector(
       `a[href="${urlContext.state.path}"]`
     );
     // console.log("activeLink", activeLink);
