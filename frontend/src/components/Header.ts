@@ -52,7 +52,10 @@ class Header extends Component {
 					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/">Home</a></li>
 					${
             !userContext.state.isSignedIn
-              ? `<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/sign-up">Sign up</a></li>`
+              ? `
+							 <li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/sign-up">Sign up</a></li>
+							 <li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/sign-in">Sign in</a></li>
+							 `
               : ""
           }
 					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/pong">Pong</a></li>
