@@ -60,6 +60,13 @@ class ThemeContext extends StateManager<ThemeType> {
       btn.classList.remove(`theme-btn-${previousTheme}`);
       btn.classList.add(`theme-btn-${newTheme}`);
     }
+
+    const googleIcon = document.querySelector(".google-icon");
+    if (googleIcon) {
+      (
+        googleIcon as HTMLImageElement
+      ).src = `/src/assets/google-icon-${newTheme}.png`;
+    }
   }
 }
 

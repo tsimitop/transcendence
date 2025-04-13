@@ -83,7 +83,15 @@ class SignIn extends Component {
 				</form>
 				<button class="${
           themeState.state === "light" ? "theme-btn-light" : "theme-btn-dark"
-        } google-sign-in-btn cursor-pointer w-full py-1"><a href=${url}>Sign in with Google</a></button>
+        } google-sign-in-btn cursor-pointer w-full py-1 flex items-center">
+				 	<a class="w-full block" href=${url}>
+						<span>Sign in with Google 
+							<img src=/src/assets/google-icon-${
+                themeState.state
+              }.png class="google-icon w-[24px] inline" />
+						</span>
+					</a>
+				</button>
 			</div>
 		`;
 

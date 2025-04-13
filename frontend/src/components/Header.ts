@@ -70,12 +70,12 @@ class Header extends Component {
                 }</a>`
               : ""
           }
-					<button class="${
+					<button class="bg-transparent theme-btn cursor-pointer
+					">${
             themeState.state === "light"
-              ? "theme-ternary-light-full"
-              : "theme-ternary-dark-full"
-          } theme-btn px-4 py-2 cursor-pointer
-					">${themeState.state === "light" ? "dark" : "light"}
+              ? "<img class='theme-icon w-[24px]' src='/src/assets/theme-dark.png' />"
+              : "<img class='theme-icon w-[24px]' src='/src/assets/theme-light.png' />"
+          }
 					</button>
 				</div>
 			</nav>
@@ -90,7 +90,10 @@ class Header extends Component {
 
   public static handleClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (target.classList.contains("theme-btn")) {
+    if (
+      target.classList.contains("theme-btn") ||
+      target.classList.contains("theme-icon")
+    ) {
       Header.handleChangeTheme(target);
     } else if (target.classList.contains("nav-link")) {
       Header.handleClickNavLink(target);
@@ -105,8 +108,18 @@ class Header extends Component {
     const newListener: StateListener<ThemeType> = {
       id: "changeTheme",
       listen: (previousTheme, newTheme) => {
+        // if (previousTheme !== newTheme) {
+        //   target.innerText = `${previousTheme}`;
+        //   themeState.dispatchChangeTheme();
+        // }
         if (previousTheme !== newTheme) {
-          target.innerText = `${previousTheme}`;
+          if (target.classList.contains("theme-icon")) {
+            (
+              target as HTMLImageElement
+            ).src = `/src/assets/theme-${previousTheme}.png`;
+          } else {
+            target.innerHTML = `<img src=/src/assets/theme-${previousTheme}.png />`;
+          }
           themeState.dispatchChangeTheme();
         }
       },
