@@ -56,6 +56,22 @@
   font-weight: bold;
 }
 
+.theme-input-btn-light {
+  border: 1px solid var(--primary-light-foreground);
+  color: var(--primary-light-foreground);
+  border-radius: 3px;
+}
+
+.theme-input-btn-dark {
+  border: 1px solid var(--primary-dark-foreground);
+  color: var(--primary-dark-foreground);
+  border-radius: 3px;
+}
+
+.theme-input-btn-dark::placeholder {
+  color: #bbb;
+}
+
 * {
   box-sizing: border-box;
 }

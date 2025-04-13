@@ -24,6 +24,10 @@ class SignIn extends Component {
 
     const main = document.createElement("main");
     main.classList.add(
+      "flex",
+      "flex-col",
+      "items-center",
+      "justify-center",
       "main-container",
       "layout-padding",
       `${
@@ -50,19 +54,41 @@ class SignIn extends Component {
     document.cookie = `oauth_state=${state}; secure=true; SameSite=None; path=/api`;
 
     const html = `
-				<h1>Sign In</h1>
-				<form class="sign-in-form">
-					<label for="username-or-email">Username or Email</label>
-					<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="username-signin-input border-2" />
-					<label for="password">Password</label>
-					<input required type="password" name="password" id="password" placeholder="password" class="password-signin-input border-2" />
-					<button type="submit" class="signin-btn cursor-pointer border-2">Sign in</button>
+			<div class="flex flex-col gap-8">
+				<h1>Sign in</h1>
+				<form class="sign-in-form flex flex-col gap-3">
+					<div class="grid grid-cols-[150px_1fr] items-center">
+						<label for="username-or-email">Username or Email</label>
+						<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="${
+              themeState.state === "light"
+                ? "theme-input-btn-light"
+                : "theme-input-btn-dark"
+            } username-signin-input w-80 px-2 py-1" />
+					</div>
+					<div class="grid grid-cols-[150px_1fr] items-center">
+						<label for="password">Password</label>
+						<input required type="password" name="password" id="password" placeholder="password" class="${
+              themeState.state === "light"
+                ? "theme-input-btn-light"
+                : "theme-input-btn-dark"
+            } password-signin-input px-2 py-1" w-80 />
+					</div>
+					<button type="submit" class="${
+            themeState.state === "light"
+              ? "theme-input-btn-light"
+              : "theme-input-btn-dark"
+          } signin-btn cursor-pointer block ml-auto mr-0 px-6 py-1">Sign in</button>
 					<p>
 						<span>Don't have an account?</span>
 						<a class="${ROUTER_CLASS_NAME}" href="/sign-up">Sign up</a>
 					</p>
 				</form>
-				<button class="google-sign-in-btn cursor-pointer border-2"><a href=${url}>Sign in with Google</a></button>
+				<button class="${
+          themeState.state === "light"
+            ? "theme-input-btn-light"
+            : "theme-input-btn-dark"
+        } google-sign-in-btn cursor-pointer w-full py-1"><a href=${url}>Sign in with Google</a></button>
+			</div>
 		`;
 
     main.insertAdjacentHTML("beforeend", html);
@@ -78,11 +104,6 @@ class SignIn extends Component {
 
     return SignInInstance;
   }
-
-  // public static handleClick(event: MouseEvent) {
-  //   const target = event.target as HTMLElement;
-  //   if (target.classList.contains("signin-btn")) SignIn.handleSignIn(event);
-  // }
 
   public static handleSignIn(event: SubmitEvent) {
     const target = event.target as HTMLFormElement;
@@ -142,35 +163,11 @@ class SignIn extends Component {
         isSignedIn,
         jwtAccessToken: jwtAccessToken,
       });
-      // console.log("userContext.state:\n", userContext.state);
-      // console.log(data);
       await Router.redirect("/");
-      // Header.highlightActiveNavLink();
     } catch (error) {
       console.log(error);
     }
   }
-
-  // public static async handleClick(event: MouseEvent) {
-  //   super.handleClick(event);
-
-  //   const target = event.target as HTMLElement;
-  //   if (target.classList.contains("google-sign-in-btn")) {
-  //     console.log("google auth");
-  //     const googleRedirectUri = "http://localhost:80/api/google-auth";
-  //     const googleClientId =
-  //       "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
-  //     const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-  //     const url = `${baseUrl}?response_type=code&client_id=${googleClientId}&scope=openid%20email&redirect_uri=${googleRedirectUri}`;
-  //     try {
-  //       const response = await fetch(url);
-  //       const data = await response.json();
-  //       console.log(data);
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   }
-  // }
 }
 
 export default SignIn;

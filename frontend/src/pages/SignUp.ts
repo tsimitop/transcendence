@@ -23,6 +23,10 @@ class SignUp extends Component {
 
     const main = document.createElement("main");
     main.classList.add(
+      "flex",
+      "flex-col",
+      "items-center",
+      "justify-center",
       "main-container",
       "layout-padding",
       `${
@@ -36,20 +40,44 @@ class SignUp extends Component {
     main.addEventListener("click", SignUp.handleClick);
 
     const html = `
-				<h1>Sign Up</h1>
-				<form class="sign-up-form">
-					<label for="email">Email</label>
-					<input required type="email" name="email" id="email" placeholder="email" class="email-signup-input border-2" />
-					<label for="username">Username</label>
-					<input required minlength="4" maxlength="20" type="text" username="username" id="username" placeholder="username" class="username-signup-input border-2" />
-					<label for="password">Password</label>
-					<input required type="password" name="password" id="password" placeholder="password" class="password-signup-input border-2" />
-					<button type="submit" class="signup-btn cursor-pointer border-2">Sign up</button>
-					<p>
-						<span>Already have an account?</span>
-						<a class=${ROUTER_CLASS_NAME} href="/sign-in">Sign in</a>
-					</p>
+			<div class="flex flex-col gap-8">
+				<h1>Sign up</h1>
+				<form class="sign-up-form flex flex-col gap-3">
+					<div class="grid grid-cols-[150px_1fr] items-center">
+						<label for="email">Email</label>
+						<input required type="email" name="email" id="email" placeholder="email" class="${
+              themeState.state === "light"
+                ? "theme-input-btn-light"
+                : "theme-input-btn-dark"
+            } email-signup-input w-80 px-2 py-1" />
+					</div>
+					<div class="grid grid-cols-[150px_1fr] items-center">
+						<label for="username">Username</label>
+						<input required minlength="4" maxlength="20" type="text" username="username" id="username" placeholder="username" class="${
+              themeState.state === "light"
+                ? "theme-input-btn-light"
+                : "theme-input-btn-dark"
+            } username-signup-input w-80 px-2 py-1" />
+					</div>
+					<div class="grid grid-cols-[150px_1fr] items-center">
+						<label for="password">Password</label>
+						<input required type="password" name="password" id="password" placeholder="password" class="${
+              themeState.state === "light"
+                ? "theme-input-btn-light"
+                : "theme-input-btn-dark"
+            } password-signup-input w-80 px-2 py-1" />
+					</div>
+						<button type="submit" class="${
+              themeState.state === "light"
+                ? "theme-input-btn-light"
+                : "theme-input-btn-dark"
+            } signup-btn cursor-pointer block ml-auto mr-0 px-6 py-1">Sign up</button>
+						<p>
+							<span>Already have an account?</span>
+							<a class=${ROUTER_CLASS_NAME} href="/sign-in">Sign in</a>
+						</p>
 				</form>
+			</div>
 		`;
 
     main.insertAdjacentHTML("beforeend", html);
@@ -62,7 +90,6 @@ class SignUp extends Component {
     );
     SignUpInstance.insertChildren();
     SignUpInstance.classList.add("page");
-
     return SignUpInstance;
   }
 

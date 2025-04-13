@@ -48,6 +48,17 @@ class ThemeContext extends StateManager<ThemeType> {
         `theme-ternary-${newTheme}-foreground`
       );
     }
+
+    const inputsAndBtns = document.querySelectorAll(
+      `.theme-input-btn-${previousTheme}`
+    );
+    console.log("previousTheme:", previousTheme);
+    console.log("newTheme", newTheme);
+    console.log(inputsAndBtns);
+    for (const inputOrBtn of inputsAndBtns) {
+      inputOrBtn.classList.remove(`theme-input-btn-${previousTheme}`);
+      inputOrBtn.classList.add(`theme-input-btn-${newTheme}`);
+    }
   }
 }
 
