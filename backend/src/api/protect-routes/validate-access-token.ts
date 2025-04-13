@@ -14,12 +14,22 @@ const validateAccessToken = function (accessTokenInHeader: string) {
   return decoded;
 };
 
+const checkAccessTokenInCookies = function (
+  accessTokenInCookies: string = ""
+): string {
+  if (!accessTokenInCookies) {
+    return "";
+  }
+  return accessTokenInCookies;
+};
+
 fastify.post(
   "/api/validate-access-token",
   async (request: FastifyRequest<{ Body: { user: UserStateType } }>, reply) => {
     const userDbInstance = new UserDb("database/test.db");
     const userDb = userDbInstance.openDb();
-    const cookieRefreshToken = request.cookies.refreshtoken;
+    const cookieRefreshToken =
+      request.cookies.refreshtoken || request.cookies.oauthrefreshtoken;
     // if (!request.body || !request.body?.user || !request.body?.user?.id) {
     if (!cookieRefreshToken) {
       reply.send({
@@ -101,7 +111,15 @@ fastify.post(
     //   accessTokenInHeader
     // );
 
+    let accessTokenInCookies = "";
+
     if (!accessTokenInHeader) {
+      accessTokenInCookies = checkAccessTokenInCookies(
+        request.cookies.accesstoken
+      );
+    }
+
+    if (!accessTokenInHeader && !accessTokenInCookies) {
       reply.send({
         errorMessage:
           "No access token in Authorization header! Refresh token will be used to generate a new access token",
@@ -128,9 +146,10 @@ fastify.post(
       userDb,
       hashedRefreshToken
     );
-
     try {
-      validateAccessToken(accessTokenInHeader);
+      if (accessTokenInHeader) {
+        validateAccessToken(accessTokenInHeader);
+      }
       reply.send({
         errorMessage: "",
         isRefreshTokenValid: true,

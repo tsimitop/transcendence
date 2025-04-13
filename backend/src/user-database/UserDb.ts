@@ -64,78 +64,85 @@ class UserDb extends Sqlite {
     userDb: DbType,
     usernameOrEmail: string,
     password: string
-  ): Promise<UserStateType> {
-    const findEmailByEmailStatement = userDb.prepare(
-      QueryUser.FIND_EMAIL_BY_EMAIL
-    );
-    const findUsernameByUsernameStatement = userDb.prepare(
-      QueryUser.FIND_USERNAME_BY_USERNAME
-    );
-    const emailsList = findEmailByEmailStatement.all(
-      usernameOrEmail.trim().toLowerCase()
-    ) as { email: string }[];
-    const usernamesList = findUsernameByUsernameStatement.all(
-      usernameOrEmail.trim()
-    ) as {
-      username: string;
-    }[];
-    const isLoginByEmail = emailsList.length;
-    const isLoginByUsername = usernamesList.length;
-    const foundUser = isLoginByEmail || isLoginByUsername;
-    if (!foundUser) {
-      return { email: "", username: "", isSignedIn: false, id: "" };
-    }
-    const findPasswordStatement = userDb.prepare(
-      isLoginByEmail
-        ? QueryUser.FIND_PASSWORD_BY_EMAIL
-        : QueryUser.FIND_PASSWORD_BY_USERNAME
-    );
-    const hashedPasswordList = findPasswordStatement.all(
-      isLoginByEmail ? emailsList[0].email : usernameOrEmail
-    ) as [{ password: string }];
+  ): Promise<UserStateType | null> {
+    try {
+      const findEmailByEmailStatement = userDb.prepare(
+        QueryUser.FIND_EMAIL_BY_EMAIL
+      );
+      const findUsernameByUsernameStatement = userDb.prepare(
+        QueryUser.FIND_USERNAME_BY_USERNAME
+      );
+      const emailsList = findEmailByEmailStatement.all(
+        usernameOrEmail.trim().toLowerCase()
+      ) as { email: string }[];
+      const usernamesList = findUsernameByUsernameStatement.all(
+        usernameOrEmail.trim()
+      ) as {
+        username: string;
+      }[];
+      const isLoginByEmail = emailsList.length;
+      const isLoginByUsername = usernamesList.length;
+      const foundUser = isLoginByEmail || isLoginByUsername;
+      if (!foundUser) {
+        return { email: "", username: "", isSignedIn: false, id: "" };
+      }
+      const findPasswordStatement = userDb.prepare(
+        isLoginByEmail
+          ? QueryUser.FIND_PASSWORD_BY_EMAIL
+          : QueryUser.FIND_PASSWORD_BY_USERNAME
+      );
+      const hashedPasswordList = findPasswordStatement.all(
+        isLoginByEmail ? emailsList[0].email : usernameOrEmail
+      ) as [{ password: string }];
 
-    const [foundHashedPassword] = hashedPasswordList;
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      foundHashedPassword.password
-    );
-    const findEmailByUsernameStatement = userDb.prepare(
-      QueryUser.FIND_EMAIL_BY_USERNAME
-    );
-    const findUsernameByEmailStatement = userDb.prepare(
-      QueryUser.FIND_USERNAME_BY_EMAIL
-    );
-    const findIdByUsernameStatement = userDb.prepare(
-      QueryUser.FIND_ID_BY_USERNAME
-    );
-    const findIdByEmailStatement = userDb.prepare(QueryUser.FIND_ID_BY_EMAIL);
-    const user: UserStateType = {
-      id: isLoginByEmail
-        ? (
-            findIdByEmailStatement.all(emailsList[0]?.email) as [{ id: string }]
-          )[0].id
-        : (
-            findIdByUsernameStatement.all(usernamesList[0]?.username) as [
-              { id: string }
+      const [foundHashedPassword] = hashedPasswordList;
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        foundHashedPassword.password
+      );
+      const findEmailByUsernameStatement = userDb.prepare(
+        QueryUser.FIND_EMAIL_BY_USERNAME
+      );
+      const findUsernameByEmailStatement = userDb.prepare(
+        QueryUser.FIND_USERNAME_BY_EMAIL
+      );
+      const findIdByUsernameStatement = userDb.prepare(
+        QueryUser.FIND_ID_BY_USERNAME
+      );
+      const findIdByEmailStatement = userDb.prepare(QueryUser.FIND_ID_BY_EMAIL);
+      const user: UserStateType = {
+        id: isLoginByEmail
+          ? (
+              findIdByEmailStatement.all(emailsList[0]?.email) as [
+                { id: string }
+              ]
+            )[0].id
+          : (
+              findIdByUsernameStatement.all(usernamesList[0]?.username) as [
+                { id: string }
+              ]
+            )[0].id,
+        email:
+          emailsList[0]?.email ||
+          (
+            findEmailByUsernameStatement.all(usernamesList[0]?.username) as [
+              { email: string }
             ]
-          )[0].id,
-      email:
-        emailsList[0]?.email ||
-        (
-          findEmailByUsernameStatement.all(usernamesList[0]?.username) as [
-            { email: string }
-          ]
-        )[0].email,
-      username:
-        usernamesList[0]?.username ||
-        (
-          findUsernameByEmailStatement.all(emailsList[0]?.email) as [
-            { username: string }
-          ]
-        )[0].username,
-      isSignedIn: isPasswordValid,
-    };
-    return user;
+          )[0].email,
+        username:
+          usernamesList[0]?.username ||
+          (
+            findUsernameByEmailStatement.all(emailsList[0]?.email) as [
+              { username: string }
+            ]
+          )[0].username,
+        isSignedIn: isPasswordValid,
+      };
+      return user;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
   };
 
   public async updateHashedRefreshToken(

@@ -17,7 +17,8 @@ fastify.post(
   "/api/generate-new-access-token",
   // (request: FastifyRequest<{ Body: RequestNewAccessTokenType }>, reply) => {
   async (request, reply) => {
-    const cookieRefreshToken = request.cookies.refreshtoken;
+    const cookieRefreshToken =
+      request.cookies.refreshtoken || request.cookies.oauthrefreshtoken;
     if (!cookieRefreshToken) {
       reply.send({
         errorMessage:
