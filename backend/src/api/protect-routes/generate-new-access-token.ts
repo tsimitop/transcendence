@@ -29,6 +29,7 @@ fastify.post(
         username: "",
         isSignedIn: false,
       });
+
       return;
     }
 
@@ -52,10 +53,12 @@ fastify.post(
       return;
     }
 
-    const refreshTokenSecret = process.env.REFRESH_TOKEN as Secret;
-    const encoded = verify(cookieRefreshToken, refreshTokenSecret);
+    const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET as Secret;
 
-    if (!encoded) {
+    try {
+      verify(cookieRefreshToken, refreshTokenSecret);
+    } catch (error) {
+      console.log(error);
       reply.send({
         errorMessage:
           "Refresh token is expired. User must sign in again. Redirecting to homepage ...",
@@ -65,8 +68,19 @@ fastify.post(
         username: "",
         isSignedIn: false,
       });
-      return;
     }
+    // if (!encoded) {
+    //   reply.send({
+    //     errorMessage:
+    //       "Refresh token is expired. User must sign in again. Redirecting to homepage ...",
+    //     newJwtAccessToken: "",
+    //     userId: "",
+    //     email: "",
+    //     username: "",
+    //     isSignedIn: false,
+    //   });
+    //   return;
+    // }
 
     const doesRefreshTokenMatch = await bcrypt.compare(
       cookieRefreshToken,

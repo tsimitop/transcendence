@@ -102,11 +102,19 @@ abstract class Router {
       );
       const data = (await response.json()) as NewAccessTokenResponseType;
       // console.log("data after new access token generation:", data);
-      const { newJwtAccessToken, userId, email, username, isSignedIn } = data;
+      const {
+        newJwtAccessToken,
+        userId,
+        email,
+        username,
+        isSignedIn,
+        errorMessage,
+      } = data;
       if (!newJwtAccessToken) {
-        throw new Error(
-          "New access token could not be created! Refresh token might be expired"
-        );
+        // throw new Error(
+        //   "New access token could not be created! Refresh token might be expired"
+        // );
+        throw errorMessage;
       }
       userContext.setState({
         ...userContext.state,
@@ -214,7 +222,6 @@ abstract class Router {
     }
 
     const { userId, email, username, isSignedIn } = data;
-    console.log("data:", data);
     userContext.setState({
       ...userContext.state,
       id: userId,

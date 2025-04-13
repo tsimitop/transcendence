@@ -1,24 +1,25 @@
 import dotenv from "dotenv";
-import { sign, verify, Secret } from "jsonwebtoken";
+import { sign, verify, Secret, Algorithm } from "jsonwebtoken";
 dotenv.config({ path: "./.env" });
 
 export const signJwtAccessToken = function (userId: string) {
-  return sign({ userId }, process.env.ACCESS_TOKEN!, {
-    algorithm: "HS256",
-    // expiresIn: "15m",
-    expiresIn: 15,
+  const algorithm = process.env.ACCESS_TOKEN_ALGORITHM as Algorithm;
+  return sign({ userId }, process.env.ACCESS_TOKEN_SECRET!, {
+    algorithm,
+    expiresIn: "15m",
   });
 };
 
 export const signJwtRefreshToken = function (userId: string) {
-  return sign({ userId }, process.env.REFRESH_TOKEN!, {
-    algorithm: "HS256",
-    expiresIn: 40,
+  const algorithm = process.env.REFRESH_TOKEN_ALGORITHM as Algorithm;
+  return sign({ userId }, process.env.REFRESH_TOKEN_SECRET!, {
+    algorithm,
+    expiresIn: "1d",
   });
 };
 
 export const isAccessTokenExpired = function (accessToken: string) {
-  const secretKey = process.env.ACCESS_TOKEN as Secret;
+  const secretKey = process.env.ACCESS_TOKEN_SECRET as Secret;
   try {
     const decoded = verify(accessToken, secretKey);
     const isDecodedValid =

@@ -106,7 +106,6 @@ fastify.get(
         return;
       }
       user.isSignedIn = true;
-      console.log("user ** * * * * * *", user);
 
       const jwtRefreshToken = signJwtRefreshToken(user.id);
       const jwtAccessToken = signJwtAccessToken(user.id);
@@ -125,8 +124,6 @@ fastify.get(
         user.id,
         hashedRefreshToken
       );
-      console.log("------- data:", data);
-      console.log("------- decoded:", decoded);
       reply.cookie("oauthrefreshtoken", jwtRefreshToken, {
         httpOnly: true,
         secure: true,

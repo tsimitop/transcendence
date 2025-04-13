@@ -8,10 +8,15 @@ import UserDb from "../../user-database/UserDb";
 
 dotenv.config({ path: "./env" });
 
-const validateAccessToken = function (accessTokenInHeader: string) {
-  const accessTokenSecret = process.env.ACCESS_TOKEN as jwt.Secret;
-  const decoded = jwt.verify(accessTokenInHeader, accessTokenSecret);
-  return decoded;
+const validateAccessToken = function (accessToken: string) {
+  try {
+    const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET as jwt.Secret;
+    const decoded = jwt.verify(accessToken, accessTokenSecret);
+    return decoded;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 };
 
 const checkAccessTokenInCookies = function (
@@ -20,11 +25,7 @@ const checkAccessTokenInCookies = function (
   if (!accessTokenInCookies) {
     return "";
   }
-  console.log(
-    "accessTokenInCookies -------------------------- **********************",
-    accessTokenInCookies
-  );
-  const accessTokenSecret = process.env.ACCESS_TOKEN as Secret;
+  const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET as Secret;
   try {
     jwt.verify(accessTokenInCookies, accessTokenSecret);
     return accessTokenInCookies;
@@ -37,137 +38,132 @@ const checkAccessTokenInCookies = function (
 fastify.post(
   "/api/validate-access-token",
   async (request: FastifyRequest<{ Body: { user: UserStateType } }>, reply) => {
-    const userDbInstance = new UserDb("database/test.db");
-    const userDb = userDbInstance.openDb();
-    const cookieRefreshToken =
-      request.cookies.refreshtoken || request.cookies.oauthrefreshtoken;
-    console.log(
-      "request.cookies.refreshtoken------------:",
-      request.cookies.refreshtoken
-    );
-    console.log(
-      "request.cookies.oauthrefreshtoken------------:",
-      request.cookies.oauthrefreshtoken
-    );
-    // if (!request.body || !request.body?.user || !request.body?.user?.id) {
-    if (!cookieRefreshToken) {
-      reply.send({
-        errorMessage: "User is not signed in!",
-        isRefreshTokenValid: false,
-        isAccessTokenValid: false,
-        isNewAccessTokenNeeded: false,
-        isSignedIn: false,
-        userId: "",
-        email: "",
-        username: "",
-      });
-      return;
-    }
-    // const { user } = request.body;
-    const hashedRefreshToken =
-      await userDbInstance.findHashedRefreshTokenByCookieRefreshToken(
-        userDb,
-        cookieRefreshToken
-      );
-    // const refreshTokensList = userDbInstance.findRefreshTokenByUserId(
-    //   userDb,
-    //   user
-    // );
-
-    if (!hashedRefreshToken) {
-      reply.send({
-        errorMessage:
-          "No hashed refresh token found in database! Redirecting to the homepage",
-        isRefreshTokenValid: false,
-        isAccessTokenValid: false,
-        isNewAccessTokenNeeded: false,
-        isSignedIn: false,
-        userId: "",
-        email: "",
-        username: "",
-      });
-      return;
-    }
-    const refreshTokenInCookie = cookieRefreshToken;
-    if (!request.cookies || !refreshTokenInCookie) {
-      reply.send({
-        errorMessage: "No cookies or no refresh token!",
-        isRefreshTokenValid: false,
-        isAccessTokenValid: false,
-        isNewAccessTokenNeeded: false,
-        isSignedIn: false,
-        userId: "",
-        email: "",
-        username: "",
-      });
-      return;
-    }
-    // console.log(hashedRefreshToken);
-    const doesRefreshTokenMatch = await bcrypt.compare(
-      refreshTokenInCookie,
-      hashedRefreshToken
-    );
-
-    if (!doesRefreshTokenMatch) {
-      reply.send({
-        errorMessage:
-          "Refresh token does not match the hashed refresh token! Redirecting to the homepage",
-        isRefreshTokenValid: false,
-        isAccessTokenValid: false,
-        isNewAccessTokenNeeded: false,
-        isSignedIn: false,
-        userId: "",
-        email: "",
-        username: "",
-      });
-      return;
-    }
-
-    const accessTokenInHeader =
-      request.headers.authorization?.split(" ")[1] || null;
-    // console.log(
-    //   "----------------accessTokenInHeader--------------:",
-    //   accessTokenInHeader
-    // );
-
-    let accessTokenInCookies = "";
-
-    if (!accessTokenInHeader) {
-      accessTokenInCookies = checkAccessTokenInCookies(
-        request.cookies.accesstoken
-      );
-    }
-
-    if (!accessTokenInHeader && !accessTokenInCookies) {
-      reply.send({
-        errorMessage:
-          "No access token in Authorization header! Refresh token will be used to generate a new access token",
-        isRefreshTokenValid: true,
-        isAccessTokenValid: false,
-        isNewAccessTokenNeeded: true,
-        isSignedIn: false,
-        userId: "",
-        email: "",
-        username: "",
-      });
-      return;
-    }
-
-    const userId = userDbInstance.findUserIdByHashedRefreshToken(
-      userDb,
-      hashedRefreshToken
-    );
-    const email = userDbInstance.findEmailByHashedRefreshToken(
-      userDb,
-      hashedRefreshToken
-    );
-    const username = userDbInstance.findUsernameByHashedRefreshToken(
-      userDb,
-      hashedRefreshToken
-    );
     try {
+      const userDbInstance = new UserDb("database/test.db");
+      const userDb = userDbInstance.openDb();
+      const cookieRefreshToken =
+        request.cookies.refreshtoken || request.cookies.oauthrefreshtoken;
+      // if (!request.body || !request.body?.user || !request.body?.user?.id) {
+      if (!cookieRefreshToken) {
+        reply.send({
+          errorMessage: "User is not signed in!",
+          isRefreshTokenValid: false,
+          isAccessTokenValid: false,
+          isNewAccessTokenNeeded: false,
+          isSignedIn: false,
+          userId: "",
+          email: "",
+          username: "",
+        });
+        return;
+      }
+      // const { user } = request.body;
+      const hashedRefreshToken =
+        await userDbInstance.findHashedRefreshTokenByCookieRefreshToken(
+          userDb,
+          cookieRefreshToken
+        );
+      // const refreshTokensList = userDbInstance.findRefreshTokenByUserId(
+      //   userDb,
+      //   user
+      // );
+
+      if (!hashedRefreshToken) {
+        reply.send({
+          errorMessage:
+            "No hashed refresh token found in database! Redirecting to the homepage",
+          isRefreshTokenValid: false,
+          isAccessTokenValid: false,
+          isNewAccessTokenNeeded: false,
+          isSignedIn: false,
+          userId: "",
+          email: "",
+          username: "",
+        });
+        return;
+      }
+      const refreshTokenInCookie = cookieRefreshToken;
+      if (!request.cookies || !refreshTokenInCookie) {
+        reply.send({
+          errorMessage: "No cookies or no refresh token!",
+          isRefreshTokenValid: false,
+          isAccessTokenValid: false,
+          isNewAccessTokenNeeded: false,
+          isSignedIn: false,
+          userId: "",
+          email: "",
+          username: "",
+        });
+        return;
+      }
+      // console.log(hashedRefreshToken);
+      const doesRefreshTokenMatch = await bcrypt.compare(
+        refreshTokenInCookie,
+        hashedRefreshToken
+      );
+
+      if (!doesRefreshTokenMatch) {
+        reply.send({
+          errorMessage:
+            "Refresh token does not match the hashed refresh token! Redirecting to the homepage",
+          isRefreshTokenValid: false,
+          isAccessTokenValid: false,
+          isNewAccessTokenNeeded: false,
+          isSignedIn: false,
+          userId: "",
+          email: "",
+          username: "",
+        });
+        return;
+      }
+
+      const accessTokenInHeader =
+        request.headers.authorization?.split(" ")[1] || null;
+      // console.log(
+      //   "----------------accessTokenInHeader--------------:",
+      //   accessTokenInHeader
+      // );
+
+      let accessTokenInCookies = "";
+
+      if (!accessTokenInHeader) {
+        accessTokenInCookies = checkAccessTokenInCookies(
+          request.cookies.accesstoken
+        );
+      }
+
+      if (!accessTokenInHeader && !accessTokenInCookies) {
+        reply.send({
+          errorMessage:
+            "No access token in Authorization header! Refresh token will be used to generate a new access token",
+          isRefreshTokenValid: true,
+          isAccessTokenValid: false,
+          isNewAccessTokenNeeded: true,
+          isSignedIn: false,
+          userId: "",
+          email: "",
+          username: "",
+        });
+        return;
+      }
+
+      const userId = userDbInstance.findUserIdByHashedRefreshToken(
+        userDb,
+        hashedRefreshToken
+      );
+      const email = userDbInstance.findEmailByHashedRefreshToken(
+        userDb,
+        hashedRefreshToken
+      );
+      const username = userDbInstance.findUsernameByHashedRefreshToken(
+        userDb,
+        hashedRefreshToken
+      );
+
       if (accessTokenInHeader) {
         validateAccessToken(accessTokenInHeader);
+      } else {
+        validateAccessToken(accessTokenInCookies);
       }
       reply.send({
         errorMessage: "",
@@ -184,6 +180,7 @@ fastify.post(
       console.log(error);
       reply.send({
         errorMessage:
+          error ||
           "Access token is invalid. Refresh token will be used to generate a new access token",
         isRefreshTokenValid: true,
         isAccessTokenValid: false,
