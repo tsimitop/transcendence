@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { fastify } from "../../server";
 import UserDb from "../../user-database/UserDb";
-import { signJwtAccessToken } from "../sign-in/jwt";
+import { signJwtAccessToken } from "../jwt";
 import { Secret, verify } from "jsonwebtoken";
 // import { UserStateType } from "../sign-in/sign-in";
 

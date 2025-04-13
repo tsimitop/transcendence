@@ -1,7 +1,7 @@
 import { FastifyRequest } from "fastify";
 import bcrypt from "bcrypt";
 import { fastify } from "../../server";
-import { signJwtAccessToken, signJwtRefreshToken } from "./jwt";
+import { signJwtAccessToken, signJwtRefreshToken } from "../jwt";
 import UserDb from "../../user-database/UserDb";
 
 type SignInType = {
@@ -38,7 +38,7 @@ fastify.post(
       password
     );
 
-    if (!user.isSignedIn) {
+    if (!user || !user.isSignedIn) {
       reply.send({
         errorMessage: "Invalid username or password!",
         user: null,

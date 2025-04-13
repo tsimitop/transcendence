@@ -79,7 +79,7 @@ abstract class Router {
       const data =
         ((await userContext.isUserSignedIn()) as ValidateAccessTokenResponseType) ||
         null;
-      // console.log("data:", data);
+      console.log("data:", data);
       return data;
     } catch (error) {
       console.log(error);

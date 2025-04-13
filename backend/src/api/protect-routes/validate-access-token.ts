@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { FastifyRequest } from "fastify/types/request";
-import jwt from "jsonwebtoken";
+import jwt, { Secret } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { fastify } from "../../server";
 import { UserStateType } from "../sign-in/sign-in";
@@ -20,7 +20,18 @@ const checkAccessTokenInCookies = function (
   if (!accessTokenInCookies) {
     return "";
   }
-  return accessTokenInCookies;
+  console.log(
+    "accessTokenInCookies -------------------------- **********************",
+    accessTokenInCookies
+  );
+  const accessTokenSecret = process.env.ACCESS_TOKEN as Secret;
+  try {
+    jwt.verify(accessTokenInCookies, accessTokenSecret);
+    return accessTokenInCookies;
+  } catch (error) {
+    console.log(error);
+    return "";
+  }
 };
 
 fastify.post(
@@ -30,6 +41,14 @@ fastify.post(
     const userDb = userDbInstance.openDb();
     const cookieRefreshToken =
       request.cookies.refreshtoken || request.cookies.oauthrefreshtoken;
+    console.log(
+      "request.cookies.refreshtoken------------:",
+      request.cookies.refreshtoken
+    );
+    console.log(
+      "request.cookies.oauthrefreshtoken------------:",
+      request.cookies.oauthrefreshtoken
+    );
     // if (!request.body || !request.body?.user || !request.body?.user?.id) {
     if (!cookieRefreshToken) {
       reply.send({

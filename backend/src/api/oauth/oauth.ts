@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { FastifyRequest } from "fastify/types/request";
 import { fastify } from "../../server";
 import UserDb from "../../user-database/UserDb";
+import { signJwtAccessToken, signJwtRefreshToken } from "../jwt";
 
 type OAuthRequestType = {
   state: string;
@@ -71,8 +72,8 @@ fastify.get(
 
       const data = (await response.json()) as OAuthResponseType;
       const {
-        access_token: accessToken,
-        refresh_token: refreshToken,
+        // access_token: accessToken,
+        // refresh_token: refreshToken,
         id_token: idToken,
       } = data;
 
@@ -107,9 +108,12 @@ fastify.get(
       user.isSignedIn = true;
       console.log("user ** * * * * * *", user);
 
+      const jwtRefreshToken = signJwtRefreshToken(user.id);
+      const jwtAccessToken = signJwtAccessToken(user.id);
+
       const saltRounds = 10;
       const salt = await bcrypt.genSalt(saltRounds);
-      const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
+      const hashedRefreshToken = await bcrypt.hash(jwtRefreshToken, salt);
       await userDbInstance.updateHashedRefreshToken(
         userDb,
         user.id,
@@ -123,13 +127,13 @@ fastify.get(
       );
       console.log("------- data:", data);
       console.log("------- decoded:", decoded);
-      reply.cookie("oauthrefreshtoken", refreshToken, {
+      reply.cookie("oauthrefreshtoken", jwtRefreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: "none",
         expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
       });
-      reply.cookie("accesstoken", accessToken, {
+      reply.cookie("accesstoken", jwtAccessToken, {
         httpOnly: true,
         secure: true,
         sameSite: "none",
