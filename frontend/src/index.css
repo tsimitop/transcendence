@@ -56,19 +56,31 @@
   font-weight: bold;
 }
 
-.theme-input-btn-light {
+.theme-btn-light {
+  color: var(--primary-light-foreground);
+  background-color: var(--ternary-light-background);
+  border-radius: 3px;
+}
+
+.theme-btn-dark {
+  color: var(--primary-dark-background);
+  background-color: var(--ternary-dark-background);
+  border-radius: 3px;
+}
+
+.theme-input-light {
   border: 1px solid var(--primary-light-foreground);
   color: var(--primary-light-foreground);
   border-radius: 3px;
 }
 
-.theme-input-btn-dark {
+.theme-input-dark {
   border: 1px solid var(--primary-dark-foreground);
   color: var(--primary-dark-foreground);
   border-radius: 3px;
 }
 
-.theme-input-btn-dark::placeholder {
+.theme-input-dark::placeholder {
   color: #bbb;
 }
 

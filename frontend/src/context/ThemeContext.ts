@@ -49,15 +49,16 @@ class ThemeContext extends StateManager<ThemeType> {
       );
     }
 
-    const inputsAndBtns = document.querySelectorAll(
-      `.theme-input-btn-${previousTheme}`
-    );
-    console.log("previousTheme:", previousTheme);
-    console.log("newTheme", newTheme);
-    console.log(inputsAndBtns);
-    for (const inputOrBtn of inputsAndBtns) {
-      inputOrBtn.classList.remove(`theme-input-btn-${previousTheme}`);
-      inputOrBtn.classList.add(`theme-input-btn-${newTheme}`);
+    const inputs = document.querySelectorAll(`.theme-input-${previousTheme}`);
+    for (const input of inputs) {
+      input.classList.remove(`theme-input-${previousTheme}`);
+      input.classList.add(`theme-input-${newTheme}`);
+    }
+
+    const btns = document.querySelectorAll(`.theme-btn-${previousTheme}`);
+    for (const btn of btns) {
+      btn.classList.remove(`theme-btn-${previousTheme}`);
+      btn.classList.add(`theme-btn-${newTheme}`);
     }
   }
 }

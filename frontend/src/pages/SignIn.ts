@@ -61,22 +61,20 @@ class SignIn extends Component {
 						<label for="username-or-email">Username or Email</label>
 						<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="${
               themeState.state === "light"
-                ? "theme-input-btn-light"
-                : "theme-input-btn-dark"
+                ? "theme-input-light"
+                : "theme-input-dark"
             } username-signin-input w-80 px-2 py-1" />
 					</div>
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="password">Password</label>
 						<input required type="password" name="password" id="password" placeholder="password" class="${
               themeState.state === "light"
-                ? "theme-input-btn-light"
-                : "theme-input-btn-dark"
+                ? "theme-input-light"
+                : "theme-input-dark"
             } password-signin-input px-2 py-1" w-80 />
 					</div>
 					<button type="submit" class="${
-            themeState.state === "light"
-              ? "theme-input-btn-light"
-              : "theme-input-btn-dark"
+            themeState.state === "light" ? "theme-btn-light" : "theme-btn-dark"
           } signin-btn cursor-pointer block ml-auto mr-0 px-6 py-1">Sign in</button>
 					<p>
 						<span>Don't have an account?</span>
@@ -84,9 +82,7 @@ class SignIn extends Component {
 					</p>
 				</form>
 				<button class="${
-          themeState.state === "light"
-            ? "theme-input-btn-light"
-            : "theme-input-btn-dark"
+          themeState.state === "light" ? "theme-btn-light" : "theme-btn-dark"
         } google-sign-in-btn cursor-pointer w-full py-1"><a href=${url}>Sign in with Google</a></button>
 			</div>
 		`;
