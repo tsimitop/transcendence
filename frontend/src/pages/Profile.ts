@@ -71,11 +71,7 @@ class Profile extends Component {
 				<p>id: ${userContext.state.id}</p>
 				<p>email: ${userContext.state.email}</p>
 				<p>username: ${userContext.state.username}</p>
-				<button class="sign-out-btn ${
-          themeState.state === "light"
-            ? "theme-ternary-light-full"
-            : "theme-ternary-dark-full"
-        } px-4 py-2 cursor-pointer">
+				<button class="sign-out-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
 					Sign out
 				</button>
 			`;

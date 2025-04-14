@@ -30,11 +30,7 @@ class Header extends Component {
     );
     HeaderInstance.insertChildren();
     HeaderInstance.classList.add(
-      `${
-        themeState.state === "light"
-          ? "theme-secondary-light-full"
-          : "theme-secondary-dark-full"
-      }`,
+      `theme-secondary-${themeState.state}-full`,
       "h-18",
       "flex",
       "items-center",
@@ -70,12 +66,11 @@ class Header extends Component {
                 }</a>`
               : ""
           }
-					<button class="bg-transparent theme-btn cursor-pointer
-					">${
-            themeState.state === "light"
-              ? "<img class='theme-icon w-[24px]' src='/src/assets/theme-dark.png' />"
-              : "<img class='theme-icon w-[24px]' src='/src/assets/theme-light.png' />"
-          }
+					<button class="bg-transparent theme-btn cursor-pointer">
+              <img class='theme-icon w-[24px]' src='/src/assets/theme-${
+                themeState.state === "light" ? "dark" : "light"
+              }.png'
+							/>
 					</button>
 				</div>
 			</nav>

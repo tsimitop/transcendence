@@ -58,37 +58,23 @@ class SignIn extends Component {
 				<form class="sign-in-form flex flex-col gap-3">
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="username-or-email">Username or Email</label>
-						<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="${
-              themeState.state === "light"
-                ? "theme-input-light"
-                : "theme-input-dark"
-            } username-signin-input w-80 px-2 py-1" />
+						<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="theme-input-${themeState.state} username-signin-input w-80 px-2 py-1" />
 					</div>
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="password">Password</label>
-						<input required type="password" name="password" id="password" placeholder="password" class="${
-              themeState.state === "light"
-                ? "theme-input-light"
-                : "theme-input-dark"
-            } password-signin-input px-2 py-1" w-80 />
+						<input required type="password" name="password" id="password" placeholder="password" class="theme-input-${themeState.state} password-signin-input px-2 py-1" w-80 />
 					</div>
-					<button type="submit" class="${
-            themeState.state === "light" ? "theme-btn-light" : "theme-btn-dark"
-          } signin-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Sign in</button>
+					<button type="submit" class="theme-btn-${themeState.state} signin-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Sign in</button>
 					<p>
 						<span class="text-sm">Don't have an account?</span>
 						<a class="${ROUTER_CLASS_NAME} text-xs underline hover:no-underline" href="/sign-up">Sign up &rarr;
 						</a>
 					</p>
 				</form>
-				<button class="${
-          themeState.state === "light" ? "theme-btn-light" : "theme-btn-dark"
-        } google-sign-in-btn cursor-pointer w-full py-2 flex items-center">
+				<button class="theme-btn-${themeState.state} google-sign-in-btn cursor-pointer w-full py-2 flex items-center">
 				 	<a class="w-full block" href=${url}>
 						<span>Sign in with Google 
-							<img src=/src/assets/google-icon-${
-                themeState.state
-              }.png class="google-icon w-[24px] inline" />
+							<img src=/src/assets/google-icon-${themeState.state}.png class="google-icon w-[24px] inline" />
 						</span>
 					</a>
 				</button>

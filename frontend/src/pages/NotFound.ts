@@ -19,11 +19,9 @@ class NotFound extends Component {
     }
 
     const html = `
-			<main class="${
-        themeState.state === "light"
-          ? "theme-primary-light-full"
-          : "theme-primary-dark-full"
-      } main-container layout-padding">
+			<main class="
+				theme-primary-${themeState.state}-full main-container layout-padding"
+			>
 				<h1>Not Found! 404</h1>
 			</main>
 		`;

@@ -25,11 +25,7 @@ class Footer extends Component {
     const FooterInstance = new Footer({ html, position: "beforeend" });
     FooterInstance.insertChildren();
     FooterInstance.classList.add(
-      `${
-        themeState.state === "light"
-          ? "theme-secondary-light-full"
-          : "theme-secondary-dark-full"
-      }`,
+      `theme-secondary-${themeState.state}-full`,
       "layout-padding",
       "h-18",
       "flex",

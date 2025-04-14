@@ -20,11 +20,9 @@ class Home extends Component {
       customElements.define("home-component", Home);
     }
     const html = `
-			<main class="${
-        themeState.state === "light"
-          ? "theme-primary-light-full"
-          : "theme-primary-dark-full"
-      } main-container layout-padding">
+			<main class="
+				theme-primary-${themeState.state}-full main-container layout-padding"
+			>
 				<h1>Welcome ${userContext.state.username || userContext.state.email}</h1>
 			</main>
 		`;

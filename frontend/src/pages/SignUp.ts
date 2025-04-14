@@ -44,33 +44,17 @@ class SignUp extends Component {
 				<form class="sign-up-form flex flex-col gap-3">
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="email">Email</label>
-						<input required type="email" name="email" id="email" placeholder="email" class="${
-              themeState.state === "light"
-                ? "theme-input-light"
-                : "theme-input-dark"
-            } email-signup-input w-80 px-2 py-1" />
+						<input required type="email" name="email" id="email" placeholder="email" class="theme-input-${themeState.state} email-signup-input w-80 px-2 py-1" />
 					</div>
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="username">Username</label>
-						<input required minlength="4" maxlength="20" type="text" username="username" id="username" placeholder="username" class="${
-              themeState.state === "light"
-                ? "theme-input-light"
-                : "theme-input-dark"
-            } username-signup-input w-80 px-2 py-1" />
+						<input required minlength="4" maxlength="20" type="text" username="username" id="username" placeholder="username" class="theme-input-${themeState.state} username-signup-input w-80 px-2 py-1" />
 					</div>
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="password">Password</label>
-						<input required type="password" name="password" id="password" placeholder="password" class="${
-              themeState.state === "light"
-                ? "theme-input-light"
-                : "theme-input-dark"
-            } password-signup-input w-80 px-2 py-1" />
+						<input required type="password" name="password" id="password" placeholder="password" class="theme-input-${themeState.state} password-signup-input w-80 px-2 py-1" />
 					</div>
-						<button type="submit" class="${
-              themeState.state === "light"
-                ? "theme-btn-light"
-                : "theme-btn-dark"
-            } signup-btn cursor-pointer block ml-auto mr-0 px-6 py-2 ">Sign up</button>
+						<button type="submit" class="theme-btn-${themeState.state} signup-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Sign up</button>
 						<p>
 							<span class="text-sm">Already have an account?</span>
 							<a class="${ROUTER_CLASS_NAME} text-xs underline hover:no-underline" href="/sign-in">Sign in &rarr;</a>
