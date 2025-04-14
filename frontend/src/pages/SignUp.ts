@@ -41,7 +41,6 @@ class SignUp extends Component {
 
     const html = `
 			<div class="flex flex-col gap-8">
-				<h1>Sign up</h1>
 				<form class="sign-up-form flex flex-col gap-3">
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="email">Email</label>
@@ -71,10 +70,10 @@ class SignUp extends Component {
               themeState.state === "light"
                 ? "theme-btn-light"
                 : "theme-btn-dark"
-            } signup-btn cursor-pointer block ml-auto mr-0 px-6 py-1">Sign up</button>
+            } signup-btn cursor-pointer block ml-auto mr-0 px-6 py-2 ">Sign up</button>
 						<p>
-							<span>Already have an account?</span>
-							<a class=${ROUTER_CLASS_NAME} href="/sign-in">Sign in</a>
+							<span class="text-sm">Already have an account?</span>
+							<a class="${ROUTER_CLASS_NAME} text-xs underline hover:no-underline" href="/sign-in">Sign in &rarr;</a>
 						</p>
 				</form>
 			</div>

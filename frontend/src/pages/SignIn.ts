@@ -55,7 +55,6 @@ class SignIn extends Component {
 
     const html = `
 			<div class="flex flex-col gap-8">
-				<h1>Sign in</h1>
 				<form class="sign-in-form flex flex-col gap-3">
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="username-or-email">Username or Email</label>
@@ -75,15 +74,16 @@ class SignIn extends Component {
 					</div>
 					<button type="submit" class="${
             themeState.state === "light" ? "theme-btn-light" : "theme-btn-dark"
-          } signin-btn cursor-pointer block ml-auto mr-0 px-6 py-1">Sign in</button>
+          } signin-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Sign in</button>
 					<p>
-						<span>Don't have an account?</span>
-						<a class="${ROUTER_CLASS_NAME}" href="/sign-up">Sign up</a>
+						<span class="text-sm">Don't have an account?</span>
+						<a class="${ROUTER_CLASS_NAME} text-xs underline hover:no-underline" href="/sign-up">Sign up &rarr;
+						</a>
 					</p>
 				</form>
 				<button class="${
           themeState.state === "light" ? "theme-btn-light" : "theme-btn-dark"
-        } google-sign-in-btn cursor-pointer w-full py-1 flex items-center">
+        } google-sign-in-btn cursor-pointer w-full py-2 flex items-center">
 				 	<a class="w-full block" href=${url}>
 						<span>Sign in with Google 
 							<img src=/src/assets/google-icon-${
