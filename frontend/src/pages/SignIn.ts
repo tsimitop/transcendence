@@ -41,7 +41,7 @@ class SignIn extends Component {
     main.addEventListener("submit", SignIn.handleSignIn);
     main.addEventListener("click", SignIn.handleClick);
 
-    const redirectUri = "http://localhost:3000/api/oauth";
+    const redirectUri = "https://localhost:3000/api/oauth";
     const clientId =
       "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
     const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";

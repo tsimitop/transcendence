@@ -10,6 +10,7 @@ import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
 import {
   GUEST_USER_REDIRECTION_PATH,
+  NGINX_SERVER,
   PAGES,
   ROUTER_CLASS_NAME,
   SIGNED_IN_USER_REDIRECTION_PATH,
@@ -92,7 +93,7 @@ abstract class Router {
     // let newJwtAccessToken = "";
     try {
       const response = await fetch(
-        "http://localhost:80/api/generate-new-access-token",
+        `${NGINX_SERVER}/api/generate-new-access-token`,
         {
           method: "POST",
           credentials: "include",
