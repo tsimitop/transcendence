@@ -69,7 +69,9 @@ class Header extends Component {
 					<button class="bg-transparent theme-btn cursor-pointer">
               <img class='theme-icon w-[24px]' src='/theme-${
                 themeState.state === "light" ? "dark" : "light"
-              }.png'
+              }.png' alt=${
+      themeState.state === "light" ? "dark" : "light"
+    }-theme
 							/>
 					</button>
 				</div>
@@ -110,8 +112,9 @@ class Header extends Component {
         if (previousTheme !== newTheme) {
           if (target.classList.contains("theme-icon")) {
             (target as HTMLImageElement).src = `/theme-${previousTheme}.png`;
+            (target as HTMLImageElement).alt = `${previousTheme}-theme`;
           } else {
-            target.innerHTML = `<img src=/theme-${previousTheme}.png />`;
+            target.innerHTML = `<img src=/theme-${previousTheme}.png alt=${previousTheme}-theme />`;
           }
           themeState.dispatchChangeTheme();
         }
