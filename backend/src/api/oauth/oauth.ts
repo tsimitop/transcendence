@@ -6,6 +6,7 @@ import { FastifyRequest } from "fastify/types/request";
 import { fastify } from "../../server";
 import UserDb from "../../user-database/UserDb";
 import { signJwtAccessToken, signJwtRefreshToken } from "../jwt";
+import { FRONT_END_URL } from "../../constants";
 
 type OAuthRequestType = {
   state: string;
@@ -47,7 +48,7 @@ fastify.get(
     const { state, code, error } = req.query;
     const oAuthStateInCookie = req.cookies?.["oauth_state"];
     if (error || oAuthStateInCookie !== state) {
-      reply.redirect("http://localhost:5173/");
+      reply.redirect(`${FRONT_END_URL}/`);
       return;
     }
 
@@ -102,7 +103,7 @@ fastify.get(
       }
       const user = await userDbInstance.findUserInDb(userDb, email, "");
       if (!user) {
-        reply.redirect("http://localhost:5173/");
+        reply.redirect(`${FRONT_END_URL}/`);
         return;
       }
       user.isSignedIn = true;
@@ -136,7 +137,7 @@ fastify.get(
         sameSite: "none",
         expires: new Date(Date.now() + 15 * 60 * 1000),
       });
-      reply.redirect("http://localhost:5173/profile");
+      reply.redirect(`${FRONT_END_URL}/profile`);
     } catch (error) {
       console.log(error);
     }

@@ -1,6 +1,6 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import { ROUTER_CLASS_NAME } from "../constants";
+import { NGINX_SERVER, ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
 import { userContext, UserStateType } from "../context/UserContext";
 import Component, {
@@ -122,7 +122,7 @@ class SignIn extends Component {
     password: string
   ) {
     try {
-      const response = await fetch("http://localhost:80/api/sign-in", {
+      const response = await fetch(`${NGINX_SERVER}/api/sign-in`, {
         method: "POST",
         credentials: "include",
         headers: {

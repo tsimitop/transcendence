@@ -25,3 +25,6 @@ dist-ssr
 
 database
 .env
+secrets
+*.crt
+*.key

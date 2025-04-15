@@ -1,5 +1,6 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import { NGINX_SERVER } from "../constants";
 import themeState from "../context/ThemeContext";
 import { userContext } from "../context/UserContext";
 import Component, {
@@ -26,7 +27,7 @@ class Profile extends Component {
   public static async signOut() {
     try {
       console.log("signing out");
-      const response = await fetch("http://localhost:80/api/sign-out", {
+      const response = await fetch(`${NGINX_SERVER}/api/sign-out`, {
         method: "POST",
         credentials: "include",
       });
