@@ -135,6 +135,6 @@ body {
   }
 
   .page {
-    @apply min-h-screen flex flex-col;
+    @apply min-h-[101vh] flex flex-col;
   }
 }

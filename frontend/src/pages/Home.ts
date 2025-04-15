@@ -82,7 +82,7 @@ class Home extends Component {
       { element: Footer.create(), position: "beforeend" }
     );
     HomeInstance.insertChildren();
-    HomeInstance.classList.add("page", "h-screen");
+    HomeInstance.classList.add("page");
     return HomeInstance;
   }
 }
