@@ -17,16 +17,16 @@ class UrlContext extends StateManager<UrlStateType> {
     return validUrlPath;
   }
 
-  public setState(newState: UrlStateType): void {
-    super.setState(newState);
-    if (newState.path) {
-      window.history.pushState(
-        {},
-        "",
-        `${window.location.origin}${newState.path}`
-      );
-    }
-  }
+  // public setState(newState: UrlStateType): void {
+  //   super.setState(newState);
+  //   if (newState.path) {
+  //     window.history.pushState(
+  //       {},
+  //       "",
+  //       `${window.location.origin}${newState.path}`
+  //     );
+  //   }
+  // }
 }
 
 const validUrlPath = UrlContext.getValidUrlPath();
