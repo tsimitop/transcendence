@@ -35,7 +35,7 @@ class Home extends Component {
     // `;
 
     const html = `
-    	<div class="bg-[linear-gradient(to_right,rgba(0,0,0,0.6),rgba(255,255,255,0.6)),url('/src/assets/hero.jpg')] bg-cover bg-top h-screen opacity-50 relative">
+    	<div class="bg-[linear-gradient(to_right,rgba(0,0,0,0.6),rgba(255,255,255,0.6)),url('/hero.jpg')] bg-cover bg-top h-screen opacity-50 relative">
 				<h1 class="absolute bottom-[30%] left-[50%] transform -translate-x-1/2 text-5xl">
 					${
             userContext.state.isSignedIn
@@ -57,7 +57,7 @@ class Home extends Component {
     	</main>
     `;
     // const html = `
-    // 	<div style="background: linear-gradient(to top right, rgba(255, 184, 3, 0.5), rgba(255, 233, 179, 0.5)), url(/src/assets/hero.jpg) no-repeat bottom 30% right/cover" class="bg-cover h-[100vh] opacity-80 bg-[bottom_20%_right_60%]">
+    // 	<div style="background: linear-gradient(to top right, rgba(255, 184, 3, 0.5), rgba(255, 233, 179, 0.5)), url(/hero.jpg) no-repeat bottom 30% right/cover" class="bg-cover h-[100vh] opacity-80 bg-[bottom_20%_right_60%]">
     // 	</div>
     // 	<main class="theme-primary-${
     //     themeState.state
@@ -67,7 +67,7 @@ class Home extends Component {
     // `;
     // const html = `
     // <div class="bg-linear-to-r from-test1 to-test2 h-[100vh] opacity-60">
-    // 	<div class="bg-[url(/src/assets/hero.png)] bg-cover h-[100vh] opacity-80 bg-[bottom_20%_right_60%]">
+    // 	<div class="bg-[url(/hero.png)] bg-cover h-[100vh] opacity-80 bg-[bottom_20%_right_60%]">
     // 	</div>
     // </div>
     // 	<main class="theme-primary-${

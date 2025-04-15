@@ -63,9 +63,7 @@ class ThemeContext extends StateManager<ThemeType> {
 
     const googleIcon = document.querySelector(".google-icon");
     if (googleIcon) {
-      (
-        googleIcon as HTMLImageElement
-      ).src = `/src/assets/google-icon-${newTheme}.png`;
+      (googleIcon as HTMLImageElement).src = `/google-icon-${newTheme}.png`;
     }
   }
 }

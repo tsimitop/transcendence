@@ -74,7 +74,7 @@ class SignIn extends Component {
 				<button class="theme-btn-${themeState.state} google-sign-in-btn cursor-pointer w-full py-2 flex items-center">
 				 	<a class="w-full block" href=${url}>
 						<span>Sign in with Google 
-							<img src=/src/assets/google-icon-${themeState.state}.png class="google-icon w-[24px] inline" />
+							<img src=/google-icon-${themeState.state}.png class="google-icon w-[24px] inline" />
 						</span>
 					</a>
 				</button>
