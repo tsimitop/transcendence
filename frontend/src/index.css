@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Winky+Rough:ital,wght@0,300..900;1,300..900&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -18,7 +19,6 @@
 
   --secondary-dark-background: #2b2b2b;
   --secondary-dark-foreground: #fff;
-
   --ternary-dark-background-200: #ffe9b3;
   --ternary-dark-background: #ffb703;
   --ternary-dark-background-700: #805c02;
@@ -119,6 +119,10 @@
 
 * {
   box-sizing: border-box;
+}
+
+body {
+  font-family: "Winky Rough", sans-serif;
 }
 
 @layer components {

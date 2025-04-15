@@ -10,6 +10,7 @@ import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
 import {
   GUEST_USER_REDIRECTION_PATH,
+  PAGES,
   ROUTER_CLASS_NAME,
   SIGNED_IN_USER_REDIRECTION_PATH,
   ValidUrlPathsType,
@@ -257,10 +258,14 @@ abstract class Router {
     Router.removeRouteChangeListeners();
     const target = event.target as HTMLAnchorElement;
     window.history.pushState({}, "", target.href);
+    const validPath = PAGES.find(page => page === target.pathname);
+    urlContext.setState({ ...urlContext.state, path: validPath });
+    console.log(urlContext.state);
     const routeToGo = Router.findRouteToGo();
     const viewToRender = await Router.findViewToRender(routeToGo);
     Router.renderPageBasedOnPath(viewToRender);
     Router.listenForRouteChange();
+    console.log(urlContext.state);
     Header.highlightActiveNavLink();
   }
 

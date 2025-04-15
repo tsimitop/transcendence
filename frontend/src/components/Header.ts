@@ -42,7 +42,7 @@ class Header extends Component {
 
   public static createChildren() {
     const html = `
-			<nav class="flex items-center">
+			<nav class="grid grid-cols-[1fr_auto_1fr] align-items">
 				<p>transcendence</p>
 				<ul class="flex grow justify-center gap-10">
 					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/">Home</a></li>
@@ -56,7 +56,7 @@ class Header extends Component {
           }
 					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/pong">Pong</a></li>
 				</ul>	
-				<div class="flex items-center gap-10">
+				<div class="flex items-center gap-10 justify-self-end">
 					${
             userContext.state.isSignedIn
               ? `<a class="nav-link profile-link ${ROUTER_CLASS_NAME}" href="/profile">${
@@ -164,10 +164,11 @@ class Header extends Component {
     if (!header) {
       return;
     }
+    console.log(urlContext.state.path);
     const activeLink = header.querySelector(
       `a[href="${urlContext.state.path}"]`
     );
-    // console.log("activeLink", activeLink);
+    console.log("activeLink", activeLink);
     const newClassName =
       themeState.state === "light"
         ? "theme-ternary-light-foreground"
