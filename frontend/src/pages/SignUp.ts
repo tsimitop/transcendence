@@ -7,6 +7,7 @@ import Component, {
   ChildElementType,
   ChildrenStringType,
 } from "../models/Component";
+import SignIn from "./SignIn";
 
 class SignUp extends Component {
   constructor(
@@ -76,7 +77,7 @@ class SignUp extends Component {
     return SignUpInstance;
   }
 
-  public static handleSignUp(event: SubmitEvent) {
+  public static async handleSignUp(event: SubmitEvent) {
     const target = event.target as HTMLFormElement;
     event.preventDefault();
     if (!target.className.includes("sign-up-form")) {
@@ -98,39 +99,36 @@ class SignUp extends Component {
       return;
     }
 
-    fetch(`${NGINX_SERVER}/api/sign-up`, {
-      // fetch("http://172.18.0.2:80/api", {
-      // fetch("http://nginx:80/api", {
-      // fetch("http://nginx.ft_transcendence_default:80/api", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, username, password }),
-      signal: AbortSignal.timeout(5000),
-    })
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        if (data.errorMessage || data.error) {
-          throw data;
-        }
-
-        // userContext.setState({
-        //   ...userContext.state,
-        //   email: data.email,
-        //   username: data.username,
-        //   isSignedIn: true,
-        // });
-
-        console.log(
-          `The user with the email "${data.email?.toLowerCase()}" and the username "${data.username?.toLowerCase()}" is added to the database.`
-        );
-      })
-      .catch(error => {
-        console.log("sign up error:\n", error);
+    try {
+      const response = await fetch(`${NGINX_SERVER}/api/sign-up`, {
+        // fetch("http://172.18.0.2:80/api", {
+        // fetch("http://nginx:80/api", {
+        // fetch("http://nginx.ft_transcendence_default:80/api", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, username, password }),
+        signal: AbortSignal.timeout(5000),
       });
+      const data = await response.json();
+      if (data.errorMessage || data.error) {
+        throw data;
+      }
+      // userContext.setState({
+      //   ...userContext.state,
+      //   email: data.email,
+      //   username: data.username,
+      //   isSignedIn: true,
+      // });
+      console.log(
+        `The user with the email "${data.email?.toLowerCase()}" and the username "${data.username?.toLowerCase()}" is added to the database.`
+      );
+
+      await SignIn.postSignInData(email, password);
+    } catch (error) {
+      console.log("sign up error:\n", error);
+    }
   }
 }
 
