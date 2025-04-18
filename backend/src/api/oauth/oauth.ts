@@ -1,8 +1,12 @@
 import dotenv from "dotenv";
 import { URLSearchParams } from "url";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { FastifyRequest } from "fastify/types/request";
 import { fastify } from "../../server";
+import UserDb from "../../user-database/UserDb";
+import { signJwtAccessToken, signJwtRefreshToken } from "../jwt";
+import { FRONT_END_URL } from "../../constants";
 
 type OAuthRequestType = {
   state: string;
@@ -44,12 +48,13 @@ fastify.get(
     const { state, code, error } = req.query;
     const oAuthStateInCookie = req.cookies?.["oauth_state"];
     if (error || oAuthStateInCookie !== state) {
-      reply.redirect("http://localhost:5173/");
+      reply.redirect(`${FRONT_END_URL}/`);
+      return;
     }
 
     const clientId =
       "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
-    const redirectUri = "http://localhost:3000/api/oauth";
+    const redirectUri = "https://localhost:3000/api/oauth";
 
     try {
       const response = await fetch("https://oauth2.googleapis.com/token", {
@@ -67,16 +72,74 @@ fastify.get(
       });
 
       const data = (await response.json()) as OAuthResponseType;
-      const { access_token, refresh_token, id_token } = data;
+      const {
+        // access_token: accessToken,
+        // refresh_token: refreshToken,
+        id_token: idToken,
+      } = data;
 
-      const decoded = jwt.decode(id_token) as DecodedIdTokenType;
+      const decoded = jwt.decode(idToken) as DecodedIdTokenType;
+      const { email, sub } = decoded;
 
-      console.log("------- data:", data);
-      console.log("------- decoded:", decoded);
+      const userDbInstance = new UserDb("database/test.db");
+      const userDb = userDbInstance.openDb();
+      userDbInstance.createUserTableInUserDb(userDb);
+      const userAlreadyExists = userDbInstance.userExistsInUserDb(
+        userDb,
+        sub,
+        email
+      );
+      if (!userAlreadyExists.found) {
+        console.log("NOT FOUND . . . .. . .");
+        await userDbInstance.createNewUserInUserDb(
+          userDb,
+          {
+            email: sub,
+            username: email,
+            password: "",
+          },
+          ""
+        );
+      }
+      const user = await userDbInstance.findUserInDb(userDb, email, "");
+      if (!user) {
+        reply.redirect(`${FRONT_END_URL}/`);
+        return;
+      }
+      user.isSignedIn = true;
+
+      const jwtRefreshToken = signJwtRefreshToken(user.id);
+      const jwtAccessToken = signJwtAccessToken(user.id);
+
+      const saltRounds = 10;
+      const salt = await bcrypt.genSalt(saltRounds);
+      const hashedRefreshToken = await bcrypt.hash(jwtRefreshToken, salt);
+      await userDbInstance.updateHashedRefreshToken(
+        userDb,
+        user.id,
+        hashedRefreshToken
+      );
+
+      await userDbInstance.updateHashedRefreshToken(
+        userDb,
+        user.id,
+        hashedRefreshToken
+      );
+      reply.cookie("oauthrefreshtoken", jwtRefreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      });
+      reply.cookie("accesstoken", jwtAccessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        expires: new Date(Date.now() + 15 * 60 * 1000),
+      });
+      reply.redirect(`${FRONT_END_URL}/profile`);
     } catch (error) {
       console.log(error);
     }
-
-    reply.redirect("http://localhost:5173/profile");
   }
 );

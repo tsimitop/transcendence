@@ -1,19 +1,40 @@
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Winky+Rough:ital,wght@0,300..900;1,300..900&display=swap");
 @import "tailwindcss";
 
 :root {
   --primary-light-background: #fafafa;
   --primary-light-foreground: #111;
+
   --secondary-light-background: #333;
   --secondary-light-foreground: #fafafa;
+
+  --ternary-light-background-200: #f7f1e5;
   --ternary-light-background: #ecdcbf;
+  --ternary-light-background-700: #474239;
+
   --ternary-light-foreground: #111;
 
   --primary-dark-background: #111;
   --primary-dark-foreground: #fff;
+
   --secondary-dark-background: #2b2b2b;
   --secondary-dark-foreground: #fff;
+  --ternary-dark-background-200: #ffe9b3;
   --ternary-dark-background: #ffb703;
+  --ternary-dark-background-700: #805c02;
   --ternary-dark-foreground: #000;
+}
+
+@theme {
+  --color-plightbg: var(--primary-light-background);
+
+  --color-tlightbg-200: var(--ternary-light-background-200);
+  --color-tlightbg: var(--ternary-light-background);
+  --color-tlightbg-700: var(--ternary-light-background-700);
+
+  --color-tdarkbg-200: var(--ternary-dark-background-200);
+  --color-tdarkbg: var(--ternary-dark-background);
+  --color-tdarkbg-700: var(--ternary-dark-background-700);
 }
 
 .theme-primary-light-full {
@@ -56,8 +77,52 @@
   font-weight: bold;
 }
 
+.theme-btn-light {
+  color: var(--primary-light-foreground);
+  background-color: var(--ternary-light-background);
+  border-radius: 6px;
+}
+
+.theme-btn-dark {
+  color: var(--primary-dark-background);
+  background-color: var(--ternary-dark-background);
+  border-radius: 6px;
+}
+
+.theme-btn-light:hover {
+  transition: all 0.3s;
+  color: var(--primary-light-background);
+  background-color: var(--ternary-light-background-700);
+}
+
+.theme-btn-dark:hover {
+  transition: all 0.3s;
+  color: var(--primary-dark-background);
+  background-color: var(--ternary-dark-background-200);
+}
+
+.theme-input-light {
+  border: 1px solid var(--primary-light-foreground);
+  color: var(--primary-light-foreground);
+  border-radius: 3px;
+}
+
+.theme-input-dark {
+  border: 1px solid var(--primary-dark-foreground);
+  color: var(--primary-dark-foreground);
+  border-radius: 3px;
+}
+
+.theme-input-dark::placeholder {
+  color: #bbb;
+}
+
 * {
   box-sizing: border-box;
+}
+
+body {
+  font-family: "Winky Rough", sans-serif;
 }
 
 @layer components {
@@ -70,6 +135,6 @@
   }
 
   .page {
-    @apply min-h-screen flex flex-col;
+    @apply min-h-[101vh] flex flex-col;
   }
 }

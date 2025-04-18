@@ -17,15 +17,15 @@ class Footer extends Component {
       customElements.define("footer-component", Footer);
     }
 
-    const html = `<footer>Footer</footer>`;
+    const html = `
+			<footer class="flex flex-col justify-center items-center grow-1 ">
+				<p>&copy; Team X - ${new Date().getFullYear()}</p>
+				<p class="text-sm">Icons by <span class="underline">Icons8</span></p>
+			</footer>`;
     const FooterInstance = new Footer({ html, position: "beforeend" });
     FooterInstance.insertChildren();
     FooterInstance.classList.add(
-      `${
-        themeState.state === "light"
-          ? "theme-secondary-light-full"
-          : "theme-secondary-dark-full"
-      }`,
+      `theme-secondary-${themeState.state}-full`,
       "layout-padding",
       "h-18",
       "flex",

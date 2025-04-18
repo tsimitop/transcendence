@@ -30,11 +30,7 @@ class Header extends Component {
     );
     HeaderInstance.insertChildren();
     HeaderInstance.classList.add(
-      `${
-        themeState.state === "light"
-          ? "theme-secondary-light-full"
-          : "theme-secondary-dark-full"
-      }`,
+      `theme-secondary-${themeState.state}-full`,
       "h-18",
       "flex",
       "items-center",
@@ -46,7 +42,7 @@ class Header extends Component {
 
   public static createChildren() {
     const html = `
-			<nav class="flex items-center">
+			<nav class="grid grid-cols-[1fr_auto_1fr] align-items">
 				<p>transcendence</p>
 				<ul class="flex grow justify-center gap-10">
 					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/">Home</a></li>
@@ -60,7 +56,7 @@ class Header extends Component {
           }
 					<li><a class="nav-link ${ROUTER_CLASS_NAME}" href="/pong">Pong</a></li>
 				</ul>	
-				<div class="flex items-center gap-10">
+				<div class="flex items-center gap-10 justify-self-end">
 					${
             userContext.state.isSignedIn
               ? `<a class="nav-link profile-link ${ROUTER_CLASS_NAME}" href="/profile">${
@@ -70,12 +66,13 @@ class Header extends Component {
                 }</a>`
               : ""
           }
-					<button class="${
-            themeState.state === "light"
-              ? "theme-ternary-light-full"
-              : "theme-ternary-dark-full"
-          } theme-btn px-4 py-2 cursor-pointer
-					">${themeState.state === "light" ? "dark" : "light"}
+					<button class="bg-transparent theme-btn cursor-pointer">
+              <img class='theme-icon w-[24px]' src='/theme-${
+                themeState.state === "light" ? "dark" : "light"
+              }.png' alt=${
+      themeState.state === "light" ? "dark" : "light"
+    }-theme
+							/>
 					</button>
 				</div>
 			</nav>
@@ -90,7 +87,10 @@ class Header extends Component {
 
   public static handleClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (target.classList.contains("theme-btn")) {
+    if (
+      target.classList.contains("theme-btn") ||
+      target.classList.contains("theme-icon")
+    ) {
       Header.handleChangeTheme(target);
     } else if (target.classList.contains("nav-link")) {
       Header.handleClickNavLink(target);
@@ -105,8 +105,17 @@ class Header extends Component {
     const newListener: StateListener<ThemeType> = {
       id: "changeTheme",
       listen: (previousTheme, newTheme) => {
+        // if (previousTheme !== newTheme) {
+        //   target.innerText = `${previousTheme}`;
+        //   themeState.dispatchChangeTheme();
+        // }
         if (previousTheme !== newTheme) {
-          target.innerText = `${previousTheme}`;
+          if (target.classList.contains("theme-icon")) {
+            (target as HTMLImageElement).src = `/theme-${previousTheme}.png`;
+            (target as HTMLImageElement).alt = `${previousTheme}-theme`;
+          } else {
+            target.innerHTML = `<img src=/theme-${previousTheme}.png alt=${previousTheme}-theme />`;
+          }
           themeState.dispatchChangeTheme();
         }
       },
@@ -156,10 +165,11 @@ class Header extends Component {
     if (!header) {
       return;
     }
+    console.log(urlContext.state.path);
     const activeLink = header.querySelector(
       `a[href="${urlContext.state.path}"]`
     );
-    // console.log("activeLink", activeLink);
+    console.log("activeLink", activeLink);
     const newClassName =
       themeState.state === "light"
         ? "theme-ternary-light-foreground"

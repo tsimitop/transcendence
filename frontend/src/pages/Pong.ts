@@ -20,11 +20,7 @@ class Pong extends Component {
     }
 
     const html = `
-			<main class="main-container layout-padding ${
-        themeState.state === "light"
-          ? "theme-primary-light-full"
-          : "theme-primary-dark-full"
-      }">
+			<main class="main-container layout-padding theme-primary-${themeState.state}-full">
 				<h1>Pong</h1>
 			</main>
 		`;

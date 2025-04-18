@@ -1,9 +1,14 @@
 import Fastify from "fastify";
 import fastifyFormbody from "@fastify/formbody";
 import fastifyCookie from "@fastify/cookie";
+import fs from "fs";
 
 export const fastify = Fastify({
   logger: true,
+  https: {
+    key: fs.readFileSync("/run/secrets/backend_ssl_certificate_key"),
+    cert: fs.readFileSync("/run/secrets/backend_ssl_certificate"),
+  },
 });
 
 const start = async function () {

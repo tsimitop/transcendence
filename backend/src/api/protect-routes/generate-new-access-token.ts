@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { fastify } from "../../server";
 import UserDb from "../../user-database/UserDb";
-import { signJwtAccessToken } from "../sign-in/jwt";
+import { signJwtAccessToken } from "../jwt";
 import { Secret, verify } from "jsonwebtoken";
 // import { UserStateType } from "../sign-in/sign-in";
 
@@ -17,7 +17,8 @@ fastify.post(
   "/api/generate-new-access-token",
   // (request: FastifyRequest<{ Body: RequestNewAccessTokenType }>, reply) => {
   async (request, reply) => {
-    const cookieRefreshToken = request.cookies.refreshtoken;
+    const cookieRefreshToken =
+      request.cookies.refreshtoken || request.cookies.oauthrefreshtoken;
     if (!cookieRefreshToken) {
       reply.send({
         errorMessage:
@@ -28,6 +29,7 @@ fastify.post(
         username: "",
         isSignedIn: false,
       });
+
       return;
     }
 
@@ -51,10 +53,12 @@ fastify.post(
       return;
     }
 
-    const refreshTokenSecret = process.env.REFRESH_TOKEN as Secret;
-    const encoded = verify(cookieRefreshToken, refreshTokenSecret);
+    const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET as Secret;
 
-    if (!encoded) {
+    try {
+      verify(cookieRefreshToken, refreshTokenSecret);
+    } catch (error) {
+      console.log(error);
       reply.send({
         errorMessage:
           "Refresh token is expired. User must sign in again. Redirecting to homepage ...",
@@ -64,8 +68,19 @@ fastify.post(
         username: "",
         isSignedIn: false,
       });
-      return;
     }
+    // if (!encoded) {
+    //   reply.send({
+    //     errorMessage:
+    //       "Refresh token is expired. User must sign in again. Redirecting to homepage ...",
+    //     newJwtAccessToken: "",
+    //     userId: "",
+    //     email: "",
+    //     username: "",
+    //     isSignedIn: false,
+    //   });
+    //   return;
+    // }
 
     const doesRefreshTokenMatch = await bcrypt.compare(
       cookieRefreshToken,

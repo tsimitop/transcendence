@@ -1,6 +1,6 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import { ROUTER_CLASS_NAME } from "../constants";
+import { NGINX_SERVER, ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
 import { userContext, UserStateType } from "../context/UserContext";
 import Component, {
@@ -24,6 +24,10 @@ class SignIn extends Component {
 
     const main = document.createElement("main");
     main.classList.add(
+      "flex",
+      "flex-col",
+      "items-center",
+      "justify-center",
       "main-container",
       "layout-padding",
       `${
@@ -37,7 +41,7 @@ class SignIn extends Component {
     main.addEventListener("submit", SignIn.handleSignIn);
     main.addEventListener("click", SignIn.handleClick);
 
-    const redirectUri = "http://localhost:3000/api/oauth";
+    const redirectUri = "https://localhost:3000/api/oauth";
     const clientId =
       "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
     const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -47,22 +51,34 @@ class SignIn extends Component {
       Math.random().toString(36).substring(2);
     const url = `${baseUrl}?response_type=code&client_id=${clientId}&scope=openid%20email&redirect_uri=${redirectUri}&state=${state}&access_type=offline&prompt=consent`;
 
-    document.cookie = `oauth_state=${state}; secure=true; HttpOnly: true; SameSite=None; path=/api`;
+    document.cookie = `oauth_state=${state}; secure=true; SameSite=None; path=/api`;
 
     const html = `
-				<h1>Sign In</h1>
-				<form class="sign-in-form">
-					<label for="username-or-email">Username or Email</label>
-					<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="username-signin-input border-2" />
-					<label for="password">Password</label>
-					<input required type="password" name="password" id="password" placeholder="password" class="password-signin-input border-2" />
-					<button type="submit" class="signin-btn cursor-pointer border-2">Sign in</button>
+			<div class="flex flex-col gap-8">
+				<form class="sign-in-form flex flex-col gap-3">
+					<div class="grid grid-cols-[150px_1fr] items-center">
+						<label for="username-or-email">Username or Email</label>
+						<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="theme-input-${themeState.state} username-signin-input w-80 px-2 py-1" />
+					</div>
+					<div class="grid grid-cols-[150px_1fr] items-center">
+						<label for="password">Password</label>
+						<input required type="password" name="password" id="password" placeholder="password" class="theme-input-${themeState.state} password-signin-input px-2 py-1" w-80 />
+					</div>
+					<button type="submit" class="theme-btn-${themeState.state} signin-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Sign in</button>
 					<p>
-						<span>Don't have an account?</span>
-						<a class="${ROUTER_CLASS_NAME}" href="/sign-up">Sign up</a>
+						<span class="text-sm">Don't have an account?</span>
+						<a class="${ROUTER_CLASS_NAME} text-xs underline hover:no-underline" href="/sign-up">Sign up &rarr;
+						</a>
 					</p>
 				</form>
-				<button class="google-sign-in-btn cursor-pointer border-2"><a href=${url}>Sign in with Google</a></button>
+				<button class="theme-btn-${themeState.state} google-sign-in-btn cursor-pointer w-full py-2 flex items-center">
+				 	<a class="w-full block" href=${url}>
+						<span>Sign in with Google 
+							<img src=/google-icon-${themeState.state}.png alt=google class="google-icon w-[24px] inline" />
+						</span>
+					</a>
+				</button>
+			</div>
 		`;
 
     main.insertAdjacentHTML("beforeend", html);
@@ -78,11 +94,6 @@ class SignIn extends Component {
 
     return SignInInstance;
   }
-
-  // public static handleClick(event: MouseEvent) {
-  //   const target = event.target as HTMLElement;
-  //   if (target.classList.contains("signin-btn")) SignIn.handleSignIn(event);
-  // }
 
   public static handleSignIn(event: SubmitEvent) {
     const target = event.target as HTMLFormElement;
@@ -111,7 +122,7 @@ class SignIn extends Component {
     password: string
   ) {
     try {
-      const response = await fetch("http://localhost:80/api/sign-in", {
+      const response = await fetch(`${NGINX_SERVER}/api/sign-in`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -142,35 +153,11 @@ class SignIn extends Component {
         isSignedIn,
         jwtAccessToken: jwtAccessToken,
       });
-      // console.log("userContext.state:\n", userContext.state);
-      // console.log(data);
       await Router.redirect("/");
-      // Header.highlightActiveNavLink();
     } catch (error) {
       console.log(error);
     }
   }
-
-  // public static async handleClick(event: MouseEvent) {
-  //   super.handleClick(event);
-
-  //   const target = event.target as HTMLElement;
-  //   if (target.classList.contains("google-sign-in-btn")) {
-  //     console.log("google auth");
-  //     const googleRedirectUri = "http://localhost:80/api/google-auth";
-  //     const googleClientId =
-  //       "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
-  //     const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-  //     const url = `${baseUrl}?response_type=code&client_id=${googleClientId}&scope=openid%20email&redirect_uri=${googleRedirectUri}`;
-  //     try {
-  //       const response = await fetch(url);
-  //       const data = await response.json();
-  //       console.log(data);
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   }
-  // }
 }
 
 export default SignIn;

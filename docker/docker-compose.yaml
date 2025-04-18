@@ -22,9 +22,12 @@ services:
     volumes:
       - ../frontend/dist:/usr/share/nginx/html
     ports:
-      - 80:80
+      - 443:443
     networks:
       - ft_transcendence
+    secrets:
+      - source: nginx_ssl_certificate
+      - source: nginx_ssl_certificate_key
 
   backend:
     container_name: backend
@@ -41,8 +44,21 @@ services:
       - ft_transcendence
     env_file:
       - ../.env
+    secrets:
+      - source: backend_ssl_certificate
+      - source: backend_ssl_certificate_key
 
 networks:
   ft_transcendence:
     name: ft_transcendence
     driver: bridge
+
+secrets:
+  nginx_ssl_certificate:
+    file: ../secrets/nginx_ssl_certificate/ssl_certificate.crt
+  nginx_ssl_certificate_key:
+    file: ../secrets/nginx_ssl_certificate/ssl_certificate.key
+  backend_ssl_certificate:
+    file: ../secrets/backend_ssl_certificate/ssl_certificate.crt
+  backend_ssl_certificate_key:
+    file: ../secrets/backend_ssl_certificate/ssl_certificate.key

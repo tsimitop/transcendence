@@ -48,6 +48,23 @@ class ThemeContext extends StateManager<ThemeType> {
         `theme-ternary-${newTheme}-foreground`
       );
     }
+
+    const inputs = document.querySelectorAll(`.theme-input-${previousTheme}`);
+    for (const input of inputs) {
+      input.classList.remove(`theme-input-${previousTheme}`);
+      input.classList.add(`theme-input-${newTheme}`);
+    }
+
+    const btns = document.querySelectorAll(`.theme-btn-${previousTheme}`);
+    for (const btn of btns) {
+      btn.classList.remove(`theme-btn-${previousTheme}`);
+      btn.classList.add(`theme-btn-${newTheme}`);
+    }
+
+    const googleIcon = document.querySelector(".google-icon");
+    if (googleIcon) {
+      (googleIcon as HTMLImageElement).src = `/google-icon-${newTheme}.png`;
+    }
   }
 }
 

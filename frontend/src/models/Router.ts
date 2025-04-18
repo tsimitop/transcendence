@@ -10,6 +10,8 @@ import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
 import {
   GUEST_USER_REDIRECTION_PATH,
+  NGINX_SERVER,
+  PAGES,
   ROUTER_CLASS_NAME,
   SIGNED_IN_USER_REDIRECTION_PATH,
   ValidUrlPathsType,
@@ -79,7 +81,7 @@ abstract class Router {
       const data =
         ((await userContext.isUserSignedIn()) as ValidateAccessTokenResponseType) ||
         null;
-      // console.log("data:", data);
+      console.log("data:", data);
       return data;
     } catch (error) {
       console.log(error);
@@ -91,7 +93,7 @@ abstract class Router {
     // let newJwtAccessToken = "";
     try {
       const response = await fetch(
-        "http://localhost:80/api/generate-new-access-token",
+        `${NGINX_SERVER}/api/generate-new-access-token`,
         {
           method: "POST",
           credentials: "include",
@@ -102,11 +104,20 @@ abstract class Router {
       );
       const data = (await response.json()) as NewAccessTokenResponseType;
       // console.log("data after new access token generation:", data);
-      const { newJwtAccessToken, userId, email, username, isSignedIn } = data;
+      const {
+        newJwtAccessToken,
+        userId,
+        email,
+        username,
+        isSignedIn,
+        errorMessage,
+      } = data;
       if (!newJwtAccessToken) {
-        throw new Error(
-          "New access token could not be created! Refresh token might be expired"
-        );
+        // throw new Error(
+        //   "New access token could not be created! Refresh token might be expired"
+        // );
+        console.log(errorMessage, "------------");
+        throw errorMessage;
       }
       userContext.setState({
         ...userContext.state,
@@ -214,7 +225,6 @@ abstract class Router {
     }
 
     const { userId, email, username, isSignedIn } = data;
-    console.log("data:", data);
     userContext.setState({
       ...userContext.state,
       id: userId,
@@ -249,10 +259,14 @@ abstract class Router {
     Router.removeRouteChangeListeners();
     const target = event.target as HTMLAnchorElement;
     window.history.pushState({}, "", target.href);
+    const validPath = PAGES.find(page => page === target.pathname);
+    urlContext.setState({ ...urlContext.state, path: validPath });
+    console.log(urlContext.state);
     const routeToGo = Router.findRouteToGo();
     const viewToRender = await Router.findViewToRender(routeToGo);
     Router.renderPageBasedOnPath(viewToRender);
     Router.listenForRouteChange();
+    console.log(urlContext.state);
     Header.highlightActiveNavLink();
   }
 
