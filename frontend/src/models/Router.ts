@@ -81,7 +81,7 @@ abstract class Router {
       const data =
         ((await userContext.isUserSignedIn()) as ValidateAccessTokenResponseType) ||
         null;
-      console.log("data:", data);
+      // console.log("data:", data);
       return data;
     } catch (error) {
       console.log(error);
@@ -261,12 +261,12 @@ abstract class Router {
     window.history.pushState({}, "", target.href);
     const validPath = PAGES.find(page => page === target.pathname);
     urlContext.setState({ ...urlContext.state, path: validPath });
-    console.log(urlContext.state);
+    // console.log(urlContext.state);
     const routeToGo = Router.findRouteToGo();
     const viewToRender = await Router.findViewToRender(routeToGo);
     Router.renderPageBasedOnPath(viewToRender);
     Router.listenForRouteChange();
-    console.log(urlContext.state);
+    // console.log(urlContext.state);
     Header.highlightActiveNavLink();
   }
 

@@ -165,11 +165,11 @@ class Header extends Component {
     if (!header) {
       return;
     }
-    console.log(urlContext.state.path);
+    // console.log(urlContext.state.path);
     const activeLink = header.querySelector(
       `a[href="${urlContext.state.path}"]`
     );
-    console.log("activeLink", activeLink);
+    // console.log("activeLink", activeLink);
     const newClassName =
       themeState.state === "light"
         ? "theme-ternary-light-foreground"

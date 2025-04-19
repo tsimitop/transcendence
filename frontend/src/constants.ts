@@ -20,4 +20,4 @@ export const NO_HIGHLIGHT_LINKS: ValidUrlPathsType[] = [];
 export const SIGNED_IN_USER_REDIRECTION_PATH: ValidUrlPathsType = "/";
 export const GUEST_USER_REDIRECTION_PATH: ValidUrlPathsType = "/sign-in";
 
-export const NGINX_SERVER = "https://localhost:443";
+export const NGINX_SERVER = "http://localhost:80";

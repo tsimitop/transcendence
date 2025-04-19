@@ -26,7 +26,7 @@ class Profile extends Component {
 
   public static async signOut() {
     try {
-      console.log("signing out");
+      // console.log("signing out");
       const response = await fetch(`${NGINX_SERVER}/api/sign-out`, {
         method: "POST",
         credentials: "include",
