@@ -28,19 +28,19 @@ backendshell:
 	docker exec -it backend /bin/bash
 
 build:
-	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence build
+	docker compose --file ./docker/docker-compose.yaml --project-name ft_transcendence build
 
 up:
-	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence up
+	docker compose --file ./docker/docker-compose.yaml --project-name ft_transcendence up
 
 down:
-	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence down
+	docker compose --file ./docker/docker-compose.yaml --project-name ft_transcendence down
 
 start:
-	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence start
+	docker compose --file ./docker/docker-compose.yaml --project-name ft_transcendence start
 
 stop:
-	docker-compose --file ./docker/docker-compose.yaml --project-name ft_transcendence stop
+	docker compose --file ./docker/docker-compose.yaml --project-name ft_transcendence stop
 
 buildfrontend:
 	cd ./frontend && npm run build
