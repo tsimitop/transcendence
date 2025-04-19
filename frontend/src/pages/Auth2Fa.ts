@@ -2,8 +2,10 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { NGINX_SERVER } from "../constants";
 import themeState from "../context/ThemeContext";
+import { urlContext } from "../context/UrlContext";
 import { userContext } from "../context/UserContext";
 import Component from "../models/Component";
+import Router from "../models/Router";
 import Profile from "./Profile";
 
 class Auth2Fa extends Component {
@@ -79,7 +81,17 @@ class Auth2Fa extends Component {
         signal: AbortSignal.timeout(5000),
       });
       const data = await response.json();
-      console.log(data);
+      if (data.errorMessage) {
+        throw new Error("Wrong 2FA code!");
+      }
+      const routeToGo = "/profile";
+      urlContext.setState({ ...urlContext.state, path: routeToGo });
+      window.history.pushState({}, "", routeToGo);
+      const viewToRender = await Router.findViewToRender(routeToGo);
+      Router.renderPageBasedOnPath(viewToRender);
+      Header.highlightActiveNavLink();
+      Router.listenForRouteChange();
+      Router.handleBackAndForward();
     } catch (error) {
       console.log(error);
     }

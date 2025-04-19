@@ -2,12 +2,14 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { NGINX_SERVER, ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
+import { urlContext } from "../context/UrlContext";
 import { userContext, UserStateType } from "../context/UserContext";
 import Component, {
   ChildElementType,
   ChildrenStringType,
 } from "../models/Component";
 import Router from "../models/Router";
+// import Auth2Fa from "./Auth2Fa";
 
 class SignIn extends Component {
   constructor(
@@ -137,10 +139,31 @@ class SignIn extends Component {
         user: UserStateType | null;
         jwtAccessToken: string;
       };
+
       if (!data.user) {
         throw new Error("Invalid username or password");
       }
+
       const { id, email, username, isSignedIn } = data.user;
+      if (data.errorMessage.includes("2FA")) {
+        userContext.setState({
+          ...userContext.state,
+          id,
+          email,
+          username,
+          isSignedIn,
+          jwtAccessToken: "",
+        });
+        const routeToGo = "/2fa";
+        urlContext.setState({ ...urlContext.state, path: routeToGo });
+        window.history.pushState({}, "", routeToGo);
+        const viewToRender = await Router.findViewToRender(routeToGo);
+        Router.renderPageBasedOnPath(viewToRender);
+        Header.highlightActiveNavLink();
+        Router.listenForRouteChange();
+        Router.handleBackAndForward();
+        return;
+      }
       const { jwtAccessToken } = data;
       if (!isSignedIn) {
         throw new Error("Invalid username or password");

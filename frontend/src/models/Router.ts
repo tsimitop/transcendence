@@ -17,7 +17,7 @@ import {
   SIGNED_IN_USER_REDIRECTION_PATH,
   ValidUrlPathsType,
 } from "../constants";
-import { userContext } from "../context/UserContext";
+import { userContext, UserStateType } from "../context/UserContext";
 
 import { ValidateAccessTokenResponseType } from "../context/UserContext";
 
@@ -28,6 +28,7 @@ type NewAccessTokenResponseType = {
   email: string;
   username: string;
   isSignedIn: boolean;
+  has2Fa?: boolean;
 };
 
 type ComponentType = {
@@ -128,8 +129,13 @@ abstract class Router {
         isSignedIn,
         jwtAccessToken: newJwtAccessToken,
       });
-      // console.log("$$$$$$$$$$$$$$$$$$$$$$$$", newJwtAccessToken);
-      return data;
+
+      const has2Fa = await Router.is2FaActive(userContext.state);
+      if (has2Fa) {
+        return { ...data, has2Fa };
+      } else {
+        return data;
+      }
     } catch (error) {
       console.log(error);
       return null;
@@ -179,7 +185,6 @@ abstract class Router {
       | (NewAccessTokenResponseType & { isAccessTokenValid?: boolean })
       | null = null;
     let viewToRender = null;
-
     data = await Router.requestUserAuthStatus();
     if (!data) {
       userContext.setState({
@@ -213,7 +218,6 @@ abstract class Router {
     }
 
     if (!data || !data.isAccessTokenValid) {
-      // console.log("data:", data);
       userContext.setState({
         ...userContext.state,
         id: "",
@@ -226,6 +230,20 @@ abstract class Router {
     }
 
     const { userId, email, username, isSignedIn } = data;
+    const has2Fa = await Router.is2FaActive({
+      email,
+      id: userId,
+      username,
+      isSignedIn,
+      jwtAccessToken: "",
+    });
+
+    if (has2Fa) {
+      routeToGo = "/2fa";
+      viewToRender = Router.getViewForSignedInUser(routeToGo);
+      return viewToRender;
+    }
+
     userContext.setState({
       ...userContext.state,
       id: userId,
@@ -234,17 +252,8 @@ abstract class Router {
       isSignedIn,
     });
 
-    const has2Fa = await Router.hasUserActive2Fa();
-    if (!has2Fa) {
-      viewToRender = Router.getViewForSignedInUser(routeToGo);
-      return viewToRender;
-    } else {
-      urlContext.setState({ ...urlContext.state, path: "/2fa" });
-      window.history.pushState({}, "", "/2fa");
-      routeToGo = "/2fa";
-      viewToRender = Router.getViewForSignedInUser(routeToGo);
-      return viewToRender;
-    }
+    viewToRender = Router.getViewForSignedInUser(routeToGo);
+    return viewToRender;
   }
 
   static listenForRouteChange() {
@@ -303,8 +312,7 @@ abstract class Router {
     Header.highlightActiveNavLink();
   }
 
-  static async hasUserActive2Fa() {
-    const user = userContext.state;
+  static async is2FaActive(user: UserStateType) {
     try {
       const response = await fetch(`${NGINX_SERVER}/api/has-2fa`, {
         method: "POST",

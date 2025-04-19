@@ -51,9 +51,9 @@ class Profile extends Component {
           jwtAccessToken: "",
         });
         const routeToGo = "/";
-        await Router.redirect(routeToGo);
         urlContext.setState({ ...urlContext.state, path: routeToGo });
         window.history.pushState({}, "", routeToGo);
+        await Router.redirect(routeToGo);
         // Header.highlightActiveNavLink();
       }
     } catch (error) {

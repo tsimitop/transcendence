@@ -1,7 +1,7 @@
 import speakeasy from "speakeasy";
 import { fastify } from "../../server";
 import { FastifyRequest } from "fastify";
-import { UserStateType } from "../sign-in/sign-in";
+import { sendRefreshAndAccessTokens, UserStateType } from "../sign-in/sign-in";
 import UserDb from "../../user-database/UserDb";
 
 type Validate2FaRequestType = {
@@ -24,10 +24,14 @@ fastify.post(
       encoding: "base32",
       token: code2Fa,
     });
-		if (is2FaCodeValid) {
-			reply.send({ errorMessage: "", isSignedIn: true });
-		} else {
-			reply.send({ errorMessage: "Please enter the valid 6-digit code", isSignedIn: false });
-		}
+
+    if (is2FaCodeValid) {
+      await sendRefreshAndAccessTokens(user, userDbInstance, userDb, reply);
+    } else {
+      reply.send({
+        errorMessage: "Please enter the valid 6-digit code",
+        isSignedIn: false,
+      });
+    }
   }
 );
