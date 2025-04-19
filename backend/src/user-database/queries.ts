@@ -6,7 +6,9 @@ export enum QueryUser {
 		email TEXT NOT NULL,
 		username TEXT NOT NULL,
 		password TEXT NOT NULL,
-		jwt_refresh_token TEXT
+		jwt_refresh_token TEXT,
+		has_2fa BOOLEAN DEFAULT false,
+		totp_secret TEXT DEFAULT ''
 	);`,
   INSERT_NEW_USER = `INSERT INTO ${table}(email, username, password)
 	VALUES(?, ?, ?);`,
@@ -26,4 +28,6 @@ export enum QueryUser {
   SELECT_ALL_USERNAMES = `SELECT username FROM ${table};`,
   UPDATE_JWT_REFRESH_TOKEN = `UPDATE ${table} SET jwt_refresh_token = ? WHERE id = ?`,
   SELECT_USER_TABLE = `SELECT * FROM ${table};`,
+  UPDATE_HAS_2FA = `UPDATE ${table} SET has_2fa = ? WHERE id = ?`,
+  UPDATE_TOTP_SECRET = `UPDATE ${table} SET totp_secret = ? WHERE id = ?`,
 }

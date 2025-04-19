@@ -116,7 +116,6 @@ abstract class Router {
         // throw new Error(
         //   "New access token could not be created! Refresh token might be expired"
         // );
-        console.log(errorMessage, "------------");
         throw errorMessage;
       }
       userContext.setState({

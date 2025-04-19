@@ -27,6 +27,8 @@ class Profile extends Component {
       Profile.signOut();
     } else if (target.classList.contains("activate-2fa-btn")) {
       Profile.activate2Fa();
+    } else if (target.classList.contains("confirm-2fa-btn")) {
+      Profile.confirm2Fa();
     }
   }
 
@@ -57,7 +59,6 @@ class Profile extends Component {
 
   public static async activate2Fa() {
     const user = userContext.state;
-    // const secret2Fa = speakeasy.generateSecret();
     try {
       const response = await fetch(`${NGINX_SERVER}/api/activate-2fa`, {
         method: "POST",
@@ -73,9 +74,32 @@ class Profile extends Component {
       const page = document.querySelector(".main-container")!;
       page.insertAdjacentHTML(
         "beforeend",
-        `<img src=${dataUrl} width=200px alt=qrcode />`
+        `
+				<img src=${dataUrl} width=200px alt=qrcode />
+				<button class="confirm-2fa-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
+					Confirm 2FA Activation
+				</button>
+				`
       );
-      console.log(dataUrl);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  public static async confirm2Fa() {
+    const user = userContext.state;
+    try {
+      const response = await fetch(`${NGINX_SERVER}/api/confirm-2fa`, {
+        method: "POST",
+        // credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user }),
+        signal: AbortSignal.timeout(5000),
+      });
+      const data = await response.json();
+      console.log(data);
     } catch (error) {
       console.log(error);
     }

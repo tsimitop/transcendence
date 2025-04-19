@@ -243,6 +243,18 @@ class UserDb extends Sqlite {
 
     return emailsList[0].email;
   }
+
+  public updateHas2Fa(userDb: DbType, id: string, has2Fa: number) {
+    const update2FaStatement = userDb.prepare(QueryUser.UPDATE_HAS_2FA);
+    update2FaStatement.run(has2Fa, id);
+  }
+
+  public updateTotpSecret(userDb: DbType, id: string, totpSecret: string) {
+    const updateTotpSecretStatement = userDb.prepare(
+      QueryUser.UPDATE_TOTP_SECRET
+    );
+    updateTotpSecretStatement.run(totpSecret, id);
+  }
 }
 
 export default UserDb;
