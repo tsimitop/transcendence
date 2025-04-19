@@ -14,11 +14,15 @@
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
     "@fastify/formbody": "^8.0.2",
+    "@types/qrcode": "^1.5.5",
+    "@types/speakeasy": "^2.0.10",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^11.8.1",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.1",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",

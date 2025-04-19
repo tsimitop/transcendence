@@ -9,6 +9,10 @@ import Component, {
 } from "../models/Component";
 import Router from "../models/Router";
 
+type Activate2FaResponseType = {
+  dataUrl: string;
+};
+
 class Profile extends Component {
   constructor(
     childrenString: ChildrenStringType,
@@ -21,6 +25,8 @@ class Profile extends Component {
     const target = event.target as HTMLElement;
     if (target.classList.contains("sign-out-btn")) {
       Profile.signOut();
+    } else if (target.classList.contains("activate-2fa-btn")) {
+      Profile.activate2Fa();
     }
   }
 
@@ -49,9 +55,35 @@ class Profile extends Component {
     }
   }
 
+  public static async activate2Fa() {
+    const user = userContext.state;
+    // const secret2Fa = speakeasy.generateSecret();
+    try {
+      const response = await fetch(`${NGINX_SERVER}/api/activate-2fa`, {
+        method: "POST",
+        // credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user }),
+        signal: AbortSignal.timeout(5000),
+      });
+      const data = (await response.json()) as Activate2FaResponseType;
+      const { dataUrl } = data;
+      const page = document.querySelector(".main-container")!;
+      page.insertAdjacentHTML(
+        "beforeend",
+        `<img src=${dataUrl} width=200px alt=qrcode />`
+      );
+      console.log(dataUrl);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   public static create() {
     if (!customElements.getName(Profile)) {
-      customElements.define("signout-component", Profile);
+      customElements.define("profile-component", Profile);
     }
 
     const main = document.createElement("main");
@@ -72,6 +104,9 @@ class Profile extends Component {
 				<p>id: ${userContext.state.id}</p>
 				<p>email: ${userContext.state.email}</p>
 				<p>username: ${userContext.state.username}</p>
+				<button class="activate-2fa-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
+					Activate 2FA
+				</button>
 				<button class="sign-out-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
 					Sign out
 				</button>
