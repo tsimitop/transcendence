@@ -1,8 +1,10 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import { NGINX_SERVER } from "../constants";
 import themeState from "../context/ThemeContext";
 import { userContext } from "../context/UserContext";
 import Component from "../models/Component";
+import Profile from "./Profile";
 
 class Auth2Fa extends Component {
   public static create() {
@@ -29,10 +31,10 @@ class Auth2Fa extends Component {
 				<form class="sign-in-form flex flex-col gap-3">
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="2fa-code">6-digit code</label>
-						<input required type="number" min="6" max="6" name="2fa-code" id="2fa-code" placeholder="6-digit code" class="theme-input-${themeState.state} 2fa-code-input w-80 px-2 py-1" />
+						<input required type="number" name="2fa-code" id="2fa-code" placeholder="6-digit code" class="theme-input-${themeState.state} code-2fa-input w-80 px-2 py-1" />
 					</div>
-					<button type="submit" class="theme-btn-${themeState.state} 2fa-code-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Submit</button>
-					<button type="submit" class="theme-btn-${themeState.state} 2fa-cancel-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Cancel</button>
+					<button type="submit" class="theme-btn-${themeState.state} code-2fa-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Submit</button>
+					<button type="submit" class="theme-btn-${themeState.state} cancel-2fa-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Cancel</button>
 				</form>
 			</div>
 			`;
@@ -49,6 +51,38 @@ class Auth2Fa extends Component {
     SignOutInstance.classList.add("page");
 
     return SignOutInstance;
+  }
+
+  public static async handleClick(event: MouseEvent) {
+    event.preventDefault();
+    const target = event.target as HTMLElement;
+    if (target.classList.contains("cancel-2fa-btn")) {
+      await Profile.signOut();
+    } else if (target.classList.contains("code-2fa-btn")) {
+      const code2Fa = (
+        document.querySelector(".code-2fa-input") as HTMLInputElement
+      ).value;
+      Auth2Fa.validate2Fa(code2Fa);
+    }
+  }
+
+  public static async validate2Fa(code2Fa: string) {
+    const user = userContext.state;
+    try {
+      const response = await fetch(`${NGINX_SERVER}/api/validate-2fa`, {
+        method: "POST",
+        // credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user, code2Fa }),
+        signal: AbortSignal.timeout(5000),
+      });
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
 

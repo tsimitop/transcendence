@@ -262,6 +262,13 @@ class UserDb extends Sqlite {
     const has2Fa = result[0].has_2fa;
     return has2Fa;
   }
+
+  public getTotpSecret(userDb: DbType, id: string) {
+    const getTotpStatement = userDb.prepare(QueryUser.GET_TOTP_SECRET);
+    const result = getTotpStatement.all(id) as [{ totp_secret: string }];
+    const totpSecret = result[0].totp_secret;
+    return totpSecret;
+  }
 }
 
 export default UserDb;

@@ -47,7 +47,7 @@ abstract class Router {
     "/sign-in": SignIn,
     "/pong": Pong,
     "/profile": Profile,
-    "/2fa": Profile,
+    "/2fa": Auth2Fa,
   };
   static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile", "/2fa"];
   static guestUsersRoutes: ValidUrlPathsType[] = ["/sign-in", "/sign-up"];
@@ -239,7 +239,11 @@ abstract class Router {
       viewToRender = Router.getViewForSignedInUser(routeToGo);
       return viewToRender;
     } else {
-      return Auth2Fa.create();
+      urlContext.setState({ ...urlContext.state, path: "/2fa" });
+      window.history.pushState({}, "", "/2fa");
+      routeToGo = "/2fa";
+      viewToRender = Router.getViewForSignedInUser(routeToGo);
+      return viewToRender;
     }
   }
 

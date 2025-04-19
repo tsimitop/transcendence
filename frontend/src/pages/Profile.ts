@@ -2,6 +2,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { NGINX_SERVER } from "../constants";
 import themeState from "../context/ThemeContext";
+import { urlContext } from "../context/UrlContext";
 import { userContext } from "../context/UserContext";
 import Component, {
   ChildElementType,
@@ -49,7 +50,10 @@ class Profile extends Component {
           isSignedIn: false,
           jwtAccessToken: "",
         });
-        await Router.redirect("/");
+        const routeToGo = "/";
+        await Router.redirect(routeToGo);
+        urlContext.setState({ ...urlContext.state, path: routeToGo });
+        window.history.pushState({}, "", routeToGo);
         // Header.highlightActiveNavLink();
       }
     } catch (error) {
