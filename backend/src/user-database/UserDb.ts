@@ -255,6 +255,13 @@ class UserDb extends Sqlite {
     );
     updateTotpSecretStatement.run(totpSecret, id);
   }
+
+  public get2FaStatus(userDb: DbType, id: string) {
+    const status2FaStatement = userDb.prepare(QueryUser.GET_2FA_STATUS);
+    const result = status2FaStatement.all(id) as [{ has_2fa: boolean }];
+    const has2Fa = result[0].has_2fa;
+    return has2Fa;
+  }
 }
 
 export default UserDb;

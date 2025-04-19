@@ -6,6 +6,7 @@ import Pong from "../pages/Pong";
 import Header from "../components/Header";
 import Profile from "../pages/Profile";
 import SignIn from "../pages/SignIn";
+import Auth2Fa from "../pages/Auth2Fa";
 import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
 import {
@@ -46,8 +47,9 @@ abstract class Router {
     "/sign-in": SignIn,
     "/pong": Pong,
     "/profile": Profile,
+    "/2fa": Profile,
   };
-  static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile"];
+  static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile", "/2fa"];
   static guestUsersRoutes: ValidUrlPathsType[] = ["/sign-in", "/sign-up"];
 
   static isProtectedRoute(route: string) {
@@ -231,8 +233,14 @@ abstract class Router {
       username,
       isSignedIn,
     });
-    viewToRender = Router.getViewForSignedInUser(routeToGo);
-    return viewToRender;
+
+    const has2Fa = await Router.hasUserActive2Fa();
+    if (!has2Fa) {
+      viewToRender = Router.getViewForSignedInUser(routeToGo);
+      return viewToRender;
+    } else {
+      return Auth2Fa.create();
+    }
   }
 
   static listenForRouteChange() {
@@ -289,6 +297,26 @@ abstract class Router {
     Router.removeRouteChangeListeners();
     Router.listenForRouteChange();
     Header.highlightActiveNavLink();
+  }
+
+  static async hasUserActive2Fa() {
+    const user = userContext.state;
+    try {
+      const response = await fetch(`${NGINX_SERVER}/api/has-2fa`, {
+        method: "POST",
+        // credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user }),
+        signal: AbortSignal.timeout(5000),
+      });
+      const data = (await response.json()) as { has2Fa: boolean };
+      return data.has2Fa;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
   }
 }
 

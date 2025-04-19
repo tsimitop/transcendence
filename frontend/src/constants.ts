@@ -5,7 +5,8 @@ export type ValidUrlPathsType =
   | "/sign-up"
   | "/pong"
   | "/sign-in"
-  | "/profile";
+  | "/profile"
+  | "/2fa";
 
 export const PAGES: ValidUrlPathsType[] = [
   "/",
@@ -13,6 +14,7 @@ export const PAGES: ValidUrlPathsType[] = [
   "/pong",
   "/sign-in",
   "/profile",
+  "/2fa",
 ];
 
 export const NO_HIGHLIGHT_LINKS: ValidUrlPathsType[] = [];

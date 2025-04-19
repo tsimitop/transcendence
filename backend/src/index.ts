@@ -5,5 +5,6 @@ import "./api/sign-out/sign-out";
 import "./api/oauth/oauth";
 import "./api/2fa/activate-2fa";
 import "./api/2fa/confirm-2fa";
+import "./api/2fa/has-2fa";
 import "./api/protect-routes/validate-access-token";
 import "./api/protect-routes/generate-new-access-token";

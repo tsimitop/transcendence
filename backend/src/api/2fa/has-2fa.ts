@@ -3,20 +3,17 @@ import { FastifyRequest } from "fastify";
 import { UserStateType } from "../sign-in/sign-in";
 import UserDb from "../../user-database/UserDb";
 
-type Confirm2FaRequestType = {
+type Has2FaRequestType = {
   user: UserStateType;
 };
 
 fastify.post(
-  "/api/confirm-2fa",
-  async function (
-    request: FastifyRequest<{ Body: Confirm2FaRequestType }>,
-    reply
-  ) {
+  "/api/has-2fa",
+  async function (request: FastifyRequest<{ Body: Has2FaRequestType }>, reply) {
     const user = request.body.user;
     const userDbInstance = new UserDb("database/test.db");
     const userDb = userDbInstance.openDb();
-    userDbInstance.updateHas2Fa(userDb, user.id, 1);
-    reply.send({ test: request.body });
+    const has2Fa = userDbInstance.get2FaStatus(userDb, user.id);
+    reply.send({ has2Fa });
   }
 );

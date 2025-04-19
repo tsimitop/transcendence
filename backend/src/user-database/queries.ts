@@ -30,4 +30,5 @@ export enum QueryUser {
   SELECT_USER_TABLE = `SELECT * FROM ${table};`,
   UPDATE_HAS_2FA = `UPDATE ${table} SET has_2fa = ? WHERE id = ?`,
   UPDATE_TOTP_SECRET = `UPDATE ${table} SET totp_secret = ? WHERE id = ?`,
+  GET_2FA_STATUS = `SELECT has_2fa FROM ${table} WHERE id = ?`,
 }
