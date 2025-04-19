@@ -50,8 +50,12 @@ abstract class Router {
     "/profile": Profile,
     "/2fa": Auth2Fa,
   };
-  static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile", "/2fa"];
-  static guestUsersRoutes: ValidUrlPathsType[] = ["/sign-in", "/sign-up"];
+  static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile"];
+  static guestUsersRoutes: ValidUrlPathsType[] = [
+    "/sign-in",
+    "/sign-up",
+    "/2fa",
+  ];
 
   static isProtectedRoute(route: string) {
     const foundRoute = Router.protectedRoutes.find(
@@ -84,7 +88,6 @@ abstract class Router {
       const data =
         ((await userContext.isUserSignedIn()) as ValidateAccessTokenResponseType) ||
         null;
-      // console.log("data:", data);
       return data;
     } catch (error) {
       console.log(error);
@@ -185,6 +188,18 @@ abstract class Router {
       | (NewAccessTokenResponseType & { isAccessTokenValid?: boolean })
       | null = null;
     let viewToRender = null;
+
+    const user = userContext.state;
+
+    if (userContext.state.isSignedIn && !userContext.state.jwtAccessToken) {
+      const has2Fa = await Router.is2FaActive(user);
+      if (has2Fa) {
+        routeToGo = "/2fa";
+        viewToRender = Router.getViewForGuestUser(routeToGo);
+        return viewToRender;
+      }
+    }
+
     data = await Router.requestUserAuthStatus();
     if (!data) {
       userContext.setState({
@@ -230,19 +245,6 @@ abstract class Router {
     }
 
     const { userId, email, username, isSignedIn } = data;
-    const has2Fa = await Router.is2FaActive({
-      email,
-      id: userId,
-      username,
-      isSignedIn,
-      jwtAccessToken: "",
-    });
-
-    if (has2Fa) {
-      routeToGo = "/2fa";
-      viewToRender = Router.getViewForSignedInUser(routeToGo);
-      return viewToRender;
-    }
 
     userContext.setState({
       ...userContext.state,

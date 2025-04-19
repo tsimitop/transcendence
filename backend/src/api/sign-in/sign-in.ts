@@ -48,46 +48,7 @@ export const sendRefreshAndAccessTokens = async function (
     expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     // expires: new Date(Date.now() + 10 * 60 * 1000),
   });
-
   reply.send({ errorMessage: "", user, jwtAccessToken });
-};
-
-const sendRefreshToken = async function (
-  user: UserStateType,
-  userDbInstance: UserDb,
-  userDb: DbType,
-  reply: FastifyReply
-) {
-  const jwtRefreshToken = signJwtRefreshToken(user.id);
-  try {
-    const saltRounds = 10;
-    const salt = await bcrypt.genSalt(saltRounds);
-    const hashedRefreshToken = await bcrypt.hash(jwtRefreshToken, salt);
-    await userDbInstance.updateHashedRefreshToken(
-      userDb,
-      user.id,
-      hashedRefreshToken
-    );
-  } catch (error) {
-    console.log(error);
-  }
-
-  reply.cookie("refreshtoken", jwtRefreshToken, {
-    // domain: "localhost",
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    // maxAge: 7 * 24 * 60 * 60 * 1000,
-    // maxAge: 10 * 1000,
-    expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-    // expires: new Date(Date.now() + 10 * 60 * 1000),
-  });
-
-  reply.send({
-    errorMessage: "2FA code is required",
-    user,
-    jwtAccessToken: "",
-  });
 };
 
 const hasUserActive2Fa = async function (user: UserStateType) {
@@ -132,7 +93,11 @@ fastify.post(
     if (!has2Fa) {
       await sendRefreshAndAccessTokens(user, userDbInstance, userDb, reply);
     } else {
-      await sendRefreshToken(user, userDbInstance, userDb, reply);
+      reply.send({
+        errorMessage: "2FA code is required",
+        user,
+        jwtAccessToken: "",
+      });
     }
   }
 );

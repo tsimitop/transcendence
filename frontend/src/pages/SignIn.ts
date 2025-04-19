@@ -2,7 +2,6 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { NGINX_SERVER, ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
-import { urlContext } from "../context/UrlContext";
 import { userContext, UserStateType } from "../context/UserContext";
 import Component, {
   ChildElementType,
@@ -155,8 +154,8 @@ class SignIn extends Component {
           jwtAccessToken: "",
         });
         const routeToGo = "/2fa";
-        urlContext.setState({ ...urlContext.state, path: routeToGo });
-        window.history.pushState({}, "", routeToGo);
+        // urlContext.setState({ ...urlContext.state, path: routeToGo });
+        // window.history.pushState({}, "", routeToGo);
         const viewToRender = await Router.findViewToRender(routeToGo);
         Router.renderPageBasedOnPath(viewToRender);
         Header.highlightActiveNavLink();
