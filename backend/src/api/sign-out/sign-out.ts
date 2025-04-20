@@ -33,6 +33,8 @@ fastify.post("/api/sign-out", async function (request, reply) {
     sameSite: "none",
     path: "/",
   });
+
   request.session.user = undefined;
+  request.session.destroy();
   reply.send({ errorMessage: "", message: "Signed out successfully" });
 });
