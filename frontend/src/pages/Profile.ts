@@ -9,6 +9,9 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 import Router from "../models/Router";
+import { removeElementsWithSimilarClassName } from "../utils/remove-elements-with-similar-class-name";
+
+const message2FaclassName = "message-2fa";
 
 type Activate2FaResponseType = {
   dataUrl: string;
@@ -65,17 +68,21 @@ class Profile extends Component {
 
   public static async activate2Fa() {
     const user = userContext.state;
-    const page = document.querySelector(".main-container")!;
+    const main = document.querySelector(".main-container") as HTMLElement;
+
     try {
+      removeElementsWithSimilarClassName(message2FaclassName, main);
       const has2Fa = await Router.is2FaActive(user);
       if (has2Fa) {
-        const note = page.querySelector(".already-active-2fa-notice");
-        if (note) {
-          page.removeChild(note);
+        const message2FaAlreadyActive = main.querySelector(
+          ".already-active-2fa-message"
+        );
+        if (message2FaAlreadyActive) {
+          main.removeChild(message2FaAlreadyActive);
         }
-        page.insertAdjacentHTML(
+        main.insertAdjacentHTML(
           "beforeend",
-          `<p class="already-active-2fa-notice theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, you have already activated 2FA!</p>`
+          `<p class="already-active-2fa-message message-2fa theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, you have already activated 2FA!</p>`
         );
         return;
       }
@@ -92,17 +99,21 @@ class Profile extends Component {
       const data = (await response.json()) as Activate2FaResponseType;
       const { dataUrl } = data;
 
-      const qrCode = page.querySelector(".qrcode");
+      const qrCode = main.querySelector(".qrcode");
       if (qrCode) {
         return;
       }
-      page.insertAdjacentHTML(
+      main.insertAdjacentHTML(
         "beforeend",
         `
-				<div class="qrcode">
+				<div class="message-2fa qrcode flex flex-col items-center gap-4">
 					<img src=${dataUrl} width=200px alt=qrcode />
-					<button class="confirm-2fa-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
-						Confirm 2FA Activation
+					<div class="text-center">
+						<p>Please scan the QR Code using a two-factor authentication app,</p>
+						<p>and only then click the <span class="italic">confirm 2FA</span> button</p>
+					</div>
+					<button class="confirm-2fa-btn theme-btn-${themeState.state} py-2 cursor-pointer w-[120px]">
+						Confirm 2FA
 					</button>
 				</div>
 				`
@@ -114,6 +125,8 @@ class Profile extends Component {
 
   public static async confirm2Fa() {
     const user = userContext.state;
+    const main = document.querySelector(".main-container") as HTMLElement;
+
     try {
       const response = await fetch(`${NGINX_SERVER}/api/confirm-2fa`, {
         method: "POST",
@@ -125,8 +138,20 @@ class Profile extends Component {
         signal: AbortSignal.timeout(5000),
       });
       const data = await response.json();
-      console.log(data);
+
+      removeElementsWithSimilarClassName(message2FaclassName, main);
+
+      main.insertAdjacentHTML(
+        "beforeend",
+        `<p class="confirmed-2fa-message message-2fa theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, 2FA is activated</p>`
+      );
+
+      console.log("successful", data);
     } catch (error) {
+      main.insertAdjacentHTML(
+        "beforeend",
+        `<p class="confirm-2fa-error-message message-2fa theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, Something went wrong!</p>`
+      );
       console.log(error);
     }
   }
@@ -150,19 +175,26 @@ class Profile extends Component {
     main.addEventListener("click", Profile.handleClick);
 
     const html = `
-				<h1>Profile</h1>
-				<p>id: ${userContext.state.id}</p>
-				<p>email: ${userContext.state.email}</p>
-				<p>username: ${userContext.state.username}</p>
-				<button class="activate-2fa-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
+				<div class="flex items-center justify-between mt-12 mb-6">
+					<h1 class="text-5xl font-bold">Profile</h1>
+					<button class="sign-out-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer">
+						Sign out
+					</button>
+				</div>
+				<div class="flex flex-col gap-1 mb-20">
+					<p>id: ${userContext.state.id}</p>
+					<p>email: ${userContext.state.email}</p>
+					<p>username: ${userContext.state.username}</p>
+				</div>
+				<h2 class="text-3xl font-bold mb-6">Settings</h2>
+				<div class="flex flex-col gap-2 w-[120px]">
+					<button class="activate-2fa-btn theme-btn-${themeState.state} py-2 cursor-pointer">
 					Activate 2FA
-				</button>
-				<button class="deactivate-2fa-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
+					</button>
+					<button class="deactivate-2fa-btn theme-btn-${themeState.state} py-2 cursor-pointer">
 					Deactivate 2FA
-				</button>
-				<button class="sign-out-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
-					Sign out
-				</button>
+					</button>
+				</di>
 			`;
 
     main.insertAdjacentHTML("beforeend", html);
@@ -181,7 +213,8 @@ class Profile extends Component {
 
   public static async deactivate2Fa() {
     const user = userContext.state;
-    const main = document.querySelector(".main-container")!;
+    const main = document.querySelector(".main-container") as HTMLElement;
+
     try {
       const response = await fetch(`${NGINX_SERVER}/api/deactivate-2fa`, {
         method: "POST",
@@ -195,16 +228,18 @@ class Profile extends Component {
 
       const data = await response.json();
 
-      const note = main.querySelector(".deactived-2fa-notice");
-      if (note) {
-        main.removeChild(note);
-      }
+      removeElementsWithSimilarClassName(message2FaclassName, main);
+
       main.insertAdjacentHTML(
         "beforeend",
-        `<p class="deactived-2fa-notice theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, 2FA is deactivated!</p>`
+        `<p class="deactive-2fa-message message-2fa theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, 2FA is deactivated!</p>`
       );
       console.log(data);
     } catch (error) {
+      main.insertAdjacentHTML(
+        "beforeend",
+        `<p class="deactive-2fa-error-message message-2fa theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, 2FA is deactivated!</p>`
+      );
       console.log(error);
     }
   }

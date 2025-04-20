@@ -32,7 +32,7 @@ class Auth2Fa extends Component {
 
     const html = `
 			<div class="flex flex-col gap-8">
-				<h1 class="text-3xl">Hi <span class="font-bold">${userContext.state.username}</span></h1>
+				<h1 class="text-4xl mb-12">Hi <span class="font-bold">${userContext.state.username}</span></h1>
 				<form class="sign-in-form flex flex-col gap-3">
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="2fa-code">2FA code</label>

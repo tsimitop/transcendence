@@ -56,7 +56,7 @@ class SignIn extends Component {
 
     const html = `
 			<div class="flex flex-col gap-8">
-				<form class="sign-in-form flex flex-col gap-3">
+				<form class="sign-in-form flex flex-col gap-6">
 					<div class="grid grid-cols-[150px_1fr] items-center">
 						<label for="username-or-email">Username or Email</label>
 						<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="theme-input-${themeState.state} username-signin-input w-80 px-2 py-1" />
@@ -65,12 +65,14 @@ class SignIn extends Component {
 						<label for="password">Password</label>
 						<input required type="password" name="password" id="password" placeholder="password" class="theme-input-${themeState.state} password-signin-input px-2 py-1" w-80 />
 					</div>
-					<button type="submit" class="theme-btn-${themeState.state} signin-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Sign in</button>
-					<p>
-						<span class="text-sm">Don't have an account?</span>
-						<a class="${ROUTER_CLASS_NAME} text-xs underline hover:no-underline" href="/sign-up">Sign up &rarr;
-						</a>
-					</p>
+					<div class="flex items-end mt-3">
+						<p>
+							<span class="text-sm">Don't have an account?</span>
+							<a class="${ROUTER_CLASS_NAME} text-xs underline hover:no-underline" href="/sign-up">Sign up &rarr;
+							</a>
+						</p>
+						<button type="submit" class="theme-btn-${themeState.state} signin-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Sign in</button>
+					</div>
 				</form>
 				<button class="theme-btn-${themeState.state} google-sign-in-btn cursor-pointer w-full py-2 flex items-center">
 				 	<a class="w-full block" href=${url}>
