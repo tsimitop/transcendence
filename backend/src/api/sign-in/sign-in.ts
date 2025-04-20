@@ -51,7 +51,7 @@ export const sendRefreshAndAccessTokens = async function (
   reply.send({ errorMessage: "", user, jwtAccessToken });
 };
 
-const hasUserActive2Fa = async function (user: UserStateType) {
+export const hasUserActive2Fa = async function (user: UserStateType) {
   const userDbInstance = new UserDb("database/test.db");
   const userDb = userDbInstance.openDb();
   const has2Fa = userDbInstance.get2FaStatus(userDb, user.id);

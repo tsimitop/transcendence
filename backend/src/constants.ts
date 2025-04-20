@@ -7,3 +7,5 @@ const isDevelopment = process.env.IS_DEVELOPMENT === "true" ? true : false;
 export const FRONT_END_URL = isDevelopment
   ? "http://localhost:5173"
   : "https://localhost:443";
+
+export const SESSION_COOKIE_NAME = "user-session";

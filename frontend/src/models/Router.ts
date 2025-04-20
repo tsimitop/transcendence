@@ -233,13 +233,25 @@ abstract class Router {
     }
 
     if (!data || !data.isAccessTokenValid) {
-      userContext.setState({
-        ...userContext.state,
-        id: "",
-        email: "",
-        username: "",
-        isSignedIn: false,
-      });
+      const userInBackendSession =
+        (await Router.isUserDataInBackendSession()) as UserStateType;
+      if (!userInBackendSession) {
+        userContext.setState({
+          ...userContext.state,
+          id: "",
+          email: "",
+          username: "",
+          isSignedIn: false,
+        });
+      } else {
+        userContext.setState({
+          ...userContext.state,
+          id: userInBackendSession.id,
+          email: userInBackendSession.email,
+          username: userInBackendSession.username,
+          isSignedIn: userInBackendSession.isSignedIn, // it is true!
+        });
+      }
       viewToRender = Router.getViewForGuestUser(routeToGo);
       return viewToRender;
     }
@@ -330,6 +342,27 @@ abstract class Router {
     } catch (error) {
       console.log(error);
       return false;
+    }
+  }
+
+  static async isUserDataInBackendSession() {
+    try {
+      const response = await fetch(
+        `${NGINX_SERVER}/api/get-user-session-data`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+      const data = await response.json();
+      if (!data) {
+        throw Error("No user session found");
+      }
+      return data;
+    } catch (error) {
+      void error;
+      // console.log(error);
+      return null;
     }
   }
 }
