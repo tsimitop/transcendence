@@ -63,7 +63,21 @@ class Profile extends Component {
 
   public static async activate2Fa() {
     const user = userContext.state;
+    const page = document.querySelector(".main-container")!;
     try {
+      const has2Fa = await Router.is2FaActive(user);
+      if (has2Fa) {
+        const note = page.querySelector(".already-active-2fa-notice");
+        if (note) {
+          page.removeChild(note);
+        }
+        page.insertAdjacentHTML(
+          "beforeend",
+          `<p class="already-active-2fa-notice theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, you have already activated 2FA!</p>`
+        );
+        return;
+      }
+
       const response = await fetch(`${NGINX_SERVER}/api/activate-2fa`, {
         method: "POST",
         // credentials: "include",
@@ -75,7 +89,6 @@ class Profile extends Component {
       });
       const data = (await response.json()) as Activate2FaResponseType;
       const { dataUrl } = data;
-      const page = document.querySelector(".main-container")!;
       page.insertAdjacentHTML(
         "beforeend",
         `
