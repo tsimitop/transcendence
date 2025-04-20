@@ -30,6 +30,8 @@ class Profile extends Component {
       Profile.activate2Fa();
     } else if (target.classList.contains("confirm-2fa-btn")) {
       Profile.confirm2Fa();
+    } else if (target.classList.contains("deactivate-2fa-btn")) {
+      Profile.deactivate2Fa();
     }
   }
 
@@ -89,13 +91,20 @@ class Profile extends Component {
       });
       const data = (await response.json()) as Activate2FaResponseType;
       const { dataUrl } = data;
+
+      const qrCode = page.querySelector(".qrcode");
+      if (qrCode) {
+        return;
+      }
       page.insertAdjacentHTML(
         "beforeend",
         `
-				<img src=${dataUrl} width=200px alt=qrcode />
-				<button class="confirm-2fa-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
-					Confirm 2FA Activation
-				</button>
+				<div class="qrcode">
+					<img src=${dataUrl} width=200px alt=qrcode />
+					<button class="confirm-2fa-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
+						Confirm 2FA Activation
+					</button>
+				</div>
 				`
       );
     } catch (error) {
@@ -148,6 +157,9 @@ class Profile extends Component {
 				<button class="activate-2fa-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
 					Activate 2FA
 				</button>
+				<button class="deactivate-2fa-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
+					Deactivate 2FA
+				</button>
 				<button class="sign-out-btn theme-ternary-${themeState.state}-full px-4 py-2 cursor-pointer">
 					Sign out
 				</button>
@@ -165,6 +177,36 @@ class Profile extends Component {
     SignOutInstance.classList.add("page");
 
     return SignOutInstance;
+  }
+
+  public static async deactivate2Fa() {
+    const user = userContext.state;
+    const main = document.querySelector(".main-container")!;
+    try {
+      const response = await fetch(`${NGINX_SERVER}/api/deactivate-2fa`, {
+        method: "POST",
+        // credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(user),
+        signal: AbortSignal.timeout(5000),
+      });
+
+      const data = await response.json();
+
+      const note = main.querySelector(".deactived-2fa-notice");
+      if (note) {
+        main.removeChild(note);
+      }
+      main.insertAdjacentHTML(
+        "beforeend",
+        `<p class="deactived-2fa-notice theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, 2FA is deactivated!</p>`
+      );
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
 
