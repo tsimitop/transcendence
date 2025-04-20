@@ -6,6 +6,7 @@ import Pong from "../pages/Pong";
 import Header from "../components/Header";
 import Profile from "../pages/Profile";
 import SignIn from "../pages/SignIn";
+import Auth2Fa from "../pages/Auth2Fa";
 import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
 import {
@@ -16,7 +17,7 @@ import {
   SIGNED_IN_USER_REDIRECTION_PATH,
   ValidUrlPathsType,
 } from "../constants";
-import { userContext } from "../context/UserContext";
+import { userContext, UserStateType } from "../context/UserContext";
 
 import { ValidateAccessTokenResponseType } from "../context/UserContext";
 
@@ -27,6 +28,7 @@ type NewAccessTokenResponseType = {
   email: string;
   username: string;
   isSignedIn: boolean;
+  has2Fa?: boolean;
 };
 
 type ComponentType = {
@@ -46,9 +48,14 @@ abstract class Router {
     "/sign-in": SignIn,
     "/pong": Pong,
     "/profile": Profile,
+    "/2fa": Auth2Fa,
   };
   static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile"];
-  static guestUsersRoutes: ValidUrlPathsType[] = ["/sign-in", "/sign-up"];
+  static guestUsersRoutes: ValidUrlPathsType[] = [
+    "/sign-in",
+    "/sign-up",
+    "/2fa",
+  ];
 
   static isProtectedRoute(route: string) {
     const foundRoute = Router.protectedRoutes.find(
@@ -81,7 +88,6 @@ abstract class Router {
       const data =
         ((await userContext.isUserSignedIn()) as ValidateAccessTokenResponseType) ||
         null;
-      console.log("data:", data);
       return data;
     } catch (error) {
       console.log(error);
@@ -116,7 +122,6 @@ abstract class Router {
         // throw new Error(
         //   "New access token could not be created! Refresh token might be expired"
         // );
-        console.log(errorMessage, "------------");
         throw errorMessage;
       }
       userContext.setState({
@@ -127,8 +132,13 @@ abstract class Router {
         isSignedIn,
         jwtAccessToken: newJwtAccessToken,
       });
-      // console.log("$$$$$$$$$$$$$$$$$$$$$$$$", newJwtAccessToken);
-      return data;
+
+      const has2Fa = await Router.is2FaActive(userContext.state);
+      if (has2Fa) {
+        return { ...data, has2Fa };
+      } else {
+        return data;
+      }
     } catch (error) {
       console.log(error);
       return null;
@@ -179,6 +189,17 @@ abstract class Router {
       | null = null;
     let viewToRender = null;
 
+    const user = userContext.state;
+
+    if (userContext.state.isSignedIn && !userContext.state.jwtAccessToken) {
+      const has2Fa = await Router.is2FaActive(user);
+      if (has2Fa) {
+        routeToGo = "/2fa";
+        viewToRender = Router.getViewForGuestUser(routeToGo);
+        return viewToRender;
+      }
+    }
+
     data = await Router.requestUserAuthStatus();
     if (!data) {
       userContext.setState({
@@ -212,19 +233,31 @@ abstract class Router {
     }
 
     if (!data || !data.isAccessTokenValid) {
-      // console.log("data:", data);
-      userContext.setState({
-        ...userContext.state,
-        id: "",
-        email: "",
-        username: "",
-        isSignedIn: false,
-      });
+      const userInBackendSession =
+        (await Router.isUserDataInBackendSession()) as UserStateType;
+      if (!userInBackendSession) {
+        userContext.setState({
+          ...userContext.state,
+          id: "",
+          email: "",
+          username: "",
+          isSignedIn: false,
+        });
+      } else {
+        userContext.setState({
+          ...userContext.state,
+          id: userInBackendSession.id,
+          email: userInBackendSession.email,
+          username: userInBackendSession.username,
+          isSignedIn: userInBackendSession.isSignedIn, // it is true!
+        });
+      }
       viewToRender = Router.getViewForGuestUser(routeToGo);
       return viewToRender;
     }
 
     const { userId, email, username, isSignedIn } = data;
+
     userContext.setState({
       ...userContext.state,
       id: userId,
@@ -232,6 +265,7 @@ abstract class Router {
       username,
       isSignedIn,
     });
+
     viewToRender = Router.getViewForSignedInUser(routeToGo);
     return viewToRender;
   }
@@ -261,12 +295,12 @@ abstract class Router {
     window.history.pushState({}, "", target.href);
     const validPath = PAGES.find(page => page === target.pathname);
     urlContext.setState({ ...urlContext.state, path: validPath });
-    console.log(urlContext.state);
+    // console.log(urlContext.state);
     const routeToGo = Router.findRouteToGo();
     const viewToRender = await Router.findViewToRender(routeToGo);
     Router.renderPageBasedOnPath(viewToRender);
     Router.listenForRouteChange();
-    console.log(urlContext.state);
+    // console.log(urlContext.state);
     Header.highlightActiveNavLink();
   }
 
@@ -290,6 +324,46 @@ abstract class Router {
     Router.removeRouteChangeListeners();
     Router.listenForRouteChange();
     Header.highlightActiveNavLink();
+  }
+
+  static async is2FaActive(user: UserStateType) {
+    try {
+      const response = await fetch(`${NGINX_SERVER}/api/has-2fa`, {
+        method: "POST",
+        // credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user }),
+        signal: AbortSignal.timeout(5000),
+      });
+      const data = (await response.json()) as { has2Fa: boolean };
+      return data.has2Fa;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+
+  static async isUserDataInBackendSession() {
+    try {
+      const response = await fetch(
+        `${NGINX_SERVER}/api/get-user-session-data`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+      const data = await response.json();
+      if (!data) {
+        throw Error("No user session found");
+      }
+      return data;
+    } catch (error) {
+      void error;
+      // console.log(error);
+      return null;
+    }
   }
 }
 

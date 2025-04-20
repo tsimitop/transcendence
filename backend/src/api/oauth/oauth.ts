@@ -7,6 +7,13 @@ import { fastify } from "../../server";
 import UserDb from "../../user-database/UserDb";
 import { signJwtAccessToken, signJwtRefreshToken } from "../jwt";
 import { FRONT_END_URL } from "../../constants";
+import { hasUserActive2Fa, UserStateType } from "../sign-in/sign-in";
+
+declare module "@fastify/session" {
+  interface FastifySessionObject {
+    user?: UserStateType;
+  }
+}
 
 type OAuthRequestType = {
   state: string;
@@ -125,19 +132,28 @@ fastify.get(
         user.id,
         hashedRefreshToken
       );
-      reply.cookie("oauthrefreshtoken", jwtRefreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      });
-      reply.cookie("accesstoken", jwtAccessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        expires: new Date(Date.now() + 15 * 60 * 1000),
-      });
-      reply.redirect(`${FRONT_END_URL}/profile`);
+
+      const has2Fa = await hasUserActive2Fa(user);
+
+      if (!has2Fa) {
+        reply.cookie("oauthrefreshtoken", jwtRefreshToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+          expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        });
+        reply.cookie("accesstoken", jwtAccessToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+          expires: new Date(Date.now() + 15 * 60 * 1000),
+        });
+        reply.redirect(`${FRONT_END_URL}/profile`);
+      } else {
+        req.session.user = user;
+        console.log("user - - - - - -- - --", user);
+        reply.redirect(`${FRONT_END_URL}/2fa`);
+      }
     } catch (error) {
       console.log(error);
     }
