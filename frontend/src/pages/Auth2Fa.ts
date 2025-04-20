@@ -39,7 +39,7 @@ class Auth2Fa extends Component {
 						<input required type="number" name="2fa-code" id="2fa-code" placeholder="6-digit code" class="theme-input-${themeState.state} code-2fa-input w-80 px-2 py-1" />
 					</div>
 					<div class="flex justify-end gap-3">
-					<button type="submit" class="theme-btn-${themeState.state} cancel-2fa-btn cursor-pointer block px-6 py-2 w-[90px] flex justify-center">Cancel</button>
+						<button type="button" class="theme-btn-${themeState.state} cancel-2fa-btn cursor-pointer block px-6 py-2 w-[90px] flex justify-center">Cancel</button>
 						<button type="submit" class="theme-btn-${themeState.state} code-2fa-btn cursor-pointer block px-6 py-2 w-[90px] flex justify-center">Submit</button>
 					</div>
 				</form>
