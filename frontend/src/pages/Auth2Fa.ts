@@ -5,18 +5,35 @@ import themeState from "../context/ThemeContext";
 import { userContext } from "../context/UserContext";
 import Component from "../models/Component";
 import Router from "../models/Router";
+import { displayFormValidationError } from "../utils/display-form-validation-error";
 import Profile from "./Profile";
 
 class Auth2Fa extends Component {
+  static validationErrorClassName = "code-2fa-error";
   public static create() {
     if (!customElements.getName(Auth2Fa)) {
       customElements.define("auth2fa-component", Auth2Fa);
     }
 
     const main = document.createElement("main");
+    const formAndValidationErrorContainer = document.createElement("div");
+    formAndValidationErrorContainer.classList.add(
+      "form-and-validation-container",
+      "grid",
+      "grid-rows-[auto_80px]",
+      "grid-cols-[500px]"
+    );
+    main.insertAdjacentElement("afterbegin", formAndValidationErrorContainer);
+    main.insertAdjacentHTML(
+      "afterbegin",
+      `
+			<h1 class="text-4xl">Hi <span class="font-bold">${userContext.state.username}</span></h1>
+			`
+    );
     main.classList.add(
       "flex",
       "flex-col",
+      "gap-20",
       "items-center",
       "justify-center",
       "main-container",
@@ -32,13 +49,12 @@ class Auth2Fa extends Component {
 
     const html = `
 			<div class="flex flex-col gap-8">
-				<h1 class="text-4xl mb-12">Hi <span class="font-bold">${userContext.state.username}</span></h1>
 				<form class="sign-in-form flex flex-col gap-3">
-					<div class="grid grid-cols-[150px_1fr] items-center">
+					<div class="grid grid-cols-[100px_400px] items-center">
 						<label for="2fa-code">2FA code</label>
-						<input required type="number" name="2fa-code" id="2fa-code" placeholder="6-digit code" class="theme-input-${themeState.state} code-2fa-input w-80 px-2 py-1" />
+						<input required type="number" name="2fa-code" id="2fa-code" placeholder="6-digit code" class="theme-input-${themeState.state} code-2fa-input px-2 py-1" />
 					</div>
-					<div class="flex justify-end gap-3">
+					<div class="flex justify-end gap-3 mt-3">
 						<button type="button" class="theme-btn-${themeState.state} cancel-2fa-btn cursor-pointer block px-6 py-2 w-[90px] flex justify-center">Cancel</button>
 						<button type="submit" class="theme-btn-${themeState.state} code-2fa-btn cursor-pointer block px-6 py-2 w-[90px] flex justify-center">Submit</button>
 					</div>
@@ -46,7 +62,7 @@ class Auth2Fa extends Component {
 			</div>
 			`;
 
-    main.insertAdjacentHTML("beforeend", html);
+    formAndValidationErrorContainer.insertAdjacentHTML("beforeend", html);
 
     const SignOutInstance = new Auth2Fa(
       { html: "", position: "beforeend" },
@@ -88,7 +104,8 @@ class Auth2Fa extends Component {
       const data = await response.json();
       if (data.errorMessage || data.error) {
         console.log(data);
-        throw new Error("Wrong 2FA code!");
+        // throw new Error("Wrong 2FA code!");
+        throw data;
       }
       const routeToGo = "/profile";
       // urlContext.setState({ ...urlContext.state, path: routeToGo });
@@ -103,6 +120,24 @@ class Auth2Fa extends Component {
       Router.listenForRouteChange();
       Router.handleBackAndForward();
     } catch (error) {
+      const formAndValidationErrorContainer = document.querySelector(
+        ".form-and-validation-container"
+      ) as HTMLElement;
+
+      const errorMessage = `${
+        error &&
+        typeof error === "object" &&
+        "errorMessage" in error &&
+        typeof error.errorMessage === "string"
+          ? error.errorMessage
+          : "Invalid input!"
+      }`;
+
+      displayFormValidationError(
+        Auth2Fa.validationErrorClassName,
+        formAndValidationErrorContainer,
+        errorMessage
+      );
       console.log(error);
     }
   }
