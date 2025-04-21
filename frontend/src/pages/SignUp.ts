@@ -7,6 +7,7 @@ import Component, {
   ChildElementType,
   ChildrenStringType,
 } from "../models/Component";
+import { removeElementsWithSimilarClassName } from "../utils/remove-elements-with-similar-class-name";
 import SignIn from "./SignIn";
 
 class SignUp extends Component {
@@ -23,6 +24,14 @@ class SignUp extends Component {
     }
 
     const main = document.createElement("main");
+    const formAndValidationErrorContainer = document.createElement("div");
+    formAndValidationErrorContainer.classList.add(
+      "form-and-validation-container",
+      "grid",
+      "grid-rows-[auto_80px]",
+      "grid-cols-[500px]"
+    );
+    main.insertAdjacentElement("afterbegin", formAndValidationErrorContainer);
     main.classList.add(
       "flex",
       "flex-col",
@@ -43,17 +52,17 @@ class SignUp extends Component {
     const html = `
 			<div class="flex flex-col gap-8">
 				<form class="sign-up-form flex flex-col gap-6">
-					<div class="grid grid-cols-[100px_1fr] items-center">
+					<div class="grid grid-cols-[100px_400px] items-center">
 						<label for="email">Email</label>
-						<input required type="email" name="email" id="email" placeholder="email" class="theme-input-${themeState.state} email-signup-input w-80 px-2 py-1" />
+						<input required type="email" name="email" id="email" placeholder="email" class="theme-input-${themeState.state} email-signup-input px-2 py-1" />
 					</div>
-					<div class="grid grid-cols-[100px_1fr] items-center">
+					<div class="grid grid-cols-[100px_400px] items-center">
 						<label for="username">Username</label>
-						<input required minlength="4" maxlength="20" type="text" username="username" id="username" placeholder="username" class="theme-input-${themeState.state} username-signup-input w-80 px-2 py-1" />
+						<input required maxlength="20" type="text" username="username" id="username" placeholder="username" class="theme-input-${themeState.state} username-signup-input px-2 py-1" />
 					</div>
-					<div class="grid grid-cols-[100px_1fr] items-center">
+					<div class="grid grid-cols-[100px_400px] items-center">
 						<label for="password">Password</label>
-						<input required type="password" name="password" id="password" placeholder="password" class="theme-input-${themeState.state} password-signup-input w-80 px-2 py-1" />
+						<input required type="password" name="password" id="password" placeholder="password" class="theme-input-${themeState.state} password-signup-input px-2 py-1" />
 					</div>
 					<div class="flex items-end mt-3">
 						<p>
@@ -66,7 +75,7 @@ class SignUp extends Component {
 			</div>
 		`;
 
-    main.insertAdjacentHTML("beforeend", html);
+    formAndValidationErrorContainer.insertAdjacentHTML("beforeend", html);
 
     const SignUpInstance = new SignUp(
       { html: "", position: "beforeend" },
@@ -129,6 +138,26 @@ class SignUp extends Component {
 
       await SignIn.postSignInData(email, password);
     } catch (error) {
+      const formAndValidationErrorContainer = document.querySelector(
+        ".form-and-validation-container"
+      ) as HTMLElement;
+      removeElementsWithSimilarClassName(
+        "sign-up-validation-error",
+        formAndValidationErrorContainer
+      );
+      formAndValidationErrorContainer.insertAdjacentHTML(
+        "beforeend",
+        `
+					<p class="sign-up-validation-error self-end text-center text-sm bg-red-900 text-plightbg px-2 py-2 rounded-[3px] mt-8">${
+            error &&
+            typeof error === "object" &&
+            "errorMessage" in error &&
+            typeof error.errorMessage === "string"
+              ? error.errorMessage
+              : "Invalid input!"
+          }</p>
+				`
+      );
       console.log("sign up error:\n", error);
     }
   }

@@ -34,19 +34,34 @@ fastify.post(
     const { validEmail, validUsername, validPassword } =
       validation.isFormValid();
 
-    if (!validEmail || !validUsername || !validPassword) {
-      reply.send({
-        errorMessage: SignUpValidation.errorMessage,
-        emailError: !validEmail ? SignUpValidation.emailError : undefined,
-        usernameError: !validUsername
-          ? SignUpValidation.usernameError
-          : undefined,
-        passwordError: !validPassword
-          ? SignUpValidation.passwordError
-          : undefined,
-      });
+    if (!validEmail) {
+      reply.send({ errorMessage: SignUpValidation.emailError });
       return;
     }
+
+    if (!validUsername) {
+      reply.send({ errorMessage: SignUpValidation.usernameError });
+      return;
+    }
+
+    if (!validPassword) {
+      reply.send({ errorMessage: SignUpValidation.passwordError });
+      return;
+    }
+
+    // if (!validEmail || !validUsername || !validPassword) {
+    //   reply.send({
+    //     errorMessage: SignUpValidation.errorMessage,
+    //     emailError: !validEmail ? SignUpValidation.emailError : undefined,
+    //     usernameError: !validUsername
+    //       ? SignUpValidation.usernameError
+    //       : undefined,
+    //     passwordError: !validPassword
+    //       ? SignUpValidation.passwordError
+    //       : undefined,
+    //   });
+    //   return;
+    // }
 
     if (
       userAlreadyExists.found &&
