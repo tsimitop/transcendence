@@ -11,6 +11,7 @@ import { removeElementsWithSimilarClassName } from "../utils/remove-elements-wit
 import SignIn from "./SignIn";
 
 class SignUp extends Component {
+  static validationErrorClassName = "sign-up-validation-error";
   constructor(
     childrenString: ChildrenStringType,
     ...childElements: ChildElementType[]
@@ -142,20 +143,22 @@ class SignUp extends Component {
         ".form-and-validation-container"
       ) as HTMLElement;
       removeElementsWithSimilarClassName(
-        "sign-up-validation-error",
+        SignUp.validationErrorClassName,
         formAndValidationErrorContainer
       );
       formAndValidationErrorContainer.insertAdjacentHTML(
         "beforeend",
         `
-					<p class="sign-up-validation-error self-end text-center text-sm bg-red-900 text-plightbg px-2 py-2 rounded-[3px] mt-8">${
-            error &&
-            typeof error === "object" &&
-            "errorMessage" in error &&
-            typeof error.errorMessage === "string"
-              ? error.errorMessage
-              : "Invalid input!"
-          }</p>
+					<p class="${
+            SignUp.validationErrorClassName
+          } self-end text-center text-sm bg-red-900 text-plightbg px-2 py-2 rounded-[3px] mt-8">${
+          error &&
+          typeof error === "object" &&
+          "errorMessage" in error &&
+          typeof error.errorMessage === "string"
+            ? error.errorMessage
+            : "Invalid input!"
+        }</p>
 				`
       );
       console.log("sign up error:\n", error);

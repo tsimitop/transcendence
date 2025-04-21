@@ -8,9 +8,11 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 import Router from "../models/Router";
+import { removeElementsWithSimilarClassName } from "../utils/remove-elements-with-similar-class-name";
 // import Auth2Fa from "./Auth2Fa";
 
 class SignIn extends Component {
+  static validationErrorClassName = "sign-in-validation-error";
   constructor(
     childrenString: ChildrenStringType,
     ...childElements: ChildElementType[]
@@ -24,6 +26,14 @@ class SignIn extends Component {
     }
 
     const main = document.createElement("main");
+    const formAndValidationErrorContainer = document.createElement("div");
+    formAndValidationErrorContainer.classList.add(
+      "form-and-validation-container",
+      "grid",
+      "grid-rows-[auto_80px]",
+      "grid-cols-[550px]"
+    );
+    main.insertAdjacentElement("afterbegin", formAndValidationErrorContainer);
     main.classList.add(
       "flex",
       "flex-col",
@@ -57,13 +67,13 @@ class SignIn extends Component {
     const html = `
 			<div class="flex flex-col gap-8">
 				<form class="sign-in-form flex flex-col gap-6">
-					<div class="grid grid-cols-[150px_1fr] items-center">
+					<div class="grid grid-cols-[150px_400px] items-center">
 						<label for="username-or-email">Username or Email</label>
-						<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="theme-input-${themeState.state} username-signin-input w-80 px-2 py-1" />
+						<input required type="text" name="username-or-email" id="username-or-email" placeholder="username or email" class="theme-input-${themeState.state} username-signin-input px-2 py-1" />
 					</div>
-					<div class="grid grid-cols-[150px_1fr] items-center">
+					<div class="grid grid-cols-[150px_400px] items-center">
 						<label for="password">Password</label>
-						<input required type="password" name="password" id="password" placeholder="password" class="theme-input-${themeState.state} password-signin-input px-2 py-1" w-80 />
+						<input required type="password" name="password" id="password" placeholder="password" class="theme-input-${themeState.state} password-signin-input px-2 py-1" />
 					</div>
 					<div class="flex items-end mt-3">
 						<p>
@@ -84,7 +94,7 @@ class SignIn extends Component {
 			</div>
 		`;
 
-    main.insertAdjacentHTML("beforeend", html);
+    formAndValidationErrorContainer.insertAdjacentHTML("beforeend", html);
 
     const SignInInstance = new SignIn(
       { html: "", position: "beforeend" },
@@ -113,7 +123,20 @@ class SignIn extends Component {
     ).value.trim();
 
     if (!usernameOrEmail || !password) {
-      console.log("field is reuqired");
+      const formAndValidationErrorContainer = document.querySelector(
+        ".form-and-validation-container"
+      ) as HTMLElement;
+      removeElementsWithSimilarClassName(
+        SignIn.validationErrorClassName,
+        formAndValidationErrorContainer
+      );
+      formAndValidationErrorContainer.insertAdjacentHTML(
+        "beforeend",
+        `
+				<p class="${SignIn.validationErrorClassName} self-end text-center text-sm bg-red-900 text-plightbg px-2 py-2 rounded-[3px] mt-8">Username or password cannot be only whitespace</p>
+				`
+      );
+
       return;
     }
 
@@ -142,7 +165,7 @@ class SignIn extends Component {
       };
 
       if (!data.user) {
-        throw new Error("Invalid username or password");
+        throw data;
       }
 
       const { id, email, username, isSignedIn } = data.user;
@@ -167,7 +190,7 @@ class SignIn extends Component {
       }
       const { jwtAccessToken } = data;
       if (!isSignedIn) {
-        throw new Error("Invalid username or password");
+        throw data;
       }
       userContext.setState({
         ...userContext.state,
@@ -179,6 +202,28 @@ class SignIn extends Component {
       });
       await Router.redirect("/");
     } catch (error) {
+      const formAndValidationErrorContainer = document.querySelector(
+        ".form-and-validation-container"
+      ) as HTMLElement;
+      removeElementsWithSimilarClassName(
+        SignIn.validationErrorClassName,
+        formAndValidationErrorContainer
+      );
+      formAndValidationErrorContainer.insertAdjacentHTML(
+        "beforeend",
+        `
+					<p class="${
+            SignIn.validationErrorClassName
+          } self-end text-center text-sm bg-red-900 text-plightbg px-2 py-2 rounded-[3px] mt-8">${
+          error &&
+          typeof error === "object" &&
+          "errorMessage" in error &&
+          typeof error.errorMessage === "string"
+            ? error.errorMessage
+            : "Invalid input!"
+        }</p>
+				`
+      );
       console.log(error);
     }
   }
