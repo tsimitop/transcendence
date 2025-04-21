@@ -1,7 +1,7 @@
 import { FastifyRequest } from "fastify";
 import bcrypt from "bcrypt";
 import { fastify } from "../../server";
-import SignUpValidation from "./SignUpValidation";
+import FormValidation from "../../utils/FormValidation";
 import UserDb from "../../user-database/UserDb";
 
 export type SignUpType = {
@@ -29,23 +29,23 @@ fastify.post(
       email,
       username
     );
-    const validation = new SignUpValidation(email, username, password);
+    const validation = new FormValidation(email, username, password);
 
     const { validEmail, validUsername, validPassword } =
       validation.isFormValid();
 
     if (!validEmail) {
-      reply.send({ errorMessage: SignUpValidation.emailError });
+      reply.send({ errorMessage: FormValidation.emailError });
       return;
     }
 
     if (!validUsername) {
-      reply.send({ errorMessage: SignUpValidation.usernameError });
+      reply.send({ errorMessage: FormValidation.usernameError });
       return;
     }
 
     if (!validPassword) {
-      reply.send({ errorMessage: SignUpValidation.passwordError });
+      reply.send({ errorMessage: FormValidation.passwordError });
       return;
     }
 

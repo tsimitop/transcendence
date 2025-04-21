@@ -1,4 +1,4 @@
-class SignUpValidation {
+class FormValidation {
   constructor(
     private _email: string,
     private _username: string,
@@ -38,4 +38,4 @@ class SignUpValidation {
   }
 }
 
-export default SignUpValidation;
+export default FormValidation;
