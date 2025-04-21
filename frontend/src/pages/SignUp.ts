@@ -7,7 +7,7 @@ import Component, {
   ChildElementType,
   ChildrenStringType,
 } from "../models/Component";
-import { removeElementsWithSimilarClassName } from "../utils/remove-elements-with-similar-class-name";
+import { displayFormValidationError } from "../utils/display-form-validation-error";
 import SignIn from "./SignIn";
 
 class SignUp extends Component {
@@ -107,7 +107,17 @@ class SignUp extends Component {
     ).value;
 
     if (!email || !username || !password.trim()) {
-      console.log("required field*");
+      const formAndValidationErrorContainer = document.querySelector(
+        ".form-and-validation-container"
+      ) as HTMLElement;
+
+      const errorMessage = "Inputs cannot be only whitespace";
+
+      displayFormValidationError(
+        SignUp.validationErrorClassName,
+        formAndValidationErrorContainer,
+        errorMessage
+      );
       return;
     }
 
@@ -142,24 +152,20 @@ class SignUp extends Component {
       const formAndValidationErrorContainer = document.querySelector(
         ".form-and-validation-container"
       ) as HTMLElement;
-      removeElementsWithSimilarClassName(
+
+      const errorMessage = `${
+        error &&
+        typeof error === "object" &&
+        "errorMessage" in error &&
+        typeof error.errorMessage === "string"
+          ? error.errorMessage
+          : "Invalid input!"
+      }`;
+
+      displayFormValidationError(
         SignUp.validationErrorClassName,
-        formAndValidationErrorContainer
-      );
-      formAndValidationErrorContainer.insertAdjacentHTML(
-        "beforeend",
-        `
-					<p class="${
-            SignUp.validationErrorClassName
-          } self-end text-center text-sm bg-red-900 text-plightbg px-2 py-2 rounded-[3px] mt-8">${
-          error &&
-          typeof error === "object" &&
-          "errorMessage" in error &&
-          typeof error.errorMessage === "string"
-            ? error.errorMessage
-            : "Invalid input!"
-        }</p>
-				`
+        formAndValidationErrorContainer,
+        errorMessage
       );
       console.log("sign up error:\n", error);
     }

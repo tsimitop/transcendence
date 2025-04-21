@@ -8,8 +8,7 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 import Router from "../models/Router";
-import { removeElementsWithSimilarClassName } from "../utils/remove-elements-with-similar-class-name";
-// import Auth2Fa from "./Auth2Fa";
+import { displayFormValidationError } from "../utils/display-form-validation-error";
 
 class SignIn extends Component {
   static validationErrorClassName = "sign-in-validation-error";
@@ -126,15 +125,11 @@ class SignIn extends Component {
       const formAndValidationErrorContainer = document.querySelector(
         ".form-and-validation-container"
       ) as HTMLElement;
-      removeElementsWithSimilarClassName(
+      const errorMessage = "Username or password cannot be only whitespace";
+      displayFormValidationError(
         SignIn.validationErrorClassName,
-        formAndValidationErrorContainer
-      );
-      formAndValidationErrorContainer.insertAdjacentHTML(
-        "beforeend",
-        `
-				<p class="${SignIn.validationErrorClassName} self-end text-center text-sm bg-red-900 text-plightbg px-2 py-2 rounded-[3px] mt-8">Username or password cannot be only whitespace</p>
-				`
+        formAndValidationErrorContainer,
+        errorMessage
       );
 
       return;
@@ -205,25 +200,22 @@ class SignIn extends Component {
       const formAndValidationErrorContainer = document.querySelector(
         ".form-and-validation-container"
       ) as HTMLElement;
-      removeElementsWithSimilarClassName(
+
+      const errorMessage = `${
+        error &&
+        typeof error === "object" &&
+        "errorMessage" in error &&
+        typeof error.errorMessage === "string"
+          ? error.errorMessage
+          : "Invalid input!"
+      }`;
+
+      displayFormValidationError(
         SignIn.validationErrorClassName,
-        formAndValidationErrorContainer
+        formAndValidationErrorContainer,
+        errorMessage
       );
-      formAndValidationErrorContainer.insertAdjacentHTML(
-        "beforeend",
-        `
-					<p class="${
-            SignIn.validationErrorClassName
-          } self-end text-center text-sm bg-red-900 text-plightbg px-2 py-2 rounded-[3px] mt-8">${
-          error &&
-          typeof error === "object" &&
-          "errorMessage" in error &&
-          typeof error.errorMessage === "string"
-            ? error.errorMessage
-            : "Invalid input!"
-        }</p>
-				`
-      );
+
       console.log(error);
     }
   }
