@@ -5,24 +5,24 @@
   --primary-light-background: #fafafa;
   --primary-light-foreground: #111;
 
-  --secondary-light-background: #333;
-  --secondary-light-foreground: #fafafa;
+  --secondary-light-background: #003049;
+  --secondary-light-foreground: #fdf0d5;
 
-  --ternary-light-background-200: #f7f1e5;
-  --ternary-light-background: #ecdcbf;
-  --ternary-light-background-700: #474239;
-
+  --ternary-light-background-200: #ffcd4f;
+  --ternary-light-background: #ffb703;
+  --ternary-light-background-700: #e6a503;
   --ternary-light-foreground: #111;
 
   --primary-dark-background: #111;
-  --primary-dark-foreground: #fff;
+  --primary-dark-foreground: #fafafa;
 
-  --secondary-dark-background: #2b2b2b;
-  --secondary-dark-foreground: #fff;
-  --ternary-dark-background-200: #ffe9b3;
-  --ternary-dark-background: #ffb703;
-  --ternary-dark-background-700: #805c02;
-  --ternary-dark-foreground: #000;
+  --secondary-dark-background: #323643;
+  --secondary-dark-foreground: #f7f7f7;
+
+  --ternary-dark-background-200: #c9efff;
+  --ternary-dark-background: #93deff;
+  --ternary-dark-background-700: #76b2cc;
+  --ternary-dark-foreground: #111;
 }
 
 @theme {
@@ -93,9 +93,9 @@
 
 .theme-btn-light:hover {
   transition: all 0.3s;
-  color: var(--primary-light-background);
-  background-color: var(--ternary-light-background-700);
-  border: 1px solid var(--ternary-light-background-700);
+  color: var(--primary-light-foreground);
+  background-color: var(--ternary-light-background-200);
+  border: 1px solid var(--ternary-light-background-200);
 }
 
 .theme-btn-dark:hover {
@@ -114,25 +114,28 @@
 
 .theme-btn-secondary-light:hover {
   transition: all 0.3s;
-  color: var(--primary-light-background);
-  background-color: var(--primary-light-foreground);
-  border: 1px solid var(--primary-light-foreground);
-}
-
-.theme-btn-secondary-dark {
-  color: var(--primary-dark-background);
-  background-color: var(--primary-dark-foreground);
-  border: 1px solid var(--primary-dark-foreground);
-  border-radius: 6px;
+  color: var(--secondary-light-foreground);
+  background-color: var(--secondary-light-background);
+  border: 1px solid var(--secondary-light-background);
 }
 
 .theme-btn-secondary-dark:hover {
   transition: all 0.3s;
+  color: var(--primary-dark-background);
+  background-color: var(--primary-dark-foreground);
+  border: 1px solid var(--primary-dark-foreground);
+}
+
+.theme-btn-secondary-dark {
   /* color: var(--primary-dark-foreground); */
   /* background-color: var(--primary-dark-background); */
   /* border: 1px solid var(--primary-dark-foreground); */
-  background-color: var(--ternary-dark-background-200);
-  border: 1px solid var(--ternary-dark-background-200);
+  color: var(--secondary-dark-foreground);
+  background-color: var(--secondary-dark-background);
+  border: 1px solid var(--secondary-dark-background);
+  border-radius: 6px;
+  /* background-color: var(--ternary-dark-background-200);
+  border: 1px solid var(--ternary-dark-background-200); */
 }
 
 .theme-input-light {
