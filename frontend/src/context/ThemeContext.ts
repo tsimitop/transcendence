@@ -61,6 +61,14 @@ class ThemeContext extends StateManager<ThemeType> {
       btn.classList.add(`theme-btn-${newTheme}`);
     }
 
+    const secondaryBtns = document.querySelectorAll(
+      `.theme-btn-secondary-${previousTheme}`
+    );
+    for (const secondaryBtn of secondaryBtns) {
+      secondaryBtn.classList.remove(`theme-btn-secondary-${previousTheme}`);
+      secondaryBtn.classList.add(`theme-btn-secondary-${newTheme}`);
+    }
+
     const googleIcon = document.querySelector(".google-icon");
     if (googleIcon) {
       (googleIcon as HTMLImageElement).src = `/google-icon-${newTheme}.png`;

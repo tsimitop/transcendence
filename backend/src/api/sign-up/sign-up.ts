@@ -1,7 +1,7 @@
 import { FastifyRequest } from "fastify";
 import bcrypt from "bcrypt";
 import { fastify } from "../../server";
-import SignUpValidation from "./SignUpValidation";
+import FormValidation from "../../utils/FormValidation";
 import UserDb from "../../user-database/UserDb";
 
 export type SignUpType = {
@@ -29,24 +29,39 @@ fastify.post(
       email,
       username
     );
-    const validation = new SignUpValidation(email, username, password);
+    const validation = new FormValidation(email, username, password);
 
     const { validEmail, validUsername, validPassword } =
       validation.isFormValid();
 
-    if (!validEmail || !validUsername || !validPassword) {
-      reply.send({
-        errorMessage: SignUpValidation.errorMessage,
-        emailError: !validEmail ? SignUpValidation.emailError : undefined,
-        usernameError: !validUsername
-          ? SignUpValidation.usernameError
-          : undefined,
-        passwordError: !validPassword
-          ? SignUpValidation.passwordError
-          : undefined,
-      });
+    if (!validEmail) {
+      reply.send({ errorMessage: FormValidation.emailError });
       return;
     }
+
+    if (!validUsername) {
+      reply.send({ errorMessage: FormValidation.usernameError });
+      return;
+    }
+
+    if (!validPassword) {
+      reply.send({ errorMessage: FormValidation.passwordError });
+      return;
+    }
+
+    // if (!validEmail || !validUsername || !validPassword) {
+    //   reply.send({
+    //     errorMessage: SignUpValidation.errorMessage,
+    //     emailError: !validEmail ? SignUpValidation.emailError : undefined,
+    //     usernameError: !validUsername
+    //       ? SignUpValidation.usernameError
+    //       : undefined,
+    //     passwordError: !validPassword
+    //       ? SignUpValidation.passwordError
+    //       : undefined,
+    //   });
+    //   return;
+    // }
 
     if (
       userAlreadyExists.found &&
