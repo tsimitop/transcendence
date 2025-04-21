@@ -11,13 +11,12 @@ import Component, {
 import Router from "../models/Router";
 import { removeElementsWithSimilarClassName } from "../utils/remove-elements-with-similar-class-name";
 
-
 type Activate2FaResponseType = {
-	dataUrl: string;
+  dataUrl: string;
 };
 
 class Profile extends Component {
-	static message2FaclassName = "message-2fa";
+  static message2FaclassName = "message-2fa";
   constructor(
     childrenString: ChildrenStringType,
     ...childElements: ChildElementType[]
@@ -177,7 +176,7 @@ class Profile extends Component {
     const html = `
 				<div class="flex items-center justify-between mt-12 mb-6">
 					<h1 class="text-5xl font-bold">Profile</h1>
-					<button class="sign-out-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer">
+					<button class="sign-out-btn theme-btn-secondary-${themeState.state} px-4 py-2 cursor-pointer">
 						Sign out
 					</button>
 				</div>

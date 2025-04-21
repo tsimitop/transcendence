@@ -81,24 +81,58 @@
   color: var(--primary-light-foreground);
   background-color: var(--ternary-light-background);
   border-radius: 6px;
+  border: 1px solid var(--ternary-light-background);
 }
 
 .theme-btn-dark {
   color: var(--primary-dark-background);
   background-color: var(--ternary-dark-background);
   border-radius: 6px;
+  border: 1px solid var(--ternary-dark-background);
 }
 
 .theme-btn-light:hover {
   transition: all 0.3s;
   color: var(--primary-light-background);
   background-color: var(--ternary-light-background-700);
+  border: 1px solid var(--ternary-light-background-700);
 }
 
 .theme-btn-dark:hover {
   transition: all 0.3s;
   color: var(--primary-dark-background);
   background-color: var(--ternary-dark-background-200);
+  border: 1px solid var(--ternary-dark-background-200);
+}
+
+.theme-btn-secondary-light {
+  color: var(--primary-light-foreground);
+  background-color: var(--primary-light-background);
+  border: 1px solid var(--primary-light-foreground);
+  border-radius: 6px;
+}
+
+.theme-btn-secondary-light:hover {
+  transition: all 0.3s;
+  color: var(--primary-light-background);
+  background-color: var(--primary-light-foreground);
+  border: 1px solid var(--primary-light-foreground);
+}
+
+.theme-btn-secondary-dark {
+  color: var(--primary-dark-background);
+  background-color: var(--primary-dark-foreground);
+  border: 1px solid var(--primary-dark-foreground);
+  border-radius: 6px;
+}
+
+.theme-btn-secondary-dark:hover {
+  transition: all 0.3s;
+  /* color: var(--primary-dark-foreground); */
+  /* background-color: var(--primary-dark-background); */
+  /* border: 1px solid var(--primary-dark-foreground); */
+  background-color: var(--ternary-dark-background-200);
+  border: 1px solid var(--ternary-dark-background-200);
 }
 
 .theme-input-light {
