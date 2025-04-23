@@ -58,3 +58,19 @@ API.
 <br>
 
 # DEADLINE 22.06.
+
+### Development
+
+- In the file ``/frontend/src/constants.ts`` change the value of the variable ``NGINX_SERVER`` to ``"http://localhost:80"``
+- In the file ``.env`` change the value of ``IS_DEVELOPMENT`` to ``true``
+- Run ``make`` from the root directory of the project
+
+  The app must be accessible on ``http://localhost:5173``
+
+### Deployment
+
+- In the file ``/frontend/src/constants.ts`` change the value of the variable ``NGINX_SERVER`` to ``"https://localhost:443"``
+- In the file ``.env`` change the value of ``IS_DEVELOPMENT`` to ``false``
+- Run ``make`` from the root directory of the project
+
+  The app must be accessible on ``https://localhost:443`` (after running the app once on port 443, the app will also be available on the development server ``http://localhost:5173``)
