@@ -47,18 +47,8 @@ class SignIn extends Component {
       }`
     );
 
-    // main.addEventListener("click", SignIn.handleClick);
     main.addEventListener("submit", SignIn.handleSignIn);
     main.addEventListener("click", SignIn.handleClick);
-
-    const redirectUri = "https://localhost:3000/api/oauth";
-    const clientId =
-      "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
-    const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-    const state = crypto.randomUUID();
-    const url = `${baseUrl}?response_type=code&client_id=${clientId}&scope=openid%20email&redirect_uri=${redirectUri}&state=${state}&access_type=offline&prompt=consent`;
-
-    document.cookie = `oauth_state=${state}; secure=true; SameSite=None; path=/api`;
 
     const html = `
 			<div class="flex flex-col gap-8">
@@ -80,10 +70,9 @@ class SignIn extends Component {
 						<button type="submit" class="theme-btn-${themeState.state} signin-btn cursor-pointer block ml-auto mr-0 px-6 py-2">Sign in</button>
 					</div>
 				</form>
-				<button class="theme-btn-${themeState.state} google-sign-in-btn cursor-pointer w-full py-2 flex items-center">
-				 	<a class="w-full block" href=${url}>
-						<span>Sign in with Google 
-							<img src=/google-icon-${themeState.state}.png alt=google class="google-icon w-[24px] inline" />
+				<button class="theme-btn-${themeState.state} google-sign-in-btn cursor-pointer w-full py-2 flex items-center justify-center">
+						<span class="google-sign-in-btn">Sign in with Google 
+							<img src=/google-icon-${themeState.state}.png alt=google class="google-icon google-sign-in-btn w-[24px] inline" />
 						</span>
 					</a>
 				</button>
@@ -214,6 +203,35 @@ class SignIn extends Component {
       );
 
       console.log(error);
+    }
+  }
+
+  public static async handleClick(event: MouseEvent) {
+    super.handleClick(event);
+
+    const target = event.target as HTMLElement;
+    if (target.classList.contains("google-sign-in-btn")) {
+      const oauthUrl = (await SignIn.requestToGenerateStateForOAuth()) as {
+        url: string;
+      } | null;
+      if (oauthUrl) {
+        window.location.href = oauthUrl.url;
+      } else {
+        console.log("Error in generating OAuth URL");
+      }
+    }
+  }
+
+  public static async requestToGenerateStateForOAuth() {
+    try {
+      const response = await fetch(`${NGINX_SERVER}/api/generate-state`, {
+        credentials: "include",
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.log(error);
+      return null;
     }
   }
 }

@@ -3,6 +3,7 @@ import "./api/sign-up/sign-up";
 import "./api/sign-in/sign-in";
 import "./api/sign-out/sign-out";
 import "./api/oauth/oauth";
+import "./api/oauth/generate-state";
 import "./api/2fa/activate-2fa";
 import "./api/2fa/confirm-2fa";
 import "./api/2fa/has-2fa";
