@@ -55,10 +55,7 @@ class SignIn extends Component {
     const clientId =
       "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
     const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-    const state =
-      Math.random().toString(36).substring(2) +
-      Date.now().toString() +
-      Math.random().toString(36).substring(2);
+    const state = crypto.randomUUID();
     const url = `${baseUrl}?response_type=code&client_id=${clientId}&scope=openid%20email&redirect_uri=${redirectUri}&state=${state}&access_type=offline&prompt=consent`;
 
     document.cookie = `oauth_state=${state}; secure=true; SameSite=None; path=/api`;

@@ -2,6 +2,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { NGINX_SERVER } from "../constants";
 import themeState from "../context/ThemeContext";
+import { urlContext } from "../context/UrlContext";
 import { userContext } from "../context/UserContext";
 import Component from "../models/Component";
 import Router from "../models/Router";
@@ -108,8 +109,8 @@ class Auth2Fa extends Component {
         throw data;
       }
       const routeToGo = "/profile";
-      // urlContext.setState({ ...urlContext.state, path: routeToGo });
-      // window.history.pushState({}, "", routeToGo);
+      urlContext.setState({ ...urlContext.state, path: routeToGo });
+      window.history.pushState({}, "", routeToGo);
       userContext.setState({
         ...userContext.state,
         jwtAccessToken: data.jwtAccessToken,
