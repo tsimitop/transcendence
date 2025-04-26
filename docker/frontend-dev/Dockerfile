@@ -6,5 +6,3 @@ COPY ./frontend-entry.sh .
 RUN chmod +x ./frontend-entry.sh
 
 ENTRYPOINT [ "./frontend-entry.sh" ]
-
-CMD []

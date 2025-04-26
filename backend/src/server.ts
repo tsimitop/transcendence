@@ -3,15 +3,10 @@ import fastifyFormbody from "@fastify/formbody";
 import fastifyCookie from "@fastify/cookie";
 import fastifySession from "@fastify/session";
 import crypto from "crypto";
-import fs from "fs";
 import { SESSION_COOKIE_NAME } from "./constants";
 
 export const fastify = Fastify({
   logger: true,
-  https: {
-    key: fs.readFileSync("/run/secrets/backend_ssl_certificate_key"),
-    cert: fs.readFileSync("/run/secrets/backend_ssl_certificate"),
-  },
 });
 
 const start = async function () {
@@ -23,7 +18,8 @@ const start = async function () {
       secret,
       cookie: {
         httpOnly: true,
-        secure: true,
+        secure: false, // HTTP is used internally, but external traffic is secured by Caddy
+        sameSite: 'lax', // Better for security with proxies
       },
       saveUninitialized: false,
       cookieName: SESSION_COOKIE_NAME,

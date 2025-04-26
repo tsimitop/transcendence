@@ -4,48 +4,37 @@ services:
     build: ./frontend-dev/.
     image: frontend-dev:latest
     volumes:
-      - ../frontend:/app
+      - ../frontend:/app:delegated
       - frontend_node_deps:/app/node_modules
-    ports:
-      - 5173:5173
     networks:
       - ft_transcendence
-
-  nginx:
-    container_name: nginx
-    build:
-      context: ../
-      dockerfile: ./docker/nginx/Dockerfile
-    image: nginx-web-server:latest
-    volumes:
-      - ../frontend/dist:/usr/share/nginx/html
-    ports:
-      - 443:443
-      - 80:80
-    networks:
-      - ft_transcendence
-    secrets:
-      - source: nginx_ssl_certificate
-      - source: nginx_ssl_certificate_key
 
   backend:
     container_name: backend
-    build:
-      context: ../
-      dockerfile: ./docker/backend/Dockerfile
+    build: ./backend/.
     image: backend:latest
     volumes:
-      - ../backend:/app
+      - ../backend:/app:delegated
       - backend_node_deps:/app/node_modules
-    ports:
-      - 3000:3000
     networks:
       - ft_transcendence
     env_file:
       - ../.env
-    secrets:
-      - source: backend_ssl_certificate
-      - source: backend_ssl_certificate_key
+
+  caddy:
+    container_name: caddy
+    build: ./caddy/.
+    image: caddy-web-server:latest
+    volumes:
+      - ../frontend/dist:/srv
+    ports:  # you can access the frontend on https://localhost:4443
+      - "4443:443"  # lets use 4443 as it doesn't need root privileges
+      # const NGINX_SERVER in frontend src needs to be set too if port is changed
+    networks:
+      - ft_transcendence
+    depends_on:
+      - backend
+      - frontend-dev
 
 networks:
   ft_transcendence:
@@ -59,13 +48,3 @@ volumes:
   backend_node_deps:
     name: backend_node_deps
     driver: local
-
-secrets:
-  nginx_ssl_certificate:
-    file: ../secrets/nginx_ssl_certificate/ssl_certificate.crt
-  nginx_ssl_certificate_key:
-    file: ../secrets/nginx_ssl_certificate/ssl_certificate.key
-  backend_ssl_certificate:
-    file: ../secrets/backend_ssl_certificate/ssl_certificate.crt
-  backend_ssl_certificate_key:
-    file: ../secrets/backend_ssl_certificate/ssl_certificate.key

@@ -105,27 +105,27 @@ buildandup() {
     up
 }
 
-# Build nginx image
-nginxbuild() {
-    print_header "Building Nginx image"
+# Build Caddy image
+caddybuild() {
+    print_header "Building Caddy image"
     local build_flags=$(get_build_flags)
-    print_verbose "Build command: docker build --file ./docker/nginx/Dockerfile -t nginx:default $build_flags ."
-    docker build --file ./docker/nginx/Dockerfile -t nginx:default $build_flags .
-    print_success "Nginx image built successfully"
+    print_verbose "Build command: docker build --file ./docker/caddy/Dockerfile -t caddy:default $build_flags ."
+    docker build --file ./docker/caddy/Dockerfile -t caddy:default $build_flags .
+    print_success "Caddy image built successfully"
 }
 
-# Run nginx container
-nginxrun() {
-    print_header "Running Nginx container"
-    print_verbose "Run command: docker run --name nginx --publish 80:80 nginx:default"
-    docker run --name nginx --publish 80:80 nginx:default
-    print_success "Nginx container started successfully"
+# Run Caddy container
+caddyrun() {
+    print_header "Running Caddy container"
+    print_verbose "Run command: docker run --name caddy --publish 80:80 --publish 443:443 caddy:default"
+    docker run --name caddy --publish 80:80 --publish 443:443 caddy:default
+    print_success "Caddy container started successfully"
 }
 
-# Build and run nginx
-nginx() {
-    nginxbuild
-    nginxrun
+# Build and run Caddy
+caddy() {
+    caddybuild
+    caddyrun
 }
 
 # Remove all Docker images
@@ -190,12 +190,12 @@ frontendshell() {
     fi
 }
 
-# Open a shell in the nginx container
-nginxshell() {
-    print_header "Opening shell in nginx container"
-    print_verbose "Executing command: docker exec -it nginx /bin/bash"
-    if ! docker exec -it nginx /bin/bash; then
-        print_error "Failed to open shell in nginx container. Is the container running?"
+# Open a shell in the Caddy container
+caddyshell() {
+    print_header "Opening shell in caddy container"
+    print_verbose "Executing command: docker exec -it caddy /bin/bash"
+    if ! docker exec -it caddy /bin/bash; then
+        print_error "Failed to open shell in caddy container. Is the container running?"
         exit 1
     fi
 }
@@ -231,7 +231,7 @@ up() {
     
     print_verbose "Executing command: $command"
     eval "$command"
-    print_success "Docker Compose services started successfully"
+    print_success "Docker Compose services exited"
 }
 
 # Stop and remove Docker Compose services
@@ -290,10 +290,10 @@ show_help() {
     echo "  down               - Stop and remove all Docker services"
     echo "  start              - Start all Docker services (without recreating containers)"
     echo "  stop               - Stop all Docker services"
-    echo "  nginx              - Build and run Nginx container"
-    echo "  nginxbuild         - Build Nginx image"
-    echo "  nginxrun           - Run Nginx container"
-    echo "  nginxshell         - Open a shell in the Nginx container"
+    echo "  caddy              - Build and run Caddy container"
+    echo "  caddybuild         - Build Caddy image"
+    echo "  caddyrun           - Run Caddy container"
+    echo "  caddyshell         - Open a shell in the Caddy container"
     echo "  frontendshell      - Open a shell in the frontend container"
     echo "  backendshell       - Open a shell in the backend container"
     echo "  buildfrontend      - Build the frontend"
@@ -345,17 +345,17 @@ main() {
         stop)
             stop
             ;;
-        nginx)
-            nginx
+        caddy)
+            caddy
             ;;
-        nginxbuild)
-            nginxbuild
+        caddybuild)
+            caddybuild
             ;;
-        nginxrun)
-            nginxrun
+        caddyrun)
+            caddyrun
             ;;
-        nginxshell)
-            nginxshell
+        caddyshell)
+            caddyshell
             ;;
         frontendshell)
             frontendshell
