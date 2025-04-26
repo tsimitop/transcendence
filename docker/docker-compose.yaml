@@ -1,5 +1,5 @@
 services:
-  frontend-dev:
+  frontend-dev:  # this just builds the frontend and exits again.
     container_name: frontend-dev
     build: ./frontend-dev/.
     image: frontend-dev:latest
@@ -14,12 +14,12 @@ services:
     build: ./backend/.
     image: backend:latest
     volumes:
-      - ../backend:/app:delegated
+      - ../backend:/app:delegated  # delegated means that the host has only read access to the files while the container is running
       - backend_node_deps:/app/node_modules
     networks:
       - ft_transcendence
     env_file:
-      - ../.env
+      - ../.env # this stores the oauth secrets and stuff
 
   caddy:
     container_name: caddy
@@ -34,14 +34,14 @@ services:
       - ft_transcendence
     depends_on:
       - backend
-      - frontend-dev
+      - frontend-dev  # it doesn't really wait for it to build the frontend, but i think it should be fine
 
 networks:
   ft_transcendence:
     name: ft_transcendence
     driver: bridge
 
-volumes:
+volumes:  # use volumes for all the node_modules so it doesn't get confusing with the host environment
   frontend_node_deps:
     name: frontend_node_deps
     driver: local
