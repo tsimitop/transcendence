@@ -5,11 +5,9 @@ services:
     image: frontend-dev:latest
     volumes:
       - ../frontend:/app
-      - /app/node_modules
+      - node_deps:/app/node_modules
     ports:
       - 5173:5173
-    working_dir: /app
-    command: sh -c 'npm install && npm run build && npm run host'
     networks:
       - ft_transcendence
 
@@ -53,6 +51,11 @@ networks:
   ft_transcendence:
     name: ft_transcendence
     driver: bridge
+
+volumes:
+  node_deps:
+    name: node_deps
+    driver: local
 
 secrets:
   nginx_ssl_certificate:
