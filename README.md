@@ -1,3 +1,21 @@
+# How to run this thing
+
+Install docker, and preferrably add your user to the `docker` group so you don't need sudo to run it. 
+See https://docs.docker.com/engine/install/linux-postinstall/. If you don't use linux, use a Github codespace or install a proper OS?
+
+Then run `./transcendence.sh buildandup`
+
+This should:
+  * start the backend container which serves the API requests of the frontend
+  * run the frontend container, which builds the static website files that Caddy (the webserver) serves and then exit again. The files are generated into `./frontend/dist`
+  * Start Caddy, this is the webserver that serves the files (the website), and redirects the requests the website code does to our backend.
+
+Now you should be able to access the website at `https://localhost:4443`
+
+If you want to clean all docker clutter again, run `./transcendence.sh removeall`
+
+Checkout what a browser console is if you don't know yet. Very important for this project.
+
 # Todos
 
 What modules we do and who does what.
