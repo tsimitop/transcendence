@@ -5,7 +5,7 @@ services:
     image: frontend-dev:latest
     volumes:
       - ../frontend:/app
-      - node_deps:/app/node_modules
+      - frontend_node_deps:/app/node_modules
     ports:
       - 5173:5173
     networks:
@@ -36,7 +36,7 @@ services:
     image: backend:latest
     volumes:
       - ../backend:/app
-      - /app/node_modules
+      - backend_node_deps:/app/node_modules
     ports:
       - 3000:3000
     networks:
@@ -53,8 +53,11 @@ networks:
     driver: bridge
 
 volumes:
-  node_deps:
-    name: node_deps
+  frontend_node_deps:
+    name: frontend_node_deps
+    driver: local
+  backend_node_deps:
+    name: backend_node_deps
     driver: local
 
 secrets:
