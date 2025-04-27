@@ -6,33 +6,29 @@ localhost {
 	# TLS configuration for self-signed certificates
 	tls internal
 
-	# Handle OPTIONS preflight requests globally
-	@options {
-		method OPTIONS
-	}
-	handle @options {
-		header {
-			Access-Control-Allow-Origin "*"
-			Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-			Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With"
-			Access-Control-Allow-Credentials "true"
-			Vary "Origin"
-		}
-		respond "" 204
-	}
-
-	# Handle the backend API - using plain HTTP internally
+	# Global CORS headers - these apply to all API responses
 	@api {
 		path /api/*
 	}
 	handle @api {
 		header {
-			Access-Control-Allow-Origin "*"
+			# Allow CORS from both the dev server and the static frontend
+			Access-Control-Allow-Origin {http.request.header.Origin}
 			Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
 			Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With"
 			Access-Control-Allow-Credentials "true"
 			Vary "Origin"
 		}
+		
+		# Handle preflight requests
+		@options {
+			method OPTIONS
+		}
+		handle @options {
+			respond "" 204
+		}
+
+		# Forward all other requests to the backend
 		reverse_proxy http://backend:3000 {
 			header_up Host {host}
 			header_up X-Real-IP {remote}

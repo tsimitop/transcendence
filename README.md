@@ -10,7 +10,7 @@ This should:
   * run the frontend container, which builds the static website files that Caddy (the webserver) serves and then exit again. The files are generated into `./frontend/dist`
   * Start Caddy, this is the webserver that serves the files (the website), and redirects the requests the website code does to our backend.
 
-Now you should be able to access the website at `https://localhost:4443`
+Now you should be able to access the website at `https://localhost:4443` (or `http://localhost:5173`, the dynamically updated version hosted by the frontend container itself, don't expose 5173 to the public)
 
 If you want to clean all docker clutter again, run `./transcendence.sh removeall`
 
@@ -77,18 +77,3 @@ API.
 
 # DEADLINE 22.06.
 
-### Development
-
-- In the file ``/frontend/src/constants.ts`` change the value of the variable ``NGINX_SERVER`` to ``"http://localhost:80"``
-- In the file ``.env`` change the value of ``IS_DEVELOPMENT`` to ``true``
-- Run ``make`` from the root directory of the project
-
-  The app must be accessible on ``http://localhost:5173``
-
-### Deployment
-
-- In the file ``/frontend/src/constants.ts`` change the value of the variable ``NGINX_SERVER`` to ``"https://localhost:443"``
-- In the file ``.env`` change the value of ``IS_DEVELOPMENT`` to ``false``
-- Run ``make`` from the root directory of the project
-
-  The app must be accessible on ``https://localhost:443`` (after running the app once on port 443, the app will also be available on the development server ``http://localhost:5173``)
