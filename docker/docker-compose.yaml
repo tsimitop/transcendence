@@ -6,6 +6,8 @@ services:
     volumes:
       - ../frontend:/app:delegated
       - frontend_node_deps:/app/node_modules
+    ports: # you can access the frontend on http://localhost:5173 for development (it is updated dynamically on changes)
+      - "5173:5173"  # requires caddy to run for the proxy to the backend
     networks:
       - ft_transcendence
 
