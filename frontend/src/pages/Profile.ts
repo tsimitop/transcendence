@@ -165,7 +165,6 @@ class Profile extends Component {
       });
 
       const validationData = await validationResponse.json();
-      console.log("-----------------", validationData);
       if (validationData.errorMessage) {
         throw validationData;
       }
@@ -179,7 +178,7 @@ class Profile extends Component {
         body: JSON.stringify({ user }),
         signal: AbortSignal.timeout(5000),
       });
-      const data = await response.json();
+      await response.json();
 
       removeElementsWithSimilarClassName(Profile.message2FaclassName, main);
 
@@ -187,8 +186,6 @@ class Profile extends Component {
         "beforeend",
         `<p class="confirmed-2fa-message ${Profile.message2FaclassName} theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, 2FA is activated</p>`
       );
-
-      console.log("successful", data);
     } catch (error) {
       if (
         error &&
@@ -268,21 +265,51 @@ class Profile extends Component {
 
   public static async deactivate2Fa() {
     const main = document.querySelector(".main-container") as HTMLElement;
+    const user = userContext.state;
+    try {
+      const response = await fetch("/api/has-2fa", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user }),
+        signal: AbortSignal.timeout(5000),
+      });
 
-    removeElementsWithSimilarClassName(Profile.message2FaclassName, main);
-    main.insertAdjacentHTML(
-      "beforeend",
-      `
-				<div class="${Profile.message2FaclassName} flex flex-col items-center gap-4 mb-12">
-					<p>Please confirm the 2FA deactivation by sending your 6-digit code</p>
-					<form class="flex gap-4 items-center">
-					<label for="confirm-2fa">2FA Code</label>
-					<input class="theme-input-${themeState.state} px-2 py-1" type="number" id="confirm-2fa" name="confirm-2fa" />
-					<button type="submit" class="theme-btn-${themeState.state} submit-2fa-deactivation-btn py-1 cursor-pointer w-[80px]">Submit</button>
-					</form>
-				</div>
-			`
-    );
+      const data = await response.json();
+      if (!data.has2Fa) {
+        throw data;
+      }
+      removeElementsWithSimilarClassName(Profile.message2FaclassName, main);
+      main.insertAdjacentHTML(
+        "beforeend",
+        `
+					<div class="${Profile.message2FaclassName} flex flex-col items-center gap-4 mb-12">
+						<p>Please confirm the 2FA deactivation by sending your 6-digit code</p>
+						<form class="flex gap-4 items-center">
+						<label for="confirm-2fa">2FA Code</label>
+						<input class="theme-input-${themeState.state} px-2 py-1" type="number" id="confirm-2fa" name="confirm-2fa" />
+						<button type="submit" class="theme-btn-${themeState.state} submit-2fa-deactivation-btn py-1 cursor-pointer w-[80px]">Submit</button>
+						</form>
+					</div>
+				`
+      );
+    } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "has2Fa" in error &&
+        !error.has2Fa
+      ) {
+        removeElementsWithSimilarClassName(Profile.message2FaclassName, main);
+        main.insertAdjacentHTML(
+          "beforeend",
+          `<p class="confirm-2fa-error-message ${Profile.message2FaclassName} theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, 2FA is not activated!</p>`
+        );
+      } else {
+        console.log(error);
+      }
+    }
 
     return;
   }
@@ -304,7 +331,6 @@ class Profile extends Component {
       });
 
       const validationData = await validationResponse.json();
-      console.log("--------------------", validationData);
       if (validationData.errorMessage) {
         throw validationData;
       }
@@ -319,15 +345,12 @@ class Profile extends Component {
         signal: AbortSignal.timeout(5000),
       });
 
-      const data = await response.json();
-
+      await response.json();
       removeElementsWithSimilarClassName(Profile.message2FaclassName, main);
-
       main.insertAdjacentHTML(
         "beforeend",
-        `<p class="deactive-2fa-message message-2fa theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, 2FA is deactivated!</p>`
+        `<p class="deactive-2fa-message message-2fa theme-ternary-${themeState.state}-full p-2 mt-2">${userContext.state.username}, you successfully deactivated the 2FA.</p>`
       );
-      console.log(data);
     } catch (error) {
       if (
         error &&
