@@ -31,9 +31,9 @@ POST /api/pong/games
 Request body:
 ```json
 {
-  "gameMode": "classic", // Optional: "classic", "speed", or "chaos", default is "classic"
+  "gameMode": "classic", // only classic for now
   "isPrivate": false,    // Optional: boolean, default is false
-  "maxScore": 10         // Optional: number, default is 10
+  "maxScore": 10         // Optional: number, default is 10 (when the game stops)
 }
 ```
 
@@ -185,7 +185,7 @@ All WebSocket messages use the following JSON format:
 {
   "type": "join_game",
   "payload": {
-    "gameId": "string", // Optional: if not provided, join a random game
+    "gameId": "string",
     "userId": "string"
   }
 }
@@ -304,14 +304,6 @@ All WebSocket messages use the following JSON format:
 
 Standard Pong game with consistent ball speed.
 
-### Speed
-
-The ball gradually increases in speed as the game progresses.
-
-### Chaos
-
-The ball randomly changes direction slightly during gameplay.
-
 ## Game States
 
 - **waiting**: Waiting for a second player to join
@@ -324,7 +316,7 @@ The ball randomly changes direction slightly during gameplay.
 
 1. The server sends game state updates at approximately 30fps (~33ms intervals)
 2. Players control their paddles using the arrow keys or W/S keys
-3. The game uses a simple physics system with collision detection
+3. The game engine uses a simple physics system with collision detection
 4. Games are automatically removed from the server a few seconds after they finish
 5. All WebSocket connections are authenticated using JWT tokens
 6. The server handles player disconnections gracefully
