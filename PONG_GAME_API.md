@@ -1,13 +1,167 @@
-# Pong Game API Specification
+# Pong Game API Documentation
+
+This document describes the Pong game API implemented for the Transcendence project, including both REST and WebSocket endpoints.
+
+## Overview
+
+The Pong game system consists of:
+
+1. A server-side game engine that handles game logic, player connections, and state management
+2. WebSocket API for real-time communication with the frontend
+3. REST API for game creation, listing, and joining
+
+## REST API
+
+### Authentication
+
+All REST endpoints require authentication using JWT tokens. Include the token in the Authorization header:
+
+```
+Authorization: Bearer <jwt_token>
+```
+
+### Endpoints
+
+#### Create a New Game
+
+```
+POST /api/pong/games
+```
+
+Request body:
+```json
+{
+  "gameMode": "classic", // Optional: "classic", "speed", or "chaos", default is "classic"
+  "isPrivate": false,    // Optional: boolean, default is false
+  "maxScore": 10         // Optional: number, default is 10
+}
+```
+
+Response:
+```json
+{
+  "game": {
+    "id": "string",
+    "status": "waiting",
+    "ball": {
+      "x": 400,
+      "y": 300,
+      "radius": 10,
+      "dx": 0,
+      "dy": 0,
+      "speed": 5
+    },
+    "leftPaddle": {
+      "x": 20,
+      "y": 250,
+      "width": 10,
+      "height": 100,
+      "score": 0,
+      "userId": "string",
+      "up": false,
+      "down": false,
+      "speed": 8
+    },
+    "rightPaddle": {
+      "x": 770,
+      "y": 250,
+      "width": 10,
+      "height": 100,
+      "score": 0,
+      "userId": "",
+      "up": false,
+      "down": false,
+      "speed": 8
+    },
+    "width": 800,
+    "height": 600,
+    "lastUpdateTime": 1234567890,
+    "gameMode": "classic",
+    "isPrivate": false,
+    "maxScore": 10
+  }
+}
+```
+
+#### Get Available Games
+
+```
+GET /api/pong/games/available
+```
+
+Response:
+```json
+{
+  "games": [
+    {
+      "id": "string",
+      "status": "waiting",
+      "gameMode": "classic",
+      "isPrivate": false,
+      "maxScore": 10
+    }
+  ]
+}
+```
+
+#### Get Game by ID
+
+```
+GET /api/pong/games/:id
+```
+
+Response:
+```json
+{
+  "game": {
+    "id": "string",
+    "status": "waiting",
+    "ball": { ... },
+    "leftPaddle": { ... },
+    "rightPaddle": { ... },
+    "width": 800,
+    "height": 600,
+    "lastUpdateTime": 1234567890,
+    "gameMode": "classic",
+    "isPrivate": false,
+    "maxScore": 10
+  }
+}
+```
+
+#### Join a Game
+
+```
+POST /api/pong/games/:id/join
+```
+
+Response:
+```json
+{
+  "game": {
+    "id": "string",
+    "status": "countdown",
+    "ball": { ... },
+    "leftPaddle": { ... },
+    "rightPaddle": { ... },
+    "width": 800,
+    "height": 600,
+    "lastUpdateTime": 1234567890,
+    "gameMode": "classic",
+    "isPrivate": false,
+    "maxScore": 10
+  }
+}
+```
 
 ## WebSocket API
 
-### Establishing Connection
+### Connecting
 
-Connect to the WebSocket endpoint provided in the REST API responses with the authentication token:
+Connect to the WebSocket endpoint with your JWT token:
 
 ```
-ws://server.url/games/socket?token={auth_token}&gameId={game_id}
+ws://localhost:4443/api/ws/pong?token=<jwt_token>
 ```
 
 ### Message Format
@@ -17,169 +171,160 @@ All WebSocket messages use the following JSON format:
 ```json
 {
   "type": "string",
-  "payload": {}  // Object with type-specific data
+  "payload": { ... }
 }
 ```
 
-### Client → Server Messages
+### Message Types
 
-#### Player Ready
+#### Client → Server
 
-```json
-{
-  "type": "player_ready"
-}
-```
-
-#### Player Input
+##### Join Game
 
 ```json
 {
-  "type": "player_input",
+  "type": "join_game",
   "payload": {
-    "paddlePosition": "float",  // Position from 0 to 1
-    "input": "string"  // "up", "down", or "stop"
+    "gameId": "string", // Optional: if not provided, join a random game
+    "userId": "string"
   }
 }
 ```
 
-#### Pause Request
+##### Create Game
 
 ```json
 {
-  "type": "pause_request"
+  "type": "create_game",
+  "payload": {
+    "userId": "string",
+    "gameMode": "classic", // Optional: "classic", "speed", or "chaos"
+    "isPrivate": false,    // Optional: boolean
+    "maxScore": 10         // Optional: number
+  }
 }
 ```
 
-#### Leave Game
+##### Player Input
 
 ```json
 {
-  "type": "leave_game"
+  "type": "input",
+  "payload": {
+    "gameId": "string",
+    "userId": "string",
+    "up": true,    // Is the up key pressed
+    "down": false  // Is the down key pressed
+  }
 }
 ```
 
-### Server → Client Messages
+##### Ping (Keep-Alive)
 
-#### Game State Update
+```json
+{
+  "type": "ping",
+  "payload": {}
+}
+```
+
+#### Server → Client
+
+##### Game State
 
 ```json
 {
   "type": "game_state",
   "payload": {
-    "ball": {
-      "position": {
-        "x": "float",
-        "y": "float"
+    "game": {
+      "id": "string",
+      "status": "playing",
+      "ball": {
+        "x": 400,
+        "y": 300,
+        "radius": 10,
+        "dx": 3,
+        "dy": 2,
+        "speed": 5
       },
-      "velocity": {
-        "x": "float",
-        "y": "float"
-      }
-    },
-    "players": [
-      {
-        "id": "integer",
-        "position": "float",  // Position from 0 to 1
-        "score": "integer"
-      }
-    ],
-    "gameStatus": "string"  // "waiting", "countdown", "playing", "paused", "finished"
-  }
-}
-```
-
-
-#### Game Result
-
-```json
-{
-  "type": "game_result",
-  "payload": {
-    "winner": {
-      "id": "integer",
-      "username": "string",
-      "score": "integer"
-    },
-    "loser": {
-      "id": "integer",
-      "username": "string",
-      "score": "integer"
-    },
-    "duration": "integer",  // seconds
-    "stats": {
-      "rankChange": "integer",
-      "experienceGained": "integer"
+      "leftPaddle": { ... },
+      "rightPaddle": { ... },
+      "width": 800,
+      "height": 600,
+      "lastUpdateTime": 1234567890,
+      "gameMode": "classic",
+      "isPrivate": false,
+      "maxScore": 10,
+      "countdown": 3 // Only present during countdown
     }
   }
 }
 ```
 
-<!-- #### Chat Message Broadcast
+##### Game Over
 
 ```json
 {
-  "type": "chat_message",
+  "type": "game_over",
   "payload": {
-    "userId": "integer",
-    "username": "string",
-    "message": "string",
-    "timestamp": "timestamp"
-  }
-} -->
-<!-- ``` -->
-
-
-<!-- #### Player Disconnected
-
-```json
-{
-  "type": "player_disconnected",
-  "payload": {
-    "playerId": "integer",
-    "username": "string",
-    "reconnectWindow": "integer"  // Seconds to wait for reconnect
+    "gameId": "string",
+    "winnerId": "string",
+    "finalScore": {
+      "left": 10,
+      "right": 8
+    }
   }
 }
 ```
 
-#### Player Reconnected
-
-```json
-{
-  "type": "player_reconnected",
-  "payload": {
-    "playerId": "integer",
-    "username": "string"
-  }
-}
-``` -->
-
-#### Error Message
+##### Error
 
 ```json
 {
   "type": "error",
   "payload": {
-    "code": "string",
-    "message": "string"
+    "message": "string",
+    "code": 400
   }
 }
 ```
 
+##### Pong (Keep-Alive Response)
+
+```json
+{
+  "type": "pong",
+  "payload": {}
+}
+```
+
+## Game Modes
+
+### Classic
+
+Standard Pong game with consistent ball speed.
+
+### Speed
+
+The ball gradually increases in speed as the game progresses.
+
+### Chaos
+
+The ball randomly changes direction slightly during gameplay.
+
 ## Game States
 
-- **waiting**: Waiting for players to join and get ready
-- **countdown**: Game is about to start, countdown in progress
+- **waiting**: Waiting for a second player to join
+- **countdown**: Countdown before the game starts (3, 2, 1)
 - **playing**: Game is in progress
-- **paused**: Game is temporarily paused
-- **finished**: Game has ended
+- **paused**: Game is paused
+- **finished**: Game is finished (one player reached the maximum score)
 
-## Implementation Recommendations
+## Implementation Notes
 
-1. The server should send game state updates at a fixed rate (e.g., 30-60 times per second).
-2. Clients should implement interpolation to render smooth animations.
-4. Implement a reconnection mechanism to handle temporary disconnections.
-5. Use token-based authentication for all API and WebSocket connections.
-6. Include rate limiting to prevent abuse.
-7. Store game results and statistics in a database for history and leaderboards.
+1. The server sends game state updates at approximately 30fps (~33ms intervals)
+2. Players control their paddles using the arrow keys or W/S keys
+3. The game uses a simple physics system with collision detection
+4. Games are automatically removed from the server a few seconds after they finish
+5. All WebSocket connections are authenticated using JWT tokens
+6. The server handles player disconnections gracefully
