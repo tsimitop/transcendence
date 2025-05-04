@@ -3,6 +3,8 @@ services:
     container_name: frontend-dev
     build: ./frontend-dev/.
     image: frontend-dev:latest
+    environment:
+      - IS_DEVELOPMENT=true
     volumes:
       - ../frontend:/app:delegated
       - frontend_node_deps:/app/node_modules
