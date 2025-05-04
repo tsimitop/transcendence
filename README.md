@@ -61,7 +61,8 @@ API.
 #### <u>Felix</u>
 * Backend implementation of Pong game
 * WS Json API definition for pong game
-* Live Chat Backend
+* fix oauth port (caddy)
+* fix frontend dev 2fa json error
 
 ## Workflow
 * Please open a github issue or fix it if you notice bugs
