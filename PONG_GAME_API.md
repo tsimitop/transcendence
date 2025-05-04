@@ -206,6 +206,8 @@ All WebSocket messages use the following JSON format:
 ```
 
 ##### Player Input
+What is "up"/"down" though? What if the user keeps up pressed? Let's define a single "up" as a press of at most X ms, if the user keeps the button pressed > X ms a new "input" is sent and the timer is reset.
+Which X is good? Depends on latency of the connection i guess?
 
 ```json
 {
