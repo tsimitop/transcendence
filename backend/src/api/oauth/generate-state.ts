@@ -2,7 +2,7 @@ import { fastify } from "../../server";
 
 fastify.get("/api/generate-state", function (_request, reply) {
   const state = crypto.randomUUID();
-  const redirectUri = "https://localhost:3000/api/oauth";
+  const redirectUri = "https://localhost:4443/api/oauth";
   const clientId =
     "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
   const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
