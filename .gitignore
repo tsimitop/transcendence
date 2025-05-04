@@ -28,3 +28,4 @@ database
 secrets
 *.crt
 *.key
+.direnv
