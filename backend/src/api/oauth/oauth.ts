@@ -61,7 +61,7 @@ fastify.get(
 
     const clientId =
       "670502424156-2ovamqt7kp3opso8mfgm6mua81rq8vas.apps.googleusercontent.com";
-    const redirectUri = "https://localhost:3000/api/oauth";
+    const redirectUri = "https://localhost:4443/api/oauth";
 
     try {
       const response = await fetch("https://oauth2.googleapis.com/token", {
