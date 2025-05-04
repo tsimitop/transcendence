@@ -1,6 +1,6 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import { NGINX_SERVER } from "../constants";
+import { CADDY_SERVER } from "../constants";
 import themeState from "../context/ThemeContext";
 import { urlContext } from "../context/UrlContext";
 import { userContext } from "../context/UserContext";
@@ -93,7 +93,7 @@ class Auth2Fa extends Component {
   public static async validate2Fa(code2Fa: string) {
     const user = userContext.state;
     try {
-      const response = await fetch(`${NGINX_SERVER}/api/validate-2fa`, {
+      const response = await fetch(`${CADDY_SERVER}/api/validate-2fa`, {
         method: "POST",
         credentials: "include",
         headers: {

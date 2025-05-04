@@ -1,6 +1,6 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import { NGINX_SERVER } from "../constants";
+import { CADDY_SERVER } from "../constants";
 import themeState from "../context/ThemeContext";
 import { urlContext } from "../context/UrlContext";
 import { userContext } from "../context/UserContext";
@@ -44,7 +44,7 @@ class Profile extends Component {
   public static async signOut() {
     try {
       // console.log("signing out");
-      const response = await fetch(`${NGINX_SERVER}/api/sign-out`, {
+      const response = await fetch(`${CADDY_SERVER}/api/sign-out`, {
         method: "POST",
         credentials: "include",
       });
@@ -90,7 +90,7 @@ class Profile extends Component {
         return;
       }
 
-      const response = await fetch(`${NGINX_SERVER}/api/activate-2fa`, {
+      const response = await fetch(`${CADDY_SERVER}/api/activate-2fa`, {
         method: "POST",
         // credentials: "include",
         headers: {
@@ -169,7 +169,7 @@ class Profile extends Component {
         throw validationData;
       }
 
-      const response = await fetch(`${NGINX_SERVER}/api/confirm-2fa`, {
+      const response = await fetch(`${CADDY_SERVER}/api/confirm-2fa`, {
         method: "POST",
         // credentials: "include",
         headers: {
@@ -267,7 +267,7 @@ class Profile extends Component {
     const main = document.querySelector(".main-container") as HTMLElement;
     const user = userContext.state;
     try {
-      const response = await fetch("/api/has-2fa", {
+      const response = await fetch(`${CADDY_SERVER}/api/has-2fa`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -335,7 +335,7 @@ class Profile extends Component {
         throw validationData;
       }
 
-      const response = await fetch(`${NGINX_SERVER}/api/deactivate-2fa`, {
+      const response = await fetch(`${CADDY_SERVER}/api/deactivate-2fa`, {
         method: "POST",
         // credentials: "include",
         headers: {

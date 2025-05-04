@@ -1,6 +1,6 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import { NGINX_SERVER, ROUTER_CLASS_NAME } from "../constants";
+import { CADDY_SERVER, ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
 // import { userContext } from "../context/UserContext";
 import Component, {
@@ -122,7 +122,7 @@ class SignUp extends Component {
     }
 
     try {
-      const response = await fetch(`${NGINX_SERVER}/api/sign-up`, {
+      const response = await fetch(`${CADDY_SERVER}/api/sign-up`, {
         // fetch("http://172.18.0.2:80/api", {
         // fetch("http://nginx:80/api", {
         // fetch("http://nginx.ft_transcendence_default:80/api", {

@@ -11,7 +11,7 @@ import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
 import {
   GUEST_USER_REDIRECTION_PATH,
-  NGINX_SERVER,
+  CADDY_SERVER,
   PAGES,
   ROUTER_CLASS_NAME,
   SIGNED_IN_USER_REDIRECTION_PATH,
@@ -99,7 +99,7 @@ abstract class Router {
     // let newJwtAccessToken = "";
     try {
       const response = await fetch(
-        `${NGINX_SERVER}/api/generate-new-access-token`,
+        `${CADDY_SERVER}/api/generate-new-access-token`,
         {
           method: "POST",
           credentials: "include",
@@ -328,7 +328,7 @@ abstract class Router {
 
   static async is2FaActive(user: UserStateType) {
     try {
-      const response = await fetch(`${NGINX_SERVER}/api/has-2fa`, {
+      const response = await fetch(`${CADDY_SERVER}/api/has-2fa`, {
         method: "POST",
         // credentials: "include",
         headers: {
@@ -348,7 +348,7 @@ abstract class Router {
   static async isUserDataInBackendSession() {
     try {
       const response = await fetch(
-        `${NGINX_SERVER}/api/get-user-session-data`,
+        `${CADDY_SERVER}/api/get-user-session-data`,
         {
           method: "GET",
           credentials: "include",

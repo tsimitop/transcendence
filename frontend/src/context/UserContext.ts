@@ -1,4 +1,4 @@
-import { NGINX_SERVER } from "../constants";
+import { CADDY_SERVER } from "../constants";
 import StateManager from "../models/StateManager";
 
 export type UserStateType = {
@@ -28,7 +28,7 @@ class UserContext extends StateManager<UserStateType> {
   public async isUserSignedIn() {
     try {
       const response = await fetch(
-        `${NGINX_SERVER}/api/validate-access-token`,
+        `${CADDY_SERVER}/api/validate-access-token`,
         {
           method: "POST",
           credentials: "include",

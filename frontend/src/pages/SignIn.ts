@@ -1,6 +1,6 @@
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-import { NGINX_SERVER, ROUTER_CLASS_NAME } from "../constants";
+import { CADDY_SERVER, ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
 import { userContext, UserStateType } from "../context/UserContext";
 import Component, {
@@ -129,7 +129,7 @@ class SignIn extends Component {
     password: string
   ) {
     try {
-      const response = await fetch(`${NGINX_SERVER}/api/sign-in`, {
+      const response = await fetch(`${CADDY_SERVER}/api/sign-in`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -224,7 +224,7 @@ class SignIn extends Component {
 
   public static async requestToGenerateStateForOAuth() {
     try {
-      const response = await fetch(`${NGINX_SERVER}/api/generate-state`, {
+      const response = await fetch(`${CADDY_SERVER}/api/generate-state`, {
         credentials: "include",
       });
       const data = await response.json();
