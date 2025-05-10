@@ -50,10 +50,32 @@ API.
 ## Assignments and Team
 
 #### <u>Farshad</u>
-* Authentication
-* Misc frontend 
-* Login flow
-
+* Frontend:
+  - Routing
+  - Sample pages such as Profile, Sign in, Sign up, and sample components such as Header
+  - Implemention of userContext (to have access to the user data in frontend), urlContext, and themeContext (to toggle between light and dark themes)
+  - Basic UI (CSS)
+* Backend:
+  - Protected routes to check the user authentication status before routing
+  - Sign in, Sign up, Sign out, Google Sign in, and 2FA
+  - Implemention of a table for user in database and a class to query the database 
+* Docker Network:
+  - Frontend-dev container to run a development server
+  - Backend container to run a Fastify server with some endpints for authentication
+  - Nginx to serve the app and act as a reverse proxy to send the requests from the client to the backend API endpoints
+    
+* Major modules:
+  - Web: Use a framework to build the backend (Fastify).
+  - User Management: Implementing a remote authentication (Google Sign in).
+  - User Management: Standard user management, authentication and users across tournaments (**ONLY** the authentication part).
+  - Cybersecurity: Implement Two-Factor Authentication (2FA) and JWT.
+ 
+* Minor modules:
+  - Web: Use a framework or a toolkit to build the frontend (Tailwind CSS). 
+  - Web: Use a database for the backend (SQLite).
+  - Accessibility: Expanding browser compatibility **???** (Supports Google Chrome and Firefox out of the box, but does not work in Safari)
+  - Accessibility: Add accessibility features for visually impaired users (**Partially**).
+    
 #### <u>Waldi</u>
 * Client implementation of Pong game (Frontend, GUI, consuming the API)
 * Live Chat frontend
