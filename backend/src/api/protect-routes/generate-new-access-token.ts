@@ -124,7 +124,7 @@ fastify.post(
       userDb,
       hashedRefreshToken
     );
-    const newJwtAccessToken = signJwtAccessToken(userId);
+    const newJwtAccessToken = signJwtAccessToken(userId, username);
     // console.log("*******************", newJwtAccessToken);
     reply.send({
       errorMessage: "",

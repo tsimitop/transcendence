@@ -23,7 +23,7 @@ export const sendRefreshAndAccessTokens = async function (
   userDb: DbType,
   reply: FastifyReply
 ) {
-  const jwtAccessToken = signJwtAccessToken(user.id);
+  const jwtAccessToken = signJwtAccessToken(user.id, user.username);
   const jwtRefreshToken = signJwtRefreshToken(user.id);
   try {
     const saltRounds = 10;

@@ -6,21 +6,32 @@ localhost {
 	# TLS configuration for self-signed certificates
 	tls internal
 
+	# WebSocket endpoint
+	@websockets {
+		path /ws
+	}
+	handle @websockets {
+		reverse_proxy http://backend:3000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote}
+			header_up Upgrade {http.request.header.Upgrade}
+			header_up Connection {http.request.header.Connection}
+		}
+	}
+
 	# Global CORS headers - these apply to all API responses
 	@api {
 		path /api/*
 	}
 	handle @api {
 		header {
-			# Allow CORS from both the dev server and the static frontend
 			Access-Control-Allow-Origin {http.request.header.Origin}
 			Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
 			Access-Control-Allow-Headers "Authorization, Content-Type, X-Requested-With"
 			Access-Control-Allow-Credentials "true"
 			Vary "Origin"
 		}
-		
-		# Handle preflight requests
+
 		@options {
 			method OPTIONS
 		}
@@ -28,12 +39,11 @@ localhost {
 			respond "" 204
 		}
 
-		# Forward all other requests to the backend
 		reverse_proxy http://backend:3000 {
 			header_up Host {host}
 			header_up X-Real-IP {remote}
 		}
-	}	
+	}
 
 	# Handle the frontend (static files)
 	handle {

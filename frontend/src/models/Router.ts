@@ -7,6 +7,7 @@ import Header from "../components/Header";
 import Profile from "../pages/Profile";
 import SignIn from "../pages/SignIn";
 import Auth2Fa from "../pages/Auth2Fa";
+import Dashboard from "../pages/Dashboard";
 import Component, { ChildElementType, ChildrenStringType } from "./Component";
 import UrlContext, { urlContext } from "../context/UrlContext";
 import {
@@ -49,6 +50,7 @@ abstract class Router {
     "/pong": Pong,
     "/profile": Profile,
     "/2fa": Auth2Fa,
+	"/dashboard": Dashboard,
   };
   static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile"];
   static guestUsersRoutes: ValidUrlPathsType[] = [
@@ -88,6 +90,18 @@ abstract class Router {
       const data =
         ((await userContext.isUserSignedIn()) as ValidateAccessTokenResponseType) ||
         null;
+
+   if (data && data.isAccessTokenValid) {
+	     userContext.setState({
+	       ...userContext.state,
+	       id: data.userId,
+	       email: data.email,
+	       username: data.username,
+	       isSignedIn: true,
+	       jwtAccessToken: localStorage.getItem("access_token") || "",
+	     });
+	   }
+
       return data;
     } catch (error) {
       console.log(error);
