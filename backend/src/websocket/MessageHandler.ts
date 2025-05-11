@@ -1,5 +1,6 @@
 // receives the messages from the websocket handler and calls the appropriate functions (chat or pong game)
 import { handleChatPayload } from "../chat";
+import { handlePongPayload } from "../api/pong/PongMsgHandler";
 
 
 interface WebsocketApiRequest {
@@ -16,9 +17,9 @@ export function handleWebsocketPayload(senderUsername: string, rawData: any): vo
       case 'chat-api':
         handleChatPayload(senderUsername, parsed.payload);
         break;
-    //   case 'pong-api':
-        // handleInvite(senderUsername, parsed);
-        // break;
+      case 'pong-api':
+        handlePongPayload(senderUsername, parsed);
+        break;
       default:
         console.warn(`[WS] Unknown message type: ${parsed.target_endpoint}`);
     }

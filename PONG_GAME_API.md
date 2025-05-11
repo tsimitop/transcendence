@@ -8,151 +8,6 @@ The Pong game system consists of:
 
 1. A server-side game engine that handles game logic, player connections, and state management
 2. WebSocket API for real-time communication with the frontend
-3. REST API for game creation, listing, and joining
-
-## REST API
-
-### Authentication
-
-All REST endpoints require authentication using JWT tokens. Include the token in the Authorization header:
-
-```
-Authorization: Bearer <jwt_token>
-```
-
-### Endpoints
-
-#### Create a New Game
-
-```
-POST /api/pong/games
-```
-
-Request body:
-```json
-{
-  "gameMode": "classic", // only classic for now
-  "isPrivate": false,    // Optional: boolean, default is false
-  "maxScore": 10         // Optional: number, default is 10 (when the game stops)
-}
-```
-
-Response:
-```json
-{
-  "game": {
-    "id": "string",
-    "status": "waiting",
-    "ball": {
-      "x": 400,
-      "y": 300,
-      "radius": 10,
-      "dx": 0,
-      "dy": 0,
-      "speed": 5
-    },
-    "leftPaddle": {
-      "x": 20,
-      "y": 250,
-      "width": 10,
-      "height": 100,
-      "score": 0,
-      "userId": "string",
-      "up": false,
-      "down": false,
-      "speed": 8
-    },
-    "rightPaddle": {
-      "x": 770,
-      "y": 250,
-      "width": 10,
-      "height": 100,
-      "score": 0,
-      "userId": "",
-      "up": false,
-      "down": false,
-      "speed": 8
-    },
-    "width": 800,
-    "height": 600,
-    "lastUpdateTime": 1234567890,
-    "gameMode": "classic",
-    "isPrivate": false,
-    "maxScore": 10
-  }
-}
-```
-
-#### Get Available Games
-
-```
-GET /api/pong/games/available
-```
-
-Response:
-```json
-{
-  "games": [
-    {
-      "id": "string",
-      "status": "waiting",
-      "gameMode": "classic",
-      "isPrivate": false,
-      "maxScore": 10
-    }
-  ]
-}
-```
-
-#### Get Game by ID
-
-```
-GET /api/pong/games/:id
-```
-
-Response:
-```json
-{
-  "game": {
-    "id": "string",
-    "status": "waiting",
-    "ball": { ... },
-    "leftPaddle": { ... },
-    "rightPaddle": { ... },
-    "width": 800,
-    "height": 600,
-    "lastUpdateTime": 1234567890,
-    "gameMode": "classic",
-    "isPrivate": false,
-    "maxScore": 10
-  }
-}
-```
-
-#### Join a Game
-
-```
-POST /api/pong/games/:id/join
-```
-
-Response:
-```json
-{
-  "game": {
-    "id": "string",
-    "status": "countdown",
-    "ball": { ... },
-    "leftPaddle": { ... },
-    "rightPaddle": { ... },
-    "width": 800,
-    "height": 600,
-    "lastUpdateTime": 1234567890,
-    "gameMode": "classic",
-    "isPrivate": false,
-    "maxScore": 10
-  }
-}
-```
 
 ## WebSocket API
 
@@ -166,37 +21,76 @@ ws://localhost:4443/api/ws/pong?token=<jwt_token>
 
 ### Message Format
 
-All WebSocket messages use the following JSON format:
-
+All WebSocket requests and responses use the following JSON format:
 ```json
 {
-  "type": "string",
-  "payload": { ... }
+  "target_endpoint": "pong-api",
+  "payload": {
+      // the requests listed below, nested in "payload"
+      "type": "string",
+      "pong_data": { ... }
+  }
 }
 ```
+Except maybe for the Ping/pong message, its not pong-api specific, we could call it target_endpoint: "global"
 
 ### Message Types
 
 #### Client → Server
 
-##### Join Game
+#### Get Available Games
 
+Request:
+{
+  "type": "getGames",
+  "pong_data": {}
+}
+
+Response:
 ```json
 {
-  "type": "join_game",
-  "payload": {
-    "gameId": "string",
-    "userId": "string"
-  }
+  "games": [
+    // list of game_state of all games 
+    {
+      game_states
+    }
+  ]
 }
 ```
+
+#### Get Game by ID
+
+Request
+{
+  "type": "gameByID",
+  "pong_data": {
+    "id": "stringid"
+  }
+}
+
+Response:
+game_state response or error
+
+#### Join a Game
+
+request:
+{
+  "type": "joinGame",
+  "pong_data": {
+    "id": "gameidstr"
+  }
+}
+
+Response:
+```json
+game_state response or error
 
 ##### Create Game
 
 ```json
 {
   "type": "create_game",
-  "payload": {
+  "pong_data": {
     "userId": "string",
     "gameMode": "classic", // Optional: "classic", "speed", or "chaos"
     "isPrivate": false,    // Optional: boolean
@@ -212,7 +106,7 @@ Which X is good? Depends on latency of the connection i guess?
 ```json
 {
   "type": "input",
-  "payload": {
+  "pong_data": {
     "userId": "string",  // we implicitly know the user (connection), however the field can become usefull for multiple player on single client scenario. Game id also isn't really required as a user can only be in a single game.
     "up": boolean,    // true for up, false for down
     }
@@ -224,7 +118,7 @@ Which X is good? Depends on latency of the connection i guess?
 ```json
 {
   "type": "ping",
-  "payload": {}
+  "pong_data": {}
 }
 ```
 
@@ -235,7 +129,7 @@ Which X is good? Depends on latency of the connection i guess?
 ```json
 {
   "type": "game_state",
-  "payload": {
+  "pong_data": {
     "game": {
       "id": "string",
       "status": "playing",
@@ -266,7 +160,7 @@ Which X is good? Depends on latency of the connection i guess?
 ```json
 {
   "type": "game_over",
-  "payload": {
+  "pong_data": {
     "gameId": "string",
     "winnerId": "string",
     "finalScore": {
@@ -282,7 +176,7 @@ Which X is good? Depends on latency of the connection i guess?
 ```json
 {
   "type": "error",
-  "payload": {
+  "pong_data": {
     "message": "string",
     "code": 400
   }
@@ -294,7 +188,7 @@ Which X is good? Depends on latency of the connection i guess?
 ```json
 {
   "type": "pong",
-  "payload": {}
+  "pong_data": {}
 }
 ```
 
