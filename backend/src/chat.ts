@@ -44,25 +44,31 @@ export function unregisterUser(username: string): void {
  * @param senderUsername - The username of the sender
  * @param rawData - The raw WebSocket data received
  */
-export function handleMessage(senderUsername: string, rawData: any): void {
+export function handleChatPayload(senderUsername: string, payload: any): void {
   try {
-    const parsed: ChatMessage = JSON.parse(rawData.toString());
+    // The payload is already parsed in MessageHandler.ts
+    const message: ChatMessage = {
+      type: payload.type,
+      from: senderUsername,
+      to: payload.to,
+      message: payload.message
+    };
 
-    switch (parsed.type) {
+    switch (message.type) {
       case 'CHAT':
-        handleChatMessage(senderUsername, parsed);
+        handleChatMessage(senderUsername, message);
         break;
       case 'BLOCK':
-        handleBlockUser(senderUsername, parsed);
+        handleBlockUser(senderUsername, message);
         break;
       case 'INVITE':
-        handleInvite(senderUsername, parsed);
+        handleInvite(senderUsername, message);
         break;
       default:
-        console.warn(`[CHAT] Unknown message type: ${parsed.type}`);
+        console.warn(`[CHAT] Unknown message type: ${message.type}`);
     }
   } catch (err) {
-    console.error('[CHAT] Failed to parse message:', err);
+    console.error('[CHAT] Failed to process message:', err);
   }
 }
 

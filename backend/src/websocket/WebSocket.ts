@@ -3,7 +3,8 @@ import { verify } from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { IncomingMessage } from 'http';
 
-import { registerUser, unregisterUser, handleMessage } from '../chat';
+import { registerUser, unregisterUser } from '../chat';
+import { handleWebsocketPayload } from './MessageHandler';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -49,7 +50,7 @@ export function startWebSocketServer(server: any) {
 
     // Handle incoming messages
     socket.on('message', (data) => {
-      handleMessage(username, data);
+      handleWebsocketPayload(username, data);
     });
 
     // Handle socket close event

@@ -84,10 +84,15 @@ import Component, {
 	  const trimmedMessage = input.value.trim();
 	  if (trimmedMessage && this.socket?.readyState === WebSocket.OPEN) {
 		this.socket.send(
-		  JSON.stringify({
-			type: "CHAT",
-			message: trimmedMessage,
-		  })
+		  JSON.stringify(
+		{
+			target_endpoint: "chat-api",  // specify the target endpoint so we can use the ws for pong too
+			payload: {
+				type: "CHAT",
+				message: trimmedMessage,
+		  }
+		}
+		)
 		);
 		input.value = ""; // Clear input field
 	  }
