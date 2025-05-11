@@ -134,22 +134,29 @@ Which X is good? Depends on latency of the connection i guess?
       "id": "string",
       "status": "playing",
       "ball": {
-        "x": 400,
-        "y": 300,
-        "radius": 10,
-        "dx": 3,
-        "dy": 2,
-        "speed": 5
+        // frontend has to calculate the direction of the ball
+        // from the previous coordinates and the new coordinates
+        // ball speed is constant
+        "x": "0.000",  // floats as string
+        "y": "0.000",  // top left corner is (0/0)
       },
-      "leftPaddle": { ... },  // what do we need here?
+      "leftPaddle": { 
+          "topPoint": {
+            "x": 0.2,
+            "y": 0.2,
+          }
+          "height": 0.1, // 1 is the whole height of the window, so 10% of the width
+      },  // we interpret the paddle as 2D object (a line), which is the line on which the ball will bounce of, how its rendered in 3d is up to the frontend?
+      // does this make sense?
       "rightPaddle": { ... },
-      "width": 800,
-      "height": 600,
       "lastUpdateTime": 1234567890,
       "gameMode": "classic",
       "isPrivate": false,
       "maxScore": 10,
-      "countdown": 3 // Only relevant during countdown
+      "scores": {
+        "playerids...": int, //score
+      }
+      "countdown": 3, // Only relevant during countdown
     }
   }
 }
