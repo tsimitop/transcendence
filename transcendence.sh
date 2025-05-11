@@ -169,12 +169,19 @@ removeallvolumes() {
     fi
 }
 
+removebackenddb() {
+    print_header "Removing backend database"
+    rm -f ./backend/database/*
+    print_success "Backend database removed successfully"
+}
+
 # Remove all Docker containers, images, and volumes
 removeall() {
     print_header "Removing all Docker containers, images, and volumes"
     removeallcontainers
     removeallimages
     removeallvolumes
+    removebackenddb
     print_verbose "Running system prune with command: docker system prune -af --volumes"
     docker system prune -af --volumes
     print_success "Docker system cleaned up successfully"
