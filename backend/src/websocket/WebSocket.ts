@@ -3,7 +3,6 @@ import { verify } from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { IncomingMessage } from 'http';
 
-import { registerUser, unregisterUser } from '../chat';
 import { handleWebsocketPayload } from './MessageHandler';
 
 // Load environment variables from .env file
@@ -11,6 +10,18 @@ dotenv.config();
 
 // Set the JWT secret from environment variables
 const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET!;
+
+/**
+ * @brief A map of connected users.
+ * @key  username, Value: WebSocket connection
+ */
+export const connectedUsers = new Map<string, WebSocket>();
+
+/**
+ * @brief A map of blocked users.
+ * @key username, Value: Set of blocked usernames
+ */
+export const blockedUsers = new Map<string, Set<string>>();
 
 /**
  * @brief Starts the WebSocket server and handles incoming socket connections.
@@ -75,4 +86,21 @@ export function startWebSocketServer(server: any) {
 function getTokenFromRequest(req: IncomingMessage): string | null {
   const url = new URL(req.url || '', `http://${req.headers.host}`);
   return url.searchParams.get('token');
+}
+
+/**
+ * @brief Registers a user as connected
+ * @param username - The username of the connecting user
+ * @param socket - The WebSocket associated with this user
+ */
+export function registerUser(username: string, socket: WebSocket): void {
+  connectedUsers.set(username, socket);
+}
+
+/**
+ * @brief Removes a user from the list of connected users
+ * @param username - The username of the disconnecting user
+ */
+export function unregisterUser(username: string): void {
+  connectedUsers.delete(username);
 }

@@ -141,7 +141,7 @@ Which X is good? Depends on latency of the connection i guess?
         "dy": 2,
         "speed": 5
       },
-      "leftPaddle": { ... },
+      "leftPaddle": { ... },  // what do we need here?
       "rightPaddle": { ... },
       "width": 800,
       "height": 600,
@@ -149,7 +149,7 @@ Which X is good? Depends on latency of the connection i guess?
       "gameMode": "classic",
       "isPrivate": false,
       "maxScore": 10,
-      "countdown": 3 // Only present during countdown
+      "countdown": 3 // Only relevant during countdown
     }
   }
 }

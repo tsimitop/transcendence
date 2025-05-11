@@ -1,16 +1,5 @@
 import { WebSocket } from 'ws';
-
-/**
- * @brief A map of connected users.
- * @key  username, Value: WebSocket connection
- */
-export const connectedUsers = new Map<string, WebSocket>();
-
-/**
- * @brief A map of blocked users.
- * @key username, Value: Set of blocked usernames
- */
-export const blockedUsers = new Map<string, Set<string>>();
+import { connectedUsers, blockedUsers } from './websocket/WebSocket';
 
 /**
  * @brief Interface representing the shape of incoming chat messages
@@ -20,23 +9,6 @@ interface ChatMessage {
   from: string;
   to?: string;
   message?: string;
-}
-
-/**
- * @brief Registers a user as connected
- * @param username - The username of the connecting user
- * @param socket - The WebSocket associated with this user
- */
-export function registerUser(username: string, socket: WebSocket): void {
-  connectedUsers.set(username, socket);
-}
-
-/**
- * @brief Removes a user from the list of connected users
- * @param username - The username of the disconnecting user
- */
-export function unregisterUser(username: string): void {
-  connectedUsers.delete(username);
 }
 
 /**
