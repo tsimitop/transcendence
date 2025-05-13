@@ -43,5 +43,6 @@ export class PongGamePaddle {
 	}
 	reset(CenterY: number) {
 		this.y = CenterY - this.paddleHeight / 2  ;
+
 	}
 }

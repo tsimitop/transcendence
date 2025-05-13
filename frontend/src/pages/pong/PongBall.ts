@@ -1,5 +1,5 @@
 import { PongGamePaddle } from "./PongPaddle.js";
-import { WWidth } from "./constants.js";
+import { ThicknessPaddle, WWidth } from "./constants.js";
 import { WHeight } from "./constants.js";
 import { collorArray } from "./constants.js";
 
@@ -8,9 +8,12 @@ export class PongGameBall {
 	private y: number;
 	private vx: number = Math.random() > 0.5 ? 4 : -4;
 	private vy: number = Math.random() > 0.5 ? 4 : -4;
-	private speed: number = 1;
+	private speed: number = 0.5;
 	private size: number = 15;
-	// private size: number = Math.floor(Math.random() * 3);
+	private lcollisionCount: number = 0;
+	private rcollisionCount: number = 0;
+	private lcollisionFlag: boolean = true;
+	private rcollisionFlag: boolean = true;
 
 	constructor(
 		private c: CanvasRenderingContext2D,
@@ -46,22 +49,41 @@ export class PongGameBall {
 			// console.log("restart");
 		}
 
-		// this.resizing();
 	}
 	collisionCheck(lPaddle: PongGamePaddle, rPaddle: PongGamePaddle): boolean{
 
-		if(this.getX() < lPaddle.getX() + lPaddle.getPaddleWidth() &&
+		if(this.lcollisionFlag == false)
+			console.log("this.lcollisionCount", this.lcollisionCount);
+		this.lcollisionCount += 1;
+		if(this.lcollisionCount == 20)
+			this.lcollisionFlag = true;
+		
+		if(this.rcollisionFlag == false)
+			console.log("this.rcollisionCount", this.rcollisionCount);
+			this.rcollisionCount += 1;
+		if(this.rcollisionCount == 20)
+			this.rcollisionFlag = true;
+
+		if(	this.getX() < lPaddle.getX() + lPaddle.getPaddleWidth() + ThicknessPaddle &&
 			this.getY() < lPaddle.getY() + lPaddle.getPaddleHeight() &&
-			this.getY() > lPaddle.getY())
+			this.getY() > lPaddle.getY()
+			&& this.lcollisionFlag)
 		{
+			this.lcollisionFlag = false;
+			this.lcollisionCount = 0;
+			// this.speed += 0.1;
 			this.setColor("#4F48F0")
 			return true;
 		}
 		else if(this.getX() > rPaddle.getX() - rPaddle.getPaddleWidth() &&
-		this.getY() > rPaddle.getY() &&
-		this.getY() < rPaddle.getY() + rPaddle.getPaddleHeight())
+		this.getY() < rPaddle.getY() + rPaddle.getPaddleHeight() &&
+		this.getY() > rPaddle.getY()
+		&& this.rcollisionFlag)
 		{
-			this.setColor("#4F48F0")
+			this.rcollisionFlag = false;
+			this.rcollisionCount = 0;
+			// this.speed += 0.1;
+			this.setColor("#4Fs48F0")
 			return true;
 		}
 		else
@@ -86,5 +108,6 @@ export class PongGameBall {
 		this.y = CenterY;
 		this.vx = Math.random() > 0.5 ? 4 : -4;
 		this.vy = Math.random() > 0.5 ? 4 : -4;
+		this.speed = 0.5;
 	}
 }

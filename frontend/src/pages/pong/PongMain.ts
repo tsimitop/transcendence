@@ -3,6 +3,7 @@ import { PongGamePaddle } from "./PongPaddle";
 import { ThicknessPaddle } from "./constants";
 import { WWidth } from "./constants";
 import { WHeight } from "./constants";
+import { offsetPaddle } from "./constants";
 
 // window.addEventListener('load', () => {
 //   const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
@@ -46,11 +47,11 @@ export class PongGame {
     private CenterX: number;
     private CenterY: number;
 	private isPaused: boolean = false;
-    // private lPlayerReady: boolean = false;
-    // private rPlayerReady: boolean = false;
+    private lPlayerReady: boolean = true;
+    private rPlayerReady: boolean = true;
     private lPlayerScore: number = 0;
     private rPlayerScore: number = 0;
-    private maxScore: number = 5;
+    private maxScore: number = 2;
 
 	constructor(canvas: HTMLCanvasElement) {
 		const ctx = canvas.getContext("2d");
@@ -61,33 +62,18 @@ export class PongGame {
 		this.CenterX = canvas.width / 2;
 
 		this.ball = new PongGameBall(this.c, this.CenterX, this.CenterY, 5, 3, "white")
-		this.lPaddle = new PongGamePaddle(this.c, 1, this.CenterY)
-		this.rPaddle = new PongGamePaddle(this.c, canvas.width - ThicknessPaddle, this.CenterY)
+		this.lPaddle = new PongGamePaddle(this.c, offsetPaddle, this.CenterY)
+		this.rPaddle = new PongGamePaddle(this.c, canvas.width - ThicknessPaddle - offsetPaddle, this.CenterY)
 	}
-
-	collisionCheck(){
-
-		if(this.ball.getX() < this.lPaddle.getX() + this.lPaddle.getPaddleWidth() &&
-			this.ball.getY() < this.lPaddle.getY() + this.lPaddle.getPaddleHeight() &&
-			this.ball.getY() > this.lPaddle.getY())
+	start()
+	{
+		if(this.lPlayerReady && this.rPlayerReady)
 		{
-			this.ball.setColor("#4F48F0")
+			this.gameLoop();
 		}
-		else if(this.ball.getX() > this.rPaddle.getX() - this.rPaddle.getPaddleWidth() &&
-			this.ball.getY() > this.rPaddle.getY() &&
-			this.ball.getY() < this.rPaddle.getY() + this.rPaddle.getPaddleHeight())
-		{
-			this.ball.setColor("#4F48F0")
-		}
-		else this.ball.setColor("#BC48F0");
-	}
-
-	start() {
-		this.gameLoop();		
     }
     restartGame(fullRestart: boolean){
         this.ball.reset(this.CenterX, this.CenterY); 
-
         this.lPaddle.reset(this.CenterY); 
         this.rPaddle.reset(this.CenterY);
         keys.clear();
@@ -98,6 +84,8 @@ export class PongGame {
         {
             this.lPlayerScore = 0;
             this.rPlayerScore = 0;
+			this.lPlayerReady = false;
+			this.rPlayerReady = false;	
         }
 
         console.log("Game restarted");
@@ -116,6 +104,21 @@ export class PongGame {
 			return true;
 		}
 		return false;
+	}
+	checkEndOfGame(){
+		if(this.lPlayerScore >= this.maxScore || this.rPlayerScore >= this.maxScore)
+		{
+			this.c.fillStyle = "white";
+			this.c.font = "48px sans-serif";
+			this.c.fillText("WIN", WWidth / 2 - 60, WHeight / 2);
+			if(this.lPlayerScore >= this.maxScore)
+				console.log("WIN left");
+			if(this.rPlayerScore >= this.maxScore)
+				console.log("WIN right");
+		
+			this.restartGame(true);
+			// this.start();
+		}
 	}
 	private gameLoop() {
 
@@ -147,18 +150,18 @@ export class PongGame {
             console.log(this.rPlayerScore, this.lPlayerScore);
 			this.restartGame(false);
 		}
-        if(this.lPlayerScore >= this.maxScore || this.rPlayerScore >= this.maxScore)
-        {
-            this.c.fillStyle = "white";
-			this.c.font = "48px sans-serif";
-			this.c.fillText("WIN", WWidth / 2 - 60, WHeight / 2);
-            if(this.lPlayerScore >= this.maxScore)
-                console.log("WIN left");
-            if(this.rPlayerScore >= this.maxScore)
-                console.log("WIN right");
-            this.restartGame(true);
-        }
-
+        // if(this.lPlayerScore >= this.maxScore || this.rPlayerScore >= this.maxScore)
+        // {
+        //     this.c.fillStyle = "white";
+		// 	this.c.font = "48px sans-serif";
+		// 	this.c.fillText("WIN", WWidth / 2 - 60, WHeight / 2);
+        //     if(this.lPlayerScore >= this.maxScore)
+        //         console.log("WIN left");
+        //     if(this.rPlayerScore >= this.maxScore)
+        //         console.log("WIN right");
+        //     this.restartGame(true);
+        // }
+		this.checkEndOfGame();
    		requestAnimationFrame(() => this.gameLoop());
   	}
 }
