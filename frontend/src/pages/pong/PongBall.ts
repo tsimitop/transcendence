@@ -71,7 +71,7 @@ export class PongGameBall {
 		{
 			this.lcollisionFlag = false;
 			this.lcollisionCount = 0;
-			// this.speed += 0.1;
+			this.speed += 0.1;
 			this.setColor("#4F48F0")
 			return true;
 		}
@@ -82,7 +82,7 @@ export class PongGameBall {
 		{
 			this.rcollisionFlag = false;
 			this.rcollisionCount = 0;
-			// this.speed += 0.1;
+			this.speed += 0.1;
 			this.setColor("#4Fs48F0")
 			return true;
 		}
