@@ -6,6 +6,7 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 
+
 class Pong extends Component {
   constructor(
     childrenString: ChildrenStringType,
@@ -17,11 +18,29 @@ class Pong extends Component {
   static create() {
     if (!customElements.getName(Pong)) {
       customElements.define("pong-component", Pong);
+      
     }
 
     const html = `
 			<main class="main-container layout-padding theme-primary-${themeState.state}-full">
-				<h1>Pong</h1>
+				<h1>Pong Game</h1>
+        <style>
+          canvas {
+          border: 1px solid black;
+          background: rgb(0, 0, 0);
+          }
+          body {
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* full viewport height */
+          }
+        </style>
+
+        <canvas id="gameCanvas" width="1200" height="800"></canvas>
+        <script type="module" src="../pong/PongMain.js"></script>
+
 			</main>
 		`;
     const PongInstance = new Pong(
@@ -34,5 +53,6 @@ class Pong extends Component {
     return PongInstance;
   }
 }
+
 
 export default Pong;
