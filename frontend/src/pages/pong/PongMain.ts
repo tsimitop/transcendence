@@ -4,16 +4,16 @@ import { ThicknessPaddle } from "./constants";
 import { WWidth } from "./constants";
 import { WHeight } from "./constants";
 
-window.addEventListener('load', () => {
-  const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
-  if (canvas) {
-    const game = new PongGame(canvas);
-    console.log("canvas: ",canvas); 
-    game.start();
-  } else {
-    console.error("Canvas not found!");
-  }
-});
+// window.addEventListener('load', () => {
+//   const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
+//   if (canvas) {
+//     const game = new PongGame(canvas);
+//     console.log("canvas: ",canvas); 
+//     game.start();
+//   } else {
+//     console.error("Canvas not found!");
+//   }
+// });
 
 /**************************************************************************/
 /**************		INPUT FROM KEYBOARD			***************************/
@@ -37,7 +37,7 @@ window.addEventListener("keyup", (event) => {
 let pauseHandled = false;
 
 
-class PongGame {
+export class PongGame {
 	private c: CanvasRenderingContext2D;
 
 	private ball: PongGameBall;

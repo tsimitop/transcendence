@@ -1,4 +1,4 @@
-import { PongGamePaddle } from "./PongPaddle";
+import { PongGamePaddle } from "./PongPaddle.js";
 import { WWidth } from "./constants.js";
 import { WHeight } from "./constants.js";
 import { collorArray } from "./constants.js";

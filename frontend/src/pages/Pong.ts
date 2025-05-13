@@ -6,6 +6,7 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 
+import { PongGame } from "./pong/PongMain";
 
 class Pong extends Component {
   constructor(
@@ -15,6 +16,21 @@ class Pong extends Component {
     super(childrenString, ...childElements);
   }
 
+/********************************************************/
+initializeGame() {
+  // if (this.gameStarted) return;
+  // this.gameStarted = true;
+
+  const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
+  if (canvas) {
+    const game = new PongGame(canvas);
+    game.start();
+  } else {
+    console.error("Canvas not found in initializeGame!");
+  }
+}
+/********************************************************/
+
   static create() {
     if (!customElements.getName(Pong)) {
       customElements.define("pong-component", Pong);
@@ -22,27 +38,26 @@ class Pong extends Component {
     }
 
     const html = `
-			<main class="main-container layout-padding theme-primary-${themeState.state}-full">
-				<h1>Pong Game</h1>
-        <style>
-          canvas {
+    <main class="main-container layout-padding theme-primary-${themeState.state}-full">
+      <h1>Pong Game</h1>
+      <style>
+        canvas {
           border: 1px solid black;
           background: rgb(0, 0, 0);
-          }
-          body {
-            margin: 0 auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh; /* full viewport height */
-          }
-        </style>
+        }
+        body {
+          margin: 0 auto;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+        }
+      </style>
+      <canvas id="gameCanvas" width="1200" height="800"></canvas>
+    </main>
+  `;
 
-        <canvas id="gameCanvas" width="1200" height="800"></canvas>
-        <script type="module" src="../pong/PongMain.js"></script>
 
-			</main>
-		`;
     const PongInstance = new Pong(
       { html, position: "beforeend" },
       { element: Header.create(), position: "afterbegin" },
@@ -50,6 +65,9 @@ class Pong extends Component {
     );
     PongInstance.insertChildren();
     PongInstance.classList.add("page");
+    /**************************************/
+    requestAnimationFrame(() => PongInstance.initializeGame()); // ✅
+    /**************************************/
     return PongInstance;
   }
 }
