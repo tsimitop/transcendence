@@ -52,17 +52,18 @@ export class PongGameBall {
 	}
 	collisionCheck(lPaddle: PongGamePaddle, rPaddle: PongGamePaddle): boolean{
 
-		if(this.lcollisionFlag == false)
-			console.log("this.lcollisionCount", this.lcollisionCount);
-		this.lcollisionCount += 1;
-		if(this.lcollisionCount == 20)
+		if(this.lcollisionFlag == false){
+			this.lcollisionCount += 1;
+		}
+		if(this.lcollisionCount == 20){
 			this.lcollisionFlag = true;
-		
-		if(this.rcollisionFlag == false)
-			console.log("this.rcollisionCount", this.rcollisionCount);
+		}		
+		if(this.rcollisionFlag == false){
 			this.rcollisionCount += 1;
-		if(this.rcollisionCount == 20)
+		}
+		if(this.rcollisionCount == 20){
 			this.rcollisionFlag = true;
+		}
 
 		if(	this.getX() < lPaddle.getX() + lPaddle.getPaddleWidth() + ThicknessPaddle &&
 			this.getY() < lPaddle.getY() + lPaddle.getPaddleHeight() &&

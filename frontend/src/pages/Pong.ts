@@ -39,7 +39,6 @@ initializeGame() {
 
     const html = `
     <main class="main-container layout-padding theme-primary-${themeState.state}-full">
-      <h1>Pong Game</h1>
       <style>
         canvas {
           border: 1px solid black;
@@ -53,7 +52,7 @@ initializeGame() {
           height: 100vh;
         }
       </style>
-      <canvas id="gameCanvas" width="1200" height="800"></canvas>
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
     </main>
   `;
 

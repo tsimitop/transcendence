@@ -1,5 +1,5 @@
-export const WWidth:number = 1200;
-export const WHeight:number = 800;
+export const WWidth:number = 800;
+export const WHeight:number = 600;
 export const ThicknessPaddle: number = 10
 export const offsetPaddle: number = 20
 

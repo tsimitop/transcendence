@@ -1,0 +1,6 @@
+{
+  "main": { "maxScore" : 5},
+  "left": { "name": "Alice", "score": 0, "ready": true},
+  "right": { "name": "Bob", "score": 0, "ready": true }
+}
+  

@@ -5,17 +5,6 @@ import { WWidth } from "./constants";
 import { WHeight } from "./constants";
 import { offsetPaddle } from "./constants";
 
-// window.addEventListener('load', () => {
-//   const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
-//   if (canvas) {
-//     const game = new PongGame(canvas);
-//     console.log("canvas: ",canvas); 
-//     game.start();
-//   } else {
-//     console.error("Canvas not found!");
-//   }
-// });
-
 /**************************************************************************/
 /**************		INPUT FROM KEYBOARD			***************************/
 /**************************************************************************/
@@ -39,6 +28,8 @@ let pauseHandled = false;
 
 
 export class PongGame {
+
+	private data;
 	private ctx: CanvasRenderingContext2D;
 
 	private ball: PongGameBall;
@@ -48,11 +39,13 @@ export class PongGame {
     private CenterY: number;
 	private isPaused: boolean = false;
 	private isEnd: boolean = false;
-    private lPlayerReady: boolean = true;
-    private rPlayerReady: boolean = true;
+    private lPlayerReady: boolean = false;
+    private rPlayerReady: boolean = false;
     private lPlayerScore: number = 0;
     private rPlayerScore: number = 0;
-    private maxScore: number = 2;
+    private maxScore: number = 0;
+	private lPlayerName: string = "PlayerOne";
+	private rPlayerName: string = "PlayerTwo";
 
 	constructor(canvas: HTMLCanvasElement) {
 		const ctx = canvas.getContext("2d");
@@ -66,15 +59,72 @@ export class PongGame {
 		this.lPaddle = new PongGamePaddle(this.ctx, offsetPaddle, this.CenterY)
 		this.rPaddle = new PongGamePaddle(this.ctx, canvas.width - ThicknessPaddle - offsetPaddle, this.CenterY)
 	}
-	start()
+	displayCountdown()
 	{
-		// this.ctx.fillStyle = '#ffffff';
-		// this.ctx.fillText("PressKeyToBegin", WWidth/2, WHeight/2);
-		if(this.lPlayerReady && this.rPlayerReady)
-		{
-			this.gameLoop();
-		};
-    }
+		// Countdown timer (3, 2, 1)
+		let countdown = 0;
+		this.ctx.fillStyle = 'white';
+		this.ctx.font = "48px sans-serif";
+		this.ctx.textAlign = "center";
+		
+		const countdownInterval = setInterval(() => {
+			// Clear the canvas each time before showing the new countdown number
+			this.ctx.clearRect(0, 0, WWidth, WHeight);
+			this.ctx.fillText(countdown.toString(), WWidth / 2, WHeight / 2);
+			
+			countdown--;
+			
+			if (countdown < 0) {
+				clearInterval(countdownInterval); // Stop the interval
+
+				this.gameLoop(); // Start the game loop
+				return;
+			}
+		}, 1000); // Update every second
+	}
+	
+	/****************************************/
+	private async fetchPlayerData() {
+		try {
+			const response = await fetch("mockData.json");
+			const data = await response.json();
+			this.data = data;
+			console.log("Fetched player data:", data);
+			
+			this.lPlayerName = data.left.name;
+			this.rPlayerName = data.right.name;
+			this.lPlayerScore = data.left.score;
+			this.rPlayerScore = data.right.score;
+			this.lPlayerReady = data.left.ready;
+			this.rPlayerReady = data.right.ready;
+			this.maxScore = data.main.maxScore;
+	
+		} catch (err) {
+			console.error("Failed to fetch player data:", err);
+		}
+	}
+	
+	  
+	/****************************************/
+	start() {
+		this.ctx.fillStyle = 'white';
+		this.ctx.font = "48px sans-serif";
+		this.ctx.textAlign = "center";
+		let message: string = "Waiting for Players to be ready";
+		this.ctx.fillText(message, WWidth / 2, WHeight / 2);
+
+		this.fetchPlayerData();
+
+
+		const readinessCheckInterval = setInterval(() => {
+			if (this.lPlayerReady && this.rPlayerReady) {
+				clearInterval(readinessCheckInterval);
+				this.displayCountdown();
+			}
+			this.fetchPlayerData();
+		}, 1000);  // Check every second 1000ms
+	}
+	
     restartGame(fullRestart: boolean){
         this.ball.reset(this.CenterX, this.CenterY); 
         this.lPaddle.reset(this.CenterY); 
@@ -87,8 +137,8 @@ export class PongGame {
         {
             this.lPlayerScore = 0;
             this.rPlayerScore = 0;
-			this.lPlayerReady = false;
-			this.rPlayerReady = false;	
+			this.lPlayerReady = true;
+			this.rPlayerReady = true;	
         }
 
         console.log("Game restarted");
@@ -118,17 +168,18 @@ export class PongGame {
 			this.ctx.font = "48px sans-serif";
 			this.ctx.textAlign = "center";
 	
-			if (this.lPlayerScore >= this.maxScore) this.ctx.fillText("WIN left", WWidth / 2, WHeight / 2);
-			if (this.rPlayerScore >= this.maxScore) this.ctx.fillText("WIN right", WWidth / 2, WHeight / 2);
+			if (this.lPlayerScore >= this.maxScore) this.ctx.fillText("Left Player WIN", WWidth / 2, WHeight / 2);
+			else if (this.rPlayerScore >= this.maxScore) this.ctx.fillText("Right Player WIN", WWidth / 2, WHeight / 2);
 	
 			this.isPaused = true;
 			this.isEnd = true;
 			
-			setTimeout(() => {
-				this.restartGame(true);
-				this.isPaused = false;
-				this.isEnd = false;
-			}, 2000);
+			// setTimeout(() => {
+			// 	this.restartGame(true);
+			// 	this.isPaused = false;
+			// 	this.isEnd = false;
+			// 	this.start();
+			// }, 2000);
 		}
 	}
 	
@@ -146,12 +197,14 @@ export class PongGame {
 			this.restartGame(false);
 		}
 	}
-	drawScore(){
+	drawScoreAndName(){
 		this.ctx.fillStyle = "white";
 		this.ctx.font = "40px Arial";
 		this.ctx.textAlign = "center";
-		this.ctx.fillText(`${this.lPlayerScore} : ${this.rPlayerScore}`, WWidth / 2,  50);
+		this.ctx.fillText(`${this.lPlayerName} ${this.lPlayerScore} : ${this.rPlayerScore} ${this.rPlayerName}`, WWidth / 2,  50);
+		this.ctx.fillText(`Winning Score: ${this.maxScore}`, WWidth / 2,  WHeight - 20);
 	}
+
 	private gameLoop() {
 		if(this.checkPause()){
 			requestAnimationFrame(() => this.gameLoop());
@@ -159,7 +212,6 @@ export class PongGame {
 		}
 
 		this.ctx.clearRect(0, 0, WWidth, WHeight);
-
 		this.ball.updatePos(this.lPaddle, this.rPaddle);
 		this.ball.drawPos();
 		this.lPaddle.updatePos(keys.has('s'), keys.has('w'));
@@ -167,10 +219,10 @@ export class PongGame {
 		this.rPaddle.updatePos(keys.has('ArrowDown'), keys.has('ArrowUp'));
 		this.rPaddle.drawPos();
 		this.checkScore();
-		this.drawScore();
+		this.drawScoreAndName();
 
 		this.checkEndOfGame();
+
    		requestAnimationFrame(() => this.gameLoop());
   	}
-
 }
