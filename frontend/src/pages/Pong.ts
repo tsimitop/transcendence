@@ -46,7 +46,7 @@ initializeGame() {
           background: rgb(0, 0, 0);
         }
         body {
-          margin: 0 auto;
+          margin: 0;
           display: flex;
           justify-content: center;
           align-items: center;

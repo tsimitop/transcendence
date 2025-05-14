@@ -19,11 +19,11 @@ import { offsetPaddle } from "./constants";
 /**************************************************************************/
 /**************		INPUT FROM KEYBOARD			***************************/
 /**************************************************************************/
-
 const keys = new Set<string>();
 
 window.addEventListener("keydown", (event) => {
   keys.add(event.key);
+
 });
 
 window.addEventListener("keyup", (event) => {
@@ -39,7 +39,7 @@ let pauseHandled = false;
 
 
 export class PongGame {
-	private c: CanvasRenderingContext2D;
+	private ctx: CanvasRenderingContext2D;
 
 	private ball: PongGameBall;
 	private lPaddle: PongGamePaddle;
@@ -47,6 +47,7 @@ export class PongGame {
     private CenterX: number;
     private CenterY: number;
 	private isPaused: boolean = false;
+	private isEnd: boolean = false;
     private lPlayerReady: boolean = true;
     private rPlayerReady: boolean = true;
     private lPlayerScore: number = 0;
@@ -56,21 +57,23 @@ export class PongGame {
 	constructor(canvas: HTMLCanvasElement) {
 		const ctx = canvas.getContext("2d");
 		if (!ctx) throw new Error("2D context not supported");
-		this.c = ctx;
+		this.ctx = ctx;
 
 		this.CenterY = canvas.height / 2;
 		this.CenterX = canvas.width / 2;
 
-		this.ball = new PongGameBall(this.c, this.CenterX, this.CenterY, 5, 3, "white")
-		this.lPaddle = new PongGamePaddle(this.c, offsetPaddle, this.CenterY)
-		this.rPaddle = new PongGamePaddle(this.c, canvas.width - ThicknessPaddle - offsetPaddle, this.CenterY)
+		this.ball = new PongGameBall(this.ctx, this.CenterX, this.CenterY, 5, 3, "white")
+		this.lPaddle = new PongGamePaddle(this.ctx, offsetPaddle, this.CenterY)
+		this.rPaddle = new PongGamePaddle(this.ctx, canvas.width - ThicknessPaddle - offsetPaddle, this.CenterY)
 	}
 	start()
 	{
+		// this.ctx.fillStyle = '#ffffff';
+		// this.ctx.fillText("PressKeyToBegin", WWidth/2, WHeight/2);
 		if(this.lPlayerReady && this.rPlayerReady)
 		{
 			this.gameLoop();
-		}
+		};
     }
     restartGame(fullRestart: boolean){
         this.ball.reset(this.CenterX, this.CenterY); 
@@ -97,37 +100,65 @@ export class PongGame {
 			pauseHandled = true;
 		}
 		if(this.isPaused){
+			if(!this.isEnd){
+
+				this.ctx.fillStyle = "white";
+				this.ctx.font = "48px sans-serif";
+				this.ctx.textAlign = "center";
+				this.ctx.fillText("Paused", WWidth / 2, WHeight / 2);
+			}
+				return true;
 			
-			this.c.fillStyle = "white";
-			this.c.font = "48px sans-serif";
-			this.c.fillText("Paused", WWidth / 2 - 60, WHeight / 2);
-			return true;
 		}
 		return false;
 	}
-	checkEndOfGame(){
-		if(this.lPlayerScore >= this.maxScore || this.rPlayerScore >= this.maxScore)
-		{
-			this.c.fillStyle = "white";
-			this.c.font = "48px sans-serif";
-			this.c.fillText("WIN", WWidth / 2 - 60, WHeight / 2);
-			if(this.lPlayerScore >= this.maxScore)
-				console.log("WIN left");
-			if(this.rPlayerScore >= this.maxScore)
-				console.log("WIN right");
-		
-			this.restartGame(true);
-			// this.start();
+	checkEndOfGame() {
+		if (this.lPlayerScore >= this.maxScore || this.rPlayerScore >= this.maxScore) {
+			this.ctx.fillStyle = "white";
+			this.ctx.font = "48px sans-serif";
+			this.ctx.textAlign = "center";
+	
+			if (this.lPlayerScore >= this.maxScore) this.ctx.fillText("WIN left", WWidth / 2, WHeight / 2);
+			if (this.rPlayerScore >= this.maxScore) this.ctx.fillText("WIN right", WWidth / 2, WHeight / 2);
+	
+			this.isPaused = true;
+			this.isEnd = true;
+			
+			setTimeout(() => {
+				this.restartGame(true);
+				this.isPaused = false;
+				this.isEnd = false;
+			}, 2000);
 		}
 	}
+	
+	checkScore(){
+		if (this.ball.getX() < 0  || this.ball.getX() > WWidth)
+		{
+			if(this.ball.getX() < 0)
+			{
+				this.rPlayerScore++;
+			}
+			if(this.ball.getX() > WWidth)
+			{
+				this.lPlayerScore++;
+			}
+			this.restartGame(false);
+		}
+	}
+	drawScore(){
+		this.ctx.fillStyle = "white";
+		this.ctx.font = "40px Arial";
+		this.ctx.textAlign = "center";
+		this.ctx.fillText(`${this.lPlayerScore} : ${this.rPlayerScore}`, WWidth / 2,  50);
+	}
 	private gameLoop() {
-
 		if(this.checkPause()){
 			requestAnimationFrame(() => this.gameLoop());
 			return;
 		}
 
-		this.c.clearRect(0, 0, WWidth, WHeight);
+		this.ctx.clearRect(0, 0, WWidth, WHeight);
 
 		this.ball.updatePos(this.lPaddle, this.rPaddle);
 		this.ball.drawPos();
@@ -135,33 +166,11 @@ export class PongGame {
 		this.lPaddle.drawPos();
 		this.rPaddle.updatePos(keys.has('ArrowDown'), keys.has('ArrowUp'));
 		this.rPaddle.drawPos();
+		this.checkScore();
+		this.drawScore();
 
-
-		if (this.ball.getX() < 0  || this.ball.getX() > WWidth)
-		{
-            if(this.ball.getX() < 0)
-            {
-                this.rPlayerScore++;
-            }
-            if(this.ball.getX() > WWidth)
-            {
-                this.lPlayerScore++;
-            }
-            console.log(this.rPlayerScore, this.lPlayerScore);
-			this.restartGame(false);
-		}
-        // if(this.lPlayerScore >= this.maxScore || this.rPlayerScore >= this.maxScore)
-        // {
-        //     this.c.fillStyle = "white";
-		// 	this.c.font = "48px sans-serif";
-		// 	this.c.fillText("WIN", WWidth / 2 - 60, WHeight / 2);
-        //     if(this.lPlayerScore >= this.maxScore)
-        //         console.log("WIN left");
-        //     if(this.rPlayerScore >= this.maxScore)
-        //         console.log("WIN right");
-        //     this.restartGame(true);
-        // }
 		this.checkEndOfGame();
    		requestAnimationFrame(() => this.gameLoop());
   	}
+
 }
