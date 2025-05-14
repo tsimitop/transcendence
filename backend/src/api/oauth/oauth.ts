@@ -91,6 +91,7 @@ fastify.get(
       const userDbInstance = new UserDb("database/test.db");
       const userDb = userDbInstance.openDb();
       userDbInstance.createUserTableInUserDb(userDb);
+	  userDbInstance.createFriendTableDb(userDb);
       const userAlreadyExists = userDbInstance.userExistsInUserDb(
         userDb,
         sub,
@@ -107,6 +108,10 @@ fastify.get(
           },
           ""
         );
+		await userDbInstance.updateFriendDb(
+			userDb,
+			email
+		);
       }
       const user = await userDbInstance.findUserInDb(userDb, email, "");
       if (!user) {

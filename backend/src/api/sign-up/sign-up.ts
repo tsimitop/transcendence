@@ -23,6 +23,7 @@ fastify.post(
     const userDbInstance = new UserDb("database/test.db");
     const userDb = userDbInstance.openDb();
     userDbInstance.createUserTableInUserDb(userDb);
+	userDbInstance.createFriendTableDb(userDb);
 
     const userAlreadyExists = userDbInstance.userExistsInUserDb(
       userDb,
@@ -94,11 +95,23 @@ fastify.post(
         hashedPassword
       );
     } catch (error) {
-      console.log(error);
-      reply.send({
-        errorMessage: "User could not be inserted in database.",
-      });
-      return;
+		console.log(error);
+		reply.send({
+			errorMessage: "User could not be inserted in database.",
+		});
+		return;
+    }
+	try {
+		await userDbInstance.updateFriendDb(
+		  userDb,
+		  request.body.username,
+		);
+	} catch (error) {
+		console.log(error);
+		reply.send({
+			errorMessage: "User '" + request.body.username + "' could not be inserted in friend database.",
+		});
+		return;
     }
     reply.send(request.body);
   }

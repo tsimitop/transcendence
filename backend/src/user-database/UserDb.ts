@@ -2,9 +2,20 @@ import { Database as DbType } from "better-sqlite3";
 import bcrypt from "bcrypt";
 import Sqlite from "../models/Sqlite";
 import { QueryUser } from "./queries";
+import { QueryFriend } from "./friend-queries";
 
 import { SignUpType } from "../api/sign-up/sign-up";
 import { UserStateType } from "../api/sign-in/sign-in";
+
+type User = {
+  id: number;
+  email: string;
+  username: string;
+  password: string;
+  jwt_refresh_token?: string | null;
+  has_2fa: boolean;
+  totp_secret: string;
+};
 
 class UserDb extends Sqlite {
   constructor(private userDbPath: string) {
@@ -13,6 +24,10 @@ class UserDb extends Sqlite {
 
   public createUserTableInUserDb(userDb: DbType) {
     userDb.prepare(QueryUser.CREATE_TABLE).run();
+  }
+
+  public createFriendTableDb(userDb: DbType) {
+    userDb.prepare(QueryFriend.CREATE_FRIEND_TABLE).run();
   }
 
   public async createNewUserInUserDb(
@@ -27,8 +42,34 @@ class UserDb extends Sqlite {
       user.username.trim(),
       hashedPassword
     );
+  }
+   // const userTable = userDb.prepare(QueryUser.SELECT_USER_TABLE).all();
 
-    // const userTable = userDb.prepare(QueryUser.SELECT_USER_TABLE).all();
+  // 1. Add new user to existing users' friendship status
+  // 2. Add all existing users to new user's friendship status
+  public async updateFriendDb(userDb: DbType, newUsername: string) {
+    const username: string = newUsername.trim();
+    const getUserIdStatement = userDb.prepare(QueryUser.FIND_ID_BY_USERNAME);
+	const result = getUserIdStatement.get(username) as { id: number } | undefined;
+    const newUserId = result?.id;
+    if (!newUserId) {
+	  console.log("Username" + username + " id not found");
+      throw new Error(`User with username '${username}' not found`);
+    }
+
+    const getAllUsersStatement = userDb.prepare(QueryUser.SELECT_ALL_USERS);
+	const allUsers = getAllUsersStatement.all() as User[];
+	console.log("ALL USERS:");
+	console.log(allUsers);
+	const existingUsers = allUsers.filter((u) => u.id !== newUserId);
+	const tables = userDb.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+	console.log("TABLES:");
+	console.log(tables);
+    const insertFriendStatement = userDb.prepare(QueryFriend.INSERT_NEW_FRIEND_USER);
+    for (const existingUser of existingUsers) {
+      insertFriendStatement.run(newUserId, existingUser.id, 'default');
+      insertFriendStatement.run(existingUser.id, newUserId, 'default');
+    }
   }
 
   public userExistsInUserDb(
@@ -269,6 +310,22 @@ class UserDb extends Sqlite {
     const totpSecret = result[0].totp_secret;
     return totpSecret;
   }
+
+//   public sendFriendRequest(userDbUser: DbType, userDbFriend: DbType) {
+
+//   }
 }
+
+/*
+New methods:
+
+sendFriendRequest(userId, friendId)
+acceptFriendRequest(userId, friendId)
+getFriends(userId)
+removeFriend(userId, friendId)
+
+Existing:
+findUserInDb() or userExistsInUserDb() to look up id values from usernames.
+*/
 
 export default UserDb;
