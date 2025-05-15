@@ -195,6 +195,18 @@ class UserDb extends Sqlite {
     return hashedRefreshToken;
   }
 
+/**
+ * @brief Finds the username by user ID
+ * @param userDb - The SQLite database instance
+ * @param userId - The user ID to search for
+ * @returns The username associated with the user ID, or an empty string if not found
+ */
+  public findUsernameByUserId(userDb: DbType, userId: string): string {
+	const stmt = userDb.prepare(QueryUser.FIND_USERNAME_BY_ID);
+	const result = stmt.get(userId) as { username: string } | undefined;
+	return result?.username || '';
+  }
+
   public findUserIdByHashedRefreshToken(
     userDb: DbType,
     hashedRefreshToken: string

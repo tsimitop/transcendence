@@ -17,32 +17,32 @@ interface ChatMessage {
  * @param rawData - The raw WebSocket data received
  */
 export function handleChatPayload(senderUsername: string, payload: any): void {
-  try {
-    // The payload is already parsed in MessageHandler.ts
-    const message: ChatMessage = {
-      type: payload.type,
-      from: senderUsername,
-      to: payload.to,
-      message: payload.message
-    };
-
-    switch (message.type) {
-      case 'CHAT':
-        handleChatMessage(senderUsername, message);
-        break;
-      case 'BLOCK':
-        handleBlockUser(senderUsername, message);
-        break;
-      case 'INVITE':
-        handleInvite(senderUsername, message);
-        break;
-      default:
-        console.warn(`[CHAT] Unknown message type: ${message.type}`);
-    }
-  } catch (err) {
-    console.error('[CHAT] Failed to process message:', err);
+	try {
+	  // The payload is already parsed in MessageHandler.ts
+	  const message: ChatMessage = {
+		type: payload.type,
+		from: senderUsername,
+		to: payload.to,
+		message: payload.message
+	  };
+  
+	  switch (message.type) {
+		case 'CHAT':
+		  handleChatMessage(senderUsername, message);
+		  break;
+		case 'BLOCK':
+		  handleBlockUser(senderUsername, message);
+		  break;
+		case 'INVITE':
+		  handleInvite(senderUsername, message);
+		  break;
+		default:
+		  console.warn(`[CHAT] Unknown message type: ${message.type}`);
+	  }
+	} catch (err) {
+	  console.error('[CHAT] Failed to process message:', err);
+	}
   }
-}
 
 /**
  * @brief Broadcasts a message to all connected users (global chat)

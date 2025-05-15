@@ -14,6 +14,7 @@ export enum QueryUser {
 	VALUES(?, ?, ?);`,
   FIND_EMAIL_BY_EMAIL = `SELECT email FROM ${table} WHERE email = ?`,
   FIND_EMAIL_BY_USERNAME = `SELECT email FROM ${table} WHERE username = ?`,
+  FIND_USERNAME_BY_ID = `SELECT username FROM ${table} WHERE id = ?`,
   FIND_USERNAME_BY_USERNAME = `SELECT username FROM ${table} WHERE username = ?`,
   FIND_USERNAME_BY_EMAIL = `SELECT username FROM ${table} WHERE email = ?`,
   FIND_PASSWORD_BY_USERNAME = `SELECT password FROM ${table} WHERE username = ?`,
