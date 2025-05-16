@@ -18,7 +18,7 @@ export function handleWebsocketPayload(senderUsername: string, rawData: any): vo
         handleChatPayload(senderUsername, parsed.payload);
         break;
       case 'pong-api':
-        handlePongPayload(senderUsername, parsed);
+        handlePongPayload(senderUsername, parsed.payload);
         break;
       default:
         console.warn(`[WS] Unknown message type: ${parsed.target_endpoint}`);

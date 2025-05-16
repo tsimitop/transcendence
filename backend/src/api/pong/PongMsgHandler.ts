@@ -9,6 +9,9 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
       pong_data: payload.pong_data,
     };
 
+    console.error("\nTHIS IS AN INPUT\n");
+    console.error(message.type);
+    
     switch (message.type) {
       case 'input':
         handleKeyboardInput(senderUsername, message.pong_data);
