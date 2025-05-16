@@ -12,15 +12,43 @@ import Component, {
 	private socket: WebSocket | null = null;
 	private reconnectAttempts = 0;
 	private readonly maxReconnectAttempts = 5;
-  
+	static isInitialized = false;
+
 	constructor(
 	  childrenString: ChildrenStringType,
 	  ...childElements: ChildElementType[]
 	) {
 	  super(childrenString, ...childElements);
 	}
+
+  	/**
+	 * @brief Lifecycle method triggered when the element is added to the DOM.
+	 * Sets up event listeners for sending messages.
+	 */
+	connectedCallback(): void {
+		const sendBtn = this.querySelector("#send-btn") as HTMLButtonElement;
+		const input = this.querySelector("#chat-input") as HTMLInputElement;
+		const toggleBtn = this.querySelector("#chat-toggle") as HTMLButtonElement;
+		const chatContent = this.querySelector("#chat-content") as HTMLDivElement;
+	  
+		if (sendBtn && input) {
+		  // Send message when button clicked
+		  sendBtn.addEventListener("click", () => this.sendMessage(input));
+	
+		  // Send message on Enter key
+		  input.addEventListener("keypress", (e: KeyboardEvent) => {
+			if (e.key === "Enter") sendBtn.click();
+		  });
+		}
+		// Toggle chat visibility
+		if (toggleBtn && chatContent) {
+		  toggleBtn.addEventListener("click", () => {
+			const isHidden = chatContent.classList.toggle("hidden");
+			toggleBtn.textContent = isHidden ? "Expand" : "Minimize";
+		  });
+		}
+	  }
   
-	static isInitialized = false;
 	/**
 	 * @brief Factory method to create and attach a Chat component to the DOM.
 	 * @return the Chat instance.
@@ -64,34 +92,6 @@ import Component, {
 	  chatInstance.insertChildren();
 	  return chatInstance;
 	}
-  
-	/**
-	 * @brief Lifecycle method triggered when the element is added to the DOM.
-	 * Sets up event listeners for sending messages.
-	 */
-	connectedCallback(): void {
-		const sendBtn = this.querySelector("#send-btn") as HTMLButtonElement;
-		const input = this.querySelector("#chat-input") as HTMLInputElement;
-		const toggleBtn = this.querySelector("#chat-toggle") as HTMLButtonElement;
-		const chatContent = this.querySelector("#chat-content") as HTMLDivElement;
-	  
-		if (sendBtn && input) {
-		  // Send message when button clicked
-		  sendBtn.addEventListener("click", () => this.sendMessage(input));
-	
-		  // Send message on Enter key
-		  input.addEventListener("keypress", (e: KeyboardEvent) => {
-			if (e.key === "Enter") sendBtn.click();
-		  });
-		}
-		// Toggle chat visibility
-		if (toggleBtn && chatContent) {
-		  toggleBtn.addEventListener("click", () => {
-			const isHidden = chatContent.classList.toggle("hidden");
-			toggleBtn.textContent = isHidden ? "Expand" : "Minimize";
-		  });
-		}
-	  }
   
 	/**
 	 * @brief Sends the current input value to the WebSocket server.
