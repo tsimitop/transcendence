@@ -6,7 +6,7 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 
-import { PongGame } from "./pong/PongMain";
+import { PongGame } from "./pong/PongMain2";
 
 class Pong extends Component {
   private socket: WebSocket | null = null;
@@ -21,55 +21,47 @@ class Pong extends Component {
   /********************************************************/
   initializeGame() {
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
-    if (canvas) {
-      const game = new PongGame(canvas);
-      game.start();
-      this.initializeWebSocket();  // Start WS connection here
-    } else {
+    if (!canvas) {
       console.error("Canvas not found in initializeGame!");
+      return;
     }
+  
+    if (!this.socket) {
+      console.error("WebSocket not initialized!");
+      return;
+    }
+  
+    const game = new PongGame(canvas, this.socket);
+    game.start();
   }
+  
   /********************************************************/
 
-  initializeWebSocket() {
-    const token = localStorage.getItem('access_token'); // Replace with your actual JWT token
-
-	  const socketUrl = `wss://localhost:4443/ws?token=${token}`;
-	  this.socket = new WebSocket(socketUrl);
-
-
+  initializeWebSocket(onOpenCallback?: () => void) {
+    const token = localStorage.getItem('access_token');
+    const socketUrl = `wss://localhost:4443/ws?token=${token}`;
+    this.socket = new WebSocket(socketUrl);
+  
     this.socket.onopen = () => {
-      console.log('WebSocket connectedsetdsfadsfafadsfadsffddgsdsDF');
-
-      // Example: send input message to backend on connection
-      this.socket?.send(JSON.stringify({
-        target_endpoint: 'pong-api',
-        payload: {
-          type: 'input',
-          pong_data: {
-            up: true,
-            down: false,
-          }
-        }
-      }));
+      console.log('WebSocket connected');  
+      if (onOpenCallback) onOpenCallback(); // ✅ call back to start game
     };
-
-    this.socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('Received from backend:', data);
-
-      // Here you could handle messages from the backend, e.g. update game state
-    };
-
+  
+    // this.socket.onmessage = (event) => {
+    //   const data = JSON.parse(event.data);
+    //   console.log('Received from backend:', data);
+    // };
+  
     this.socket.onclose = (event) => {
       console.log('WebSocket closed', event);
       this.socket = null;
     };
-
+  
     this.socket.onerror = (error) => {
       console.error('WebSocket error', error);
     };
   }
+  
   /********************************************************/
 
   static create() {
@@ -104,9 +96,11 @@ class Pong extends Component {
     PongInstance.insertChildren();
     PongInstance.classList.add("page");
 
-    /**************************************/
+  /**************************************/
+  PongInstance.initializeWebSocket(() => {
     requestAnimationFrame(() => PongInstance.initializeGame());
-    /**************************************/
+  });
+  /**************************************/
 
     return PongInstance;
   }

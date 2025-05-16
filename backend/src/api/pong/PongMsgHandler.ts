@@ -9,10 +9,14 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
       pong_data: payload.pong_data,
     };
 
-    console.error("\nTHIS IS AN INPUT\n");
-    console.error(message.type);
+    console.error("|\n| THIS IS AN INPUT\nV");
+    console.error("payload:", payload);
+    console.error("message:", message.type);
     
     switch (message.type) {
+      case 'getGames':
+        handleGetGames(senderUsername);
+        break;
       case 'input':
         handleKeyboardInput(senderUsername, message.pong_data);
         break;
@@ -50,6 +54,37 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
     sendMessage(senderUsername, 'error', errorData);
     console.debug(`[PONG WS] Error message sent to ${senderUsername}: ${errorMessage} (code: ${errorCode})`);
 }
+
+/*****************************************************/
+/************** ajehles Methods  *********************/
+/*****************************************************/
+
+function handleGetGames(senderUsername: string): void {
+  
+  for (const [username, socket] of connectedUsers.entries()) {
+    if (socket.readyState !== WebSocket.OPEN) continue;
+    
+    // console.error(username);
+    socket.send(JSON.stringify({
+      target_endpoint: 'pong-api', // <== match what frontend expects
+      payload: {
+        type: 'match_found',
+        pong_data: {
+          opponent: senderUsername,
+          match_id: 'abc123'
+        }
+      }
+    }));
+  }
+}
+
+
+  
+   /*****************************************************/
+  /************** ajehles Methods end *********************/
+  /*****************************************************/
+
+
 
 function handleKeyboardInput(senderUsername: string, message: KeyboardInputData): void {
   const { userId, up } = message;
