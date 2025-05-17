@@ -12,7 +12,7 @@ interface WebsocketApiRequest {
 export function handleWebsocketPayload(senderUsername: string, rawData: any): void {
   try {
     const parsed: WebsocketApiRequest = JSON.parse(rawData.toString());
-
+    console.log(parsed);
     switch (parsed.target_endpoint) {
       case 'chat-api':
         handleChatPayload(senderUsername, parsed.payload);

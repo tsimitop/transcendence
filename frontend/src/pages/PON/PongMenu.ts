@@ -14,22 +14,20 @@ export function setupMenu(pong: Pong) {
   const remoteBtn = get('remotePlayBtn');
   const createGameBtn = get('createGameBtn');
   const joinGamePageBtn = get('joinGamePageBtn');
-  const confirmCreateBtn = get('confirmCreateBtn');
+  const backFromRemoteOptionsBtn = get('backFromRemoteOptionsBtn');
+  const backFromCreateSettingsBtn = get('backFromCreateSettingsBtn');
   const backFromGameListBtn = get('backFromGameListBtn');
+  const backFromAliasBtn = get('backFromAliasBtn');
+  const createGameConfirmBtn = get('createGameConfirmBtn');
   const startBtn = get('startGameBtn');
 
   const maxPlayersSelect = get('maxPlayersSelect') as HTMLSelectElement;
-  // const modeSelect = get('ModeSelect') as HTMLSelectElement;
-  // const tournamentOption = [...modeSelect.options].find(opt => opt.value === "Tournament")!;
-  
-
   const alias1Input = get('player1Input') as HTMLInputElement;
   const alias2Input = get('player2Input') as HTMLInputElement;
+  const remoteAliasInput = get('remoteAliasInput') as HTMLInputElement;
 
   let selectedMode: 'local' | 'remote' = 'local';
   let remoteSubmode: 'create' | 'join' | null = null;
-  let createSettingsData = {};
-  let joinGameId = '';
 
   showOnly(menu);
 
@@ -49,21 +47,39 @@ export function setupMenu(pong: Pong) {
     showOnly(createSettings);
   };
 
-  confirmCreateBtn.onclick = () => {
-    const maxPlayers = maxPlayersSelect;
-    createSettingsData = { maxPlayers };
-    showOnly(alias);
-    alias2Input.style.display = 'none';
+  createGameConfirmBtn.onclick = () => {
+    const alias1 = remoteAliasInput.value.trim();
+    const maxPlayers = parseInt(maxPlayersSelect.value);
+
+    if (!alias1) {
+      alert("Please enter your alias");
+      return;
+    }
+
+    showOnly(canvas);
+    canvas.style.display = 'block';
+
+    pong.socket?.send(JSON.stringify({
+      target_endpoint: 'pong-api',
+      payload: {
+        type: 'create_game',
+        mode: 'remote',
+        alias: alias1,
+        maxPlayers
+      }
+    }));
   };
 
   joinGamePageBtn.onclick = () => {
     remoteSubmode = 'join';
+    const alias1 = remoteAliasInput.value.trim();
+    if (!alias1) {
+      alert("Please enter your alias");
+      return;
+    }
+    (window as any)._joinAlias = alias1;
     showOnly(gameList);
     loadAvailableGames();
-  };
-
-  backFromGameListBtn.onclick = () => {
-    showOnly(remoteOptions);
   };
 
   startBtn.onclick = () => {
@@ -75,39 +91,25 @@ export function setupMenu(pong: Pong) {
       return;
     }
 
-    showOnly(canvas);
-    canvas.style.display = 'block';
-
     if (selectedMode === 'local') {
+      showOnly(canvas);
+      canvas.style.display = 'block';
+
       pong.socket?.send(JSON.stringify({
         target_endpoint: 'pong-api',
         payload: {
-        type: 'create_game',
-        mode: 'local',
-        players: [alias1, alias2]
-        }
-        }));
-    } else if (remoteSubmode === 'create') {
-      pong.socket?.send(JSON.stringify({
-        target_endpoint: 'pong-api',
-        payload: {
-        type: 'create_game',
-        alias: alias1,
-        }
-      }));
-    } else if (remoteSubmode === 'join') {
-      pong.socket?.send(JSON.stringify({
-        target_endpoint: 'pong-api',
-        payload: {
-        type: 'join_game',
-        alias: alias1,
-        gameId: joinGameId
+          type: 'create_game',
+          mode: 'local',
+          players: [alias1, alias2]
         }
       }));
     }
-
-    // pong.initializeGame();
   };
+
+  backFromGameListBtn.onclick = () => showOnly(remoteOptions);
+  backFromRemoteOptionsBtn.onclick = () => showOnly(menu);
+  backFromCreateSettingsBtn.onclick = () => showOnly(remoteOptions);
+  backFromAliasBtn.onclick = () => showOnly(menu);
 
   function showOnly(elem: HTMLElement) {
     document.querySelectorAll('.screen').forEach(div => {
@@ -119,6 +121,4 @@ export function setupMenu(pong: Pong) {
   function loadAvailableGames() {
     pong.socket?.send(JSON.stringify({ type: 'list_games' }));
   }
-
-  // Optional: pong.socket.onmessage handler could listen for game list and render it into #availableGamesList
 }

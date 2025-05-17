@@ -1,4 +1,4 @@
-import {PongMessage, PongErrorData, KeyboardInputData} from './PongMessages';
+import {PongMessage, PongErrorData, KeyboardInputData, LocalGame} from './PongMessages';
 import { connectedUsers } from '../../websocket/WebSocket';
 import { PongGame } from './PongGame';
 
@@ -8,15 +8,15 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
     console.error("payload:", payload);
 
     // The payload is already parsed in MessageHandler.ts
-    const message: PongMessage = {
-      type: payload.type,
-      pong_data: payload.pong_data,
-    };
+    // const message: PongMessage = {
+    //   type: payload.type,
+    //   pong_data: payload.pong_data,
+    // };
 
-    
-    switch (message.type) {
+    const message: PongMessage = payload;    
+    switch (payload.type) {
       case 'create_game':
-        handleCreategame(senderUsername);
+        handleCreategame(senderUsername, payload);
         break;
       default:
         sendErrorMessage(senderUsername, `Unknown message type: ${message.type}`, 4001);
@@ -57,12 +57,19 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
 /************** ajehles Methods  *********************/
 /*****************************************************/
 
-function handleCreategame(senderUsername: string): void {
+function handleCreategame(senderUsername: string, pong_data: LocalGame): void {
   
   for (const [username, socket] of connectedUsers.entries()) {
     if (socket.readyState !== WebSocket.OPEN) continue;
 
-    const game = new PongGame(socket);
+    console.log(pong_data);
+    if(pong_data.mode === 'local')
+      console.log("LOCAL");
+    if(pong_data.mode === 'local')
+      console.log("REMOTE");
+    else
+      console.log("NO LOCAL");
+
 
 
   }

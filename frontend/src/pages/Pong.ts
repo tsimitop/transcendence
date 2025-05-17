@@ -13,7 +13,7 @@ import { setupMenu } from './PON/PongMenu';
 
 
 export class Pong extends Component {
-  public socket: WebSocket | null = null; // public????
+  public socket: WebSocket | null = null;
 
   constructor(
     childrenString: ChildrenStringType,
@@ -53,7 +53,7 @@ export class Pong extends Component {
   
     this.socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log('Received from backend:', data);
+      console.log('[[[[[[[Received from backend]]]]]]]:', data);
     };
   
     this.socket.onclose = (event) => {

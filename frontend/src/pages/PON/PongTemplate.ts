@@ -35,8 +35,10 @@ export function getPongHTML(theme: string): string {
       <!-- Remote Option -->
       <div id="remoteOptionScreen" class="screen">
         <h2>Remote Game Options</h2>
+        <input id="remoteAliasInput" placeholder="Your alias" />
         <button id="createGameBtn">Create New Game</button>
         <button id="joinGamePageBtn">Join Existing Game</button>
+        <button id="backFromRemoteOptionsBtn">Back</button>
       </div>
 
       <!-- Game List Page -->
@@ -52,8 +54,8 @@ export function getPongHTML(theme: string): string {
         <label>
           Mode:
           <select id="ModeSelect">
-          <option value="VS">VS</option>
-          <option value="Tournament">Tournament</option>
+            <option value="VS">VS</option>
+            <option value="Tournament">Tournament</option>
           </select>
         </label>
         <label>
@@ -63,7 +65,8 @@ export function getPongHTML(theme: string): string {
             <option value="4">4</option>
           </select>
         </label>
-        <button id="confirmCreateBtn">Next</button>
+        <button id="createGameConfirmBtn">Create Game</button>
+        <button id="backFromCreateSettingsBtn">Back</button>
       </div>
 
       <!-- Alias Entry -->
@@ -72,6 +75,7 @@ export function getPongHTML(theme: string): string {
         <input id="player1Input" placeholder="Your alias" />
         <input id="player2Input" placeholder="Player 2 alias" style="display: none;" />
         <button id="startGameBtn">Start Game</button>
+        <button id="backFromAliasBtn">Back</button>
       </div>
 
       <!-- Game Canvas -->
