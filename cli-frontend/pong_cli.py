@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 import aiohttp
 from aiohttp import ClientTimeout, TCPConnector, ClientSession
 
+PING_MSG = '{"target_endpoint": "ping", "payload": ""}'
 
 class BackendClient:
     def __init__(self, username: str, password: str, url: str) -> None:
@@ -70,7 +71,7 @@ class BackendClient:
             # Connect to the websocket server
             _websocket_handler = tg.create_task(self.handle_websocket())
             _ws_sender = tg.create_task(send_messages_from_queue())
-        raise Exception("network ended")
+        raise GracefulExit("network ended")
         
     async def handle_websocket(self):
         """Receive messages from the websocket server"""
@@ -324,8 +325,53 @@ class PongCli:
             game_result = self.game_screen(game_id)
             # show game result
             self.show_game_result(game_result)
-        raise Exception(f"gui cancelled")
+        raise GracefulExit(f"gui cancelled")
 
+    def print_at(self, y: int, x: int, text: str) -> None:
+        """
+        Print text at the given coordinates (y, x).
+        """
+        max_y, max_x = self.screen_size
+        if y < 0 or y >= max_y or x < 0 or x >= max_x:
+            raise ValueError(f"Coordinates out of bounds: ({y}, {x})")
+        self.stdscr.clear()
+        self.stdscr.addstr(y, x, text)
+        self.stdscr.refresh()
+
+    async def text_input(self, y = 0, x = 0, msg = "Enter text:") -> str:
+        self.print_at(y, x, msg)
+        result = ""
+        while True:
+            key = self.stdscr.getch()
+            if key == curses.ERR:
+                await asyncio.sleep(0.1)
+                continue
+            elif key == ord('\n'):
+                return result
+            elif key in (curses.KEY_BACKSPACE, ord('\b'), ord('\x7f')):
+                result = result[:-1]
+            else:
+                result += chr(key)
+            self.print_at(y, x, f"{msg} {result}")
+    
+    async def show_error(self, error_msg: str):
+        self.stdscr.clear()
+        self.stdscr.addstr(0, 0, "An error occured:")
+        self.stdscr.addstr(3, 0, error_msg)
+        self.stdscr.addstr(6, 0, "Press q to return")
+        self.stdscr.refresh()
+        await self.wait_until_input("q")
+
+    async def wait_until_input(self, input_key: Optional[str] = None) -> str:
+        while True:
+            key = self.stdscr.getch()
+            if key == curses.ERR:
+                await asyncio.sleep(0.25)
+            elif input_key and key == ord(input_key):
+                return chr(key)
+            elif not input_key:
+                return chr(key)
+  
     @property
     def screen_size(self) -> Tuple[int, int]:
         """Get max values for (y, x)"""
@@ -364,21 +410,12 @@ class PongCli:
                 await asyncio.sleep(0.5)
                 return ""
 
-    def print_at(self, y: int, x: int, text: str) -> None:
-        """
-        Print text at the given coordinates (y, x).
-        """
-        max_y, max_x = self.screen_size
-        if y < 0 or y >= max_y or x < 0 or x >= max_x:
-            raise ValueError(f"Coordinates out of bounds: ({y}, {x})")
-        self.stdscr.clear()
-        self.stdscr.addstr(y, x, text)
-        self.stdscr.refresh()
-
     async def debug_screen(self) -> None:
         """print websocket messages"""
+        await self.client.outgoing_messages.put(PING_MSG)
+        await asyncio.sleep(0.3)
         messages = []
-        self.print_at(0, 0, "Debug mode: Press 'q' to quit")
+        self.print_at(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")
         while True:
             # get messages from the queue
             while not self.client.incoming_messages.empty():
@@ -388,7 +425,7 @@ class PongCli:
                     messages.pop(0)
             if messages:
                 self.stdscr.clear()
-                self.stdscr.addstr(0, 0, "Debug mode: Press 'q' to quit, 's' to dump a msg on the ws")
+                self.stdscr.addstr(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")
                 self.stdscr.addstr(1, 0, "WebSocket messages:")
                 self.stdscr.addstr(2, 0, "---------------------")
                 for index, message in enumerate(messages):
@@ -398,12 +435,17 @@ class PongCli:
                     self.stdscr.addstr(index, 0, f"Message {message}")
                 self.stdscr.refresh()
             
-            key = self.stdscr.getch()
-            if key == curses.ERR:
-                await asyncio.sleep(0.25)
-            elif key == ord('q'):
+            key = await self.wait_until_input()
+            if key == 'q':
                 break
-    
+            elif key == 'i':
+                input_str = await self.text_input()
+                try:
+                    await self.client.outgoing_messages.put(input_str)
+                except Exception as error:
+                    await self.show_error(str(error))
+                self.print_at(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")
+
     def game_screen(self, game_id: str) -> dict[str, Any]:
         """
         Screen which shows the game. Returns the game result.
@@ -428,6 +470,7 @@ class PongCli:
         except Exception as e:
             print(f"Error during cleanup: {e}", file=sys.stderr)
 
+class GracefulExit(Exception): pass
 
 async def main():
     # TODO: move network on separate thread
@@ -445,6 +488,10 @@ async def main():
             _client_task = tg.create_task(game_client.start())
             # run the terminal UI
             _ui_task = tg.create_task(terminal_ui.run())
+    except* Exception as exc_group:
+        for exc in exc_group.exceptions:
+            if not isinstance(exc, GracefulExit):
+                raise
     finally:
         terminal_ui.cleanup()
         await game_client.close()
