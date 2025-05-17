@@ -1,5 +1,5 @@
 // receives the messages from the websocket handler and calls the appropriate functions (chat or pong game)
-import { handleChatPayload } from "../chat";
+import { handleChatPayload } from "../api/chat/ChatMsgHandler";
 import { handlePongPayload } from "../api/pong/PongMsgHandler";
 
 

@@ -116,7 +116,7 @@ fastify.get(
       user.isSignedIn = true;
 
       const jwtRefreshToken = signJwtRefreshToken(user.id);
-      const jwtAccessToken = signJwtAccessToken(user.id, user.username);
+      const jwtAccessToken = signJwtAccessToken(user.id);
 
       const saltRounds = 10;
       const salt = await bcrypt.genSalt(saltRounds);

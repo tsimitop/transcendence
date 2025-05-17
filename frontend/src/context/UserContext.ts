@@ -1,5 +1,6 @@
 import { CADDY_SERVER } from "../constants";
 import StateManager from "../models/StateManager";
+import { maybeStopChat, maybeStartChat } from "../main";
 
 export type UserStateType = {
   id: string;
@@ -46,6 +47,18 @@ class UserContext extends StateManager<UserStateType> {
       console.log(error);
       return null;
     }
+  }
+  public override setState(newState: UserStateType) {
+	const wasSignedIn = this.state.isSignedIn;
+	super.setState(newState);
+	const willBeSignedIn = newState.isSignedIn;
+	
+	if (!willBeSignedIn && wasSignedIn) {
+	  maybeStopChat();
+	}
+	if (willBeSignedIn && !wasSignedIn && newState.jwtAccessToken) {
+	  maybeStartChat();
+	}
   }
 }
 
