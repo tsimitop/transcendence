@@ -4,13 +4,14 @@ import curses
 import time
 import sys
 import os
+import json
 import asyncio
 import ssl 
 from pprint import pprint
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import aiohttp
-from aiohttp import ClientTimeout, TCPConnector
+from aiohttp import ClientTimeout, TCPConnector, ClientSession
 
 
 class BackendClient:
@@ -21,7 +22,77 @@ class BackendClient:
         self.session: Optional[aiohttp.ClientSession] = None
         self.access_token: Optional[str] = None
         self.user_data: Optional[Dict[str, Any]] = None
-        self.is_authenticated: bool = False
+        self.websocket_client = None
+        self.is_connected: asyncio.Event = asyncio.Event()
+        self.ws = None
+        self.incoming_messages = asyncio.Queue()
+        self.outgoing_messages = asyncio.Queue()
+    
+    async def __aenter__(self) -> "BackendClient":
+        """Enter the context manager"""
+        try:
+            await self.start()
+        except Exception as e:
+            await self.close()
+            raise e
+        pprint(f"Connected to backend at {self.url}")
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Exit the context manager"""
+        await self.close()
+
+    async def start(self):
+        """Start the backend client and authenticate"""
+        # Initialize the aiohttp session
+        await self.connect()
+        # Authenticate with the backend server
+        await self.authenticate()
+        assert self.is_connected, "Failed to authenticate with the backend server"
+        async def keep_token_updated():
+            while True:
+                # Check if the access token is still valid
+                if not await self.validate_auth_status():
+                    raise ConnectionError("We're not authenticated anymore")
+                await asyncio.sleep(20)
+
+        async def send_messages_from_queue():
+            while not self.ws:
+                await asyncio.sleep(0.1)
+            while True:
+                message = await self.outgoing_messages.get()
+                if message is None:
+                    break
+                await self.ws.send_str(message)
+        
+        async with asyncio.TaskGroup() as tg:
+            _update_token_task = tg.create_task(keep_token_updated())
+            # Connect to the websocket server
+            _websocket_handler = tg.create_task(self.handle_websocket())
+            _ws_sender = tg.create_task(send_messages_from_queue())
+        raise Exception("network ended")
+        
+    async def handle_websocket(self):
+        """Receive messages from the websocket server"""
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        connector = TCPConnector(ssl=ssl_context)
+        async with ClientSession(connector=connector) as session:
+            async with session.ws_connect(f'{self.url}/ws') as ws:
+                self.ws = ws
+                self.incoming_messages.put_nowait("init")
+                async for msg in ws:
+                    if msg.type == aiohttp.WSMsgType.TEXT:
+                        if msg.data == 'close':
+                            await ws.close()
+                            break
+                        else:
+                            await self.incoming_messages.put(msg.data)
+                    elif msg.type == aiohttp.WSMsgType.ERROR:
+                        break
+        self.ws = None
+        raise Exception("websocket closed")
 
     async def connect(self) -> aiohttp.ClientSession:
         """Initialize aiohttp client session with cookie support"""
@@ -43,14 +114,13 @@ class BackendClient:
 
     async def authenticate(self) -> None:
         """Authenticate with the backend server using provided credentials"""
-        await self.connect()
         
         # Prepare the sign-in request payload
         payload: Dict[str, str] = {
             "usernameOrEmail": self.username,
             "password": self.password
         }
-        
+
         # Make the authentication request
         assert self.session is not None
         async with self.session.post(
@@ -73,9 +143,10 @@ class BackendClient:
             # Store user data and token for future requests
             self.user_data = data["user"]
             self.access_token = data["jwtAccessToken"]
-            self.is_authenticated = self.user_data["isSignedIn"]
+            if self.user_data["isSignedIn"]:
+                self.is_connected.set()
             
-            if self.is_authenticated:
+            if self.is_connected.is_set():
                 pprint(f"Successfully logged in as {self.user_data['username']}")
     
     async def validate_2fa(self, user_data: Dict[str, Any], code_2fa: str):
@@ -101,7 +172,7 @@ class BackendClient:
             # Store the authentication info
             self.user_data = user_data
             self.access_token = data["jwtAccessToken"]
-            self.is_authenticated = True
+            self.is_connected.set()
             
             pprint(f"Successfully authenticated with 2FA as {user_data.get('username')}")
                     
@@ -159,45 +230,172 @@ class BackendClient:
                     "isSignedIn": data.get("isSignedIn", False)
                 })
         
-            self.is_authenticated = data.get("isSignedIn", False)
-            return self.is_authenticated
-    
+            if data.get("isSignedIn", False):
+                self.is_connected.set()
+            else:
+                self.is_connected.clear() 
+            assert self.is_connected.is_set(), "Failed to refresh access token"
+            return self.is_connected.is_set()
+
     async def close(self) -> None:
         """Close the aiohttp session"""
         if self.session and not self.session.closed:
             await self.session.close()
+        self.is_connected.clear()
+        self.session = None
+        pprint("Closed backend client session")
 
-class PongCli(BackendClient):
-    def __init__(self, *, username: str, password: str, url: str):
-        BackendClient.__init__(self, username=username, password=password, url=url)
+
+class GameClient(BackendClient):
+    """Wrapper around the backend client to handle game-specific requests"""
+    def __init__(self, username: str, password: str, url: str) -> None:
+        super().__init__(username, password, url)
+        self.game_id: Optional[str] = None
+        self.game_data: Optional[Dict[str, Any]] = None
+
+    @property
+    def user_id(self) -> str:
+        """Get the user ID from the user data"""
+        if self.user_data:
+            return self.user_data.get("username", "")
+        return ""
 
     @classmethod
-    def from_login(cls, url: Optional[str] = None) -> "PongCli":
+    def from_login(cls, url: Optional[str] = None) -> "GameClient":
         # show login screen to enter username and password
         username = input("Enter email/username: ")
         password = input("Enter password: ")
+        username, password = "anonym", "Anonym99!"
         if url is None:
             url = input("Enter backend URL: ")
         assert url, "Backend URL cannot be empty"
         assert username and password, "Username and password cannot be empty"
         return cls(username=username, password=password, url=url)
+    
+    async def __aenter__(self) -> 'GameClient':
+        await super().__aenter__()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        await super().__aexit__(exc_type, exc_val, exc_tb)
+
+# curses refresh decorator
+def refresh(func):
+    def wrapper(self, *args, **kwargs):
+        try:
+            result = func(self, *args, **kwargs)
+            self.stdscr.refresh()
+            return result
+        except Exception as e:
+            self.cleanup()
+            raise e
+    return wrapper
+
+
+class PongCli:
+    def __init__(self, game_client: GameClient):
+        assert game_client.is_connected, "Backend client is not authenticated"
+        self.client: GameClient = game_client
+        self.stdscr = curses.initscr()
+        curses.noecho()
+        curses.cbreak()
+        curses.curs_set(False)  # Hide the cursor
+        self.stdscr.keypad(True)
+        self.stdscr.nodelay(True)  # Non-blocking input
+        self.stdscr.clear()
+        self.stdscr.refresh()
 
     async def run(self):
-        await self.connect()
+        await asyncio.wait_for(self.client.is_connected.wait(), timeout=5)
+        await self.client.outgoing_messages.put(json.dumps({"target_endpoint": "ping", "payload": {}}))
         while True:
             # find new game
-            game_id = self.new_game_screen()
+            game_id = await self.new_game_screen()
+            if not game_id:
+                break
             # run game
             game_result = self.game_screen(game_id)
             # show game result
             self.show_game_result(game_result)
+        raise Exception(f"gui cancelled")
 
-    def new_game_screen(self) -> str:
+    @property
+    def screen_size(self) -> Tuple[int, int]:
+        """Get max values for (y, x)"""
+        return curses.LINES - 1, curses.COLS - 1
+
+    async def new_game_screen(self) -> str:
         """
         Screen which lists available matches and allows to create a new match.
         Returns the game id of the match the user wants to join/created.
         """
-        return ""
+        def draw_menu():
+            self.stdscr.clear()
+            self.stdscr.addstr(0, 0, f"Welcome to Pong CLI {self.client.user_id}!")
+            self.stdscr.addstr(1, 0, "Press 'c' to create a new game")
+            self.stdscr.addstr(2, 0, "Press 'j' to join an existing game")
+            self.stdscr.addstr(3, 0, "Press 'd' to enter debug mode")
+            self.stdscr.addstr(4, 0, "Press 'q' to quit")
+            self.stdscr.refresh()
+        draw_menu()
+        while True:
+            key = self.stdscr.getch()
+            if key == curses.ERR:
+                await asyncio.sleep(0.1)
+            elif key == ord('c'):
+                # create new game
+                self.print_at(0, 0, "Creating new game...")
+            elif key == ord('j'):
+                # join existing game
+                self.print_at(0, 0, "Joining existing game...")
+            elif key == ord('d'):
+                await self.debug_screen()
+                draw_menu()
+            elif key == ord('q'):
+                # quit
+                self.print_at(0, 0, "Quitting...")
+                await asyncio.sleep(0.5)
+                return ""
+
+    def print_at(self, y: int, x: int, text: str) -> None:
+        """
+        Print text at the given coordinates (y, x).
+        """
+        max_y, max_x = self.screen_size
+        if y < 0 or y >= max_y or x < 0 or x >= max_x:
+            raise ValueError(f"Coordinates out of bounds: ({y}, {x})")
+        self.stdscr.clear()
+        self.stdscr.addstr(y, x, text)
+        self.stdscr.refresh()
+
+    async def debug_screen(self) -> None:
+        """print websocket messages"""
+        messages = []
+        self.print_at(0, 0, "Debug mode: Press 'q' to quit")
+        while True:
+            # get messages from the queue
+            while not self.client.incoming_messages.empty():
+                message = await self.client.incoming_messages.get()
+                messages.append(message)
+                if len(messages) > curses.LINES - 1:
+                    messages.pop(0)
+            if messages:
+                self.stdscr.clear()
+                self.stdscr.addstr(0, 0, "Debug mode: Press 'q' to quit")
+                self.stdscr.addstr(1, 0, "WebSocket messages:")
+                self.stdscr.addstr(2, 0, "---------------------")
+                for index, message in enumerate(messages):
+                    index += 3
+                    if index >= curses.LINES - 1:
+                        break
+                    self.stdscr.addstr(index, 0, f"Message {message}")
+                self.stdscr.refresh()
+            
+            key = self.stdscr.getch()
+            if key == curses.ERR:
+                await asyncio.sleep(0.25)
+            elif key == ord('q'):
+                break
     
     def game_screen(self, game_id: str) -> dict[str, Any]:
         """
@@ -212,25 +410,38 @@ class PongCli(BackendClient):
         pprint(f"Game result:\n{game_result}")
         input("Press enter to continue with new game...")
 
+    def cleanup(self) -> None:
+        try:
+            self.stdscr.clear()
+            self.stdscr.refresh()
+            curses.nocbreak()
+            self.stdscr.keypad(False)
+            curses.echo()
+            curses.endwin()
+        except Exception as e:
+            print(f"Error during cleanup: {e}", file=sys.stderr)
+
 
 async def main():
     # TODO: move network on separate thread
     cli_args = sys.argv[1:]
     if len(cli_args) != 1:
-        print("Usage: ./pong_cli.py <backend_url>")
+        print("Usage: ./pong_cli.py <backend_url>", file=sys.stderr)
         sys.exit(1)
     
     backend_url = cli_args[0]
-    terminal_ui = PongCli.from_login(backend_url)
+    game_client = GameClient.from_login(backend_url)
+    terminal_ui = PongCli(game_client)
     try:
-        # Authenticate before starting the application
-        await terminal_ui.authenticate()
-        await terminal_ui.run()
+        async with asyncio.TaskGroup() as tg:
+            # run the game client
+            _client_task = tg.create_task(game_client.start())
+            # run the terminal UI
+            _ui_task = tg.create_task(terminal_ui.run())
     finally:
-    # Ensure we properly close the session on exit
-        await terminal_ui.close()
-    
-    asyncio.run(run_with_auth())
+        terminal_ui.cleanup()
+        await game_client.close()
+        print("Exiting Pong CLI...")
 
 if __name__ == "__main__":
     asyncio.run(main())
