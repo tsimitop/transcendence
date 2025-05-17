@@ -74,12 +74,20 @@ class BackendClient:
         
     async def handle_websocket(self):
         """Receive messages from the websocket server"""
+        while not self.access_token:
+            await asyncio.sleep(1)
+        if not self.access_token:
+            raise ConnectionError("Access token is required for WebSocket connection")
+
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
         connector = TCPConnector(ssl=ssl_context)
+        
+        websocket_url = f'{self.url}/ws?token={self.access_token}'
+        
         async with ClientSession(connector=connector) as session:
-            async with session.ws_connect(f'{self.url}/ws') as ws:
+            async with session.ws_connect(websocket_url) as ws:
                 self.ws = ws
                 self.incoming_messages.put_nowait("init")
                 async for msg in ws:
@@ -307,7 +315,6 @@ class PongCli:
 
     async def run(self):
         await asyncio.wait_for(self.client.is_connected.wait(), timeout=5)
-        await self.client.outgoing_messages.put(json.dumps({"target_endpoint": "ping", "payload": {}}))
         while True:
             # find new game
             game_id = await self.new_game_screen()
