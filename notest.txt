@@ -11,3 +11,15 @@ WIN✅
 
 
 
+
+
+Enter alias and choose Game :
+
+local or remote?
+spiel erstellen oder spiel beitreten
+
+localGame - > second player alias
+remoteGame - > search for other player
+tournamentGame - > 4 player fix, wait for 4 other players
+
+

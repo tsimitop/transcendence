@@ -3,17 +3,20 @@ import { connectedUsers } from '../../websocket/WebSocket';
 
 export function handlePongPayload(senderUsername: string, payload: any): void {
   try {
+    console.error("|\n| THIS IS AN INPUT\nV");
+    console.error("payload:", payload);
+    // console.error("message:", message.type);
     // The payload is already parsed in MessageHandler.ts
     const message: PongMessage = {
       type: payload.type,
       pong_data: payload.pong_data,
     };
 
-    console.error("|\n| THIS IS AN INPUT\nV");
-    console.error("payload:", payload);
-    console.error("message:", message.type);
     
     switch (message.type) {
+      case 'select_mode':
+        handleSelectMode(senderUsername);
+        break;
       case 'getGames':
         handleGetGames(senderUsername);
         break;
@@ -58,6 +61,25 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
 /*****************************************************/
 /************** ajehles Methods  *********************/
 /*****************************************************/
+
+function handleSelectMode(senderUsername: string): void {
+  
+  for (const [username, socket] of connectedUsers.entries()) {
+    if (socket.readyState !== WebSocket.OPEN) continue;
+    
+    // console.error(username);
+    socket.send(JSON.stringify({
+      target_endpoint: 'pong-api', // <== match what frontend expects
+      payload: {
+        type: 'match_found',
+        pong_data: {
+          opponent: senderUsername,
+          match_id: 'abc123'
+        }
+      }
+    }));
+  }
+}
 
 function handleGetGames(senderUsername: string): void {
   

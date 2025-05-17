@@ -45,7 +45,7 @@ private frontendBall: PongGameBall;
 
 
     start() {
-        this.sendMessage("getGames");
+        // this.sendMessage("getGames");
         // matchmaking
 
     //     this.socket.send(JSON.stringify({
