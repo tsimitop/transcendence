@@ -1,3 +1,5 @@
+import { Pong } from "../Pong";
+
 export function setupMenu(pong: Pong) {
   const get = (id: string) => document.getElementById(id)!;
 
@@ -15,6 +17,11 @@ export function setupMenu(pong: Pong) {
   const confirmCreateBtn = get('confirmCreateBtn');
   const backFromGameListBtn = get('backFromGameListBtn');
   const startBtn = get('startGameBtn');
+
+  const maxPlayersSelect = get('maxPlayersSelect') as HTMLSelectElement;
+  // const modeSelect = get('ModeSelect') as HTMLSelectElement;
+  // const tournamentOption = [...modeSelect.options].find(opt => opt.value === "Tournament")!;
+  
 
   const alias1Input = get('player1Input') as HTMLInputElement;
   const alias2Input = get('player2Input') as HTMLInputElement;
@@ -43,9 +50,8 @@ export function setupMenu(pong: Pong) {
   };
 
   confirmCreateBtn.onclick = () => {
-    const maxPlayers = (get('maxPlayersSelect') as HTMLSelectElement).value;
-    const visibility = (get('visibilitySelect') as HTMLSelectElement).value;
-    createSettingsData = { maxPlayers, visibility };
+    const maxPlayers = maxPlayersSelect;
+    createSettingsData = { maxPlayers };
     showOnly(alias);
     alias2Input.style.display = 'none';
   };
@@ -74,25 +80,33 @@ export function setupMenu(pong: Pong) {
 
     if (selectedMode === 'local') {
       pong.socket?.send(JSON.stringify({
-        type: 'start_game',
+        target_endpoint: 'pong-api',
+        payload: {
+        type: 'create_game',
         mode: 'local',
         players: [alias1, alias2]
-      }));
+        }
+        }));
     } else if (remoteSubmode === 'create') {
       pong.socket?.send(JSON.stringify({
+        target_endpoint: 'pong-api',
+        payload: {
         type: 'create_game',
         alias: alias1,
-        settings: createSettingsData
+        }
       }));
     } else if (remoteSubmode === 'join') {
       pong.socket?.send(JSON.stringify({
+        target_endpoint: 'pong-api',
+        payload: {
         type: 'join_game',
         alias: alias1,
         gameId: joinGameId
+        }
       }));
     }
 
-    pong.initializeGame();
+    // pong.initializeGame();
   };
 
   function showOnly(elem: HTMLElement) {

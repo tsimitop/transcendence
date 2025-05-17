@@ -50,17 +50,17 @@ export function getPongHTML(theme: string): string {
       <div id="createSettingsScreen" class="screen">
         <h2>Game Settings</h2>
         <label>
+          Mode:
+          <select id="ModeSelect">
+          <option value="VS">VS</option>
+          <option value="Tournament">Tournament</option>
+          </select>
+        </label>
+        <label>
           Max Players:
           <select id="maxPlayersSelect">
             <option value="2">2</option>
             <option value="4">4</option>
-          </select>
-        </label>
-        <label>
-          Game Visibility:
-          <select id="visibilitySelect">
-            <option value="public">Public</option>
-            <option value="private">Private</option>
           </select>
         </label>
         <button id="confirmCreateBtn">Next</button>

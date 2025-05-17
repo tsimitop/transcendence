@@ -1,11 +1,12 @@
 import {PongMessage, PongErrorData, KeyboardInputData} from './PongMessages';
 import { connectedUsers } from '../../websocket/WebSocket';
+import { PongGame } from './PongGame';
 
 export function handlePongPayload(senderUsername: string, payload: any): void {
   try {
     console.error("|\n| THIS IS AN INPUT\nV");
     console.error("payload:", payload);
-    // console.error("message:", message.type);
+
     // The payload is already parsed in MessageHandler.ts
     const message: PongMessage = {
       type: payload.type,
@@ -14,14 +15,8 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
 
     
     switch (message.type) {
-      case 'select_mode':
-        handleSelectMode(senderUsername);
-        break;
-      case 'getGames':
-        handleGetGames(senderUsername);
-        break;
-      case 'input':
-        handleKeyboardInput(senderUsername, message.pong_data);
+      case 'create_game':
+        handleCreategame(senderUsername);
         break;
       default:
         sendErrorMessage(senderUsername, `Unknown message type: ${message.type}`, 4001);
@@ -62,43 +57,35 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
 /************** ajehles Methods  *********************/
 /*****************************************************/
 
-function handleSelectMode(senderUsername: string): void {
+function handleCreategame(senderUsername: string): void {
   
   for (const [username, socket] of connectedUsers.entries()) {
     if (socket.readyState !== WebSocket.OPEN) continue;
-    
-    // console.error(username);
-    socket.send(JSON.stringify({
-      target_endpoint: 'pong-api', // <== match what frontend expects
-      payload: {
-        type: 'match_found',
-        pong_data: {
-          opponent: senderUsername,
-          match_id: 'abc123'
-        }
-      }
-    }));
+
+    const game = new PongGame(socket);
+
+
   }
 }
 
-function handleGetGames(senderUsername: string): void {
+// function handleGetGames(senderUsername: string): void {
   
-  for (const [username, socket] of connectedUsers.entries()) {
-    if (socket.readyState !== WebSocket.OPEN) continue;
+//   for (const [username, socket] of connectedUsers.entries()) {
+//     if (socket.readyState !== WebSocket.OPEN) continue;
     
-    // console.error(username);
-    socket.send(JSON.stringify({
-      target_endpoint: 'pong-api', // <== match what frontend expects
-      payload: {
-        type: 'match_found',
-        pong_data: {
-          opponent: senderUsername,
-          match_id: 'abc123'
-        }
-      }
-    }));
-  }
-}
+//     // console.error(username);
+//     socket.send(JSON.stringify({
+//       target_endpoint: 'pong-api', // <== match what frontend expects
+//       payload: {
+//         type: 'match_found',
+//         pong_data: {
+//           opponent: senderUsername,
+//           match_id: 'abc123'
+//         }
+//       }
+//     }));
+//   }
+// }
 
 
   
