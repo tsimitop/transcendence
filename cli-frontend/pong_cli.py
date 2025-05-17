@@ -388,7 +388,7 @@ class PongCli:
                     messages.pop(0)
             if messages:
                 self.stdscr.clear()
-                self.stdscr.addstr(0, 0, "Debug mode: Press 'q' to quit")
+                self.stdscr.addstr(0, 0, "Debug mode: Press 'q' to quit, 's' to dump a msg on the ws")
                 self.stdscr.addstr(1, 0, "WebSocket messages:")
                 self.stdscr.addstr(2, 0, "---------------------")
                 for index, message in enumerate(messages):
