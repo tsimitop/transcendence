@@ -29,3 +29,5 @@ secrets
 *.crt
 *.key
 .direnv
+venv
+.venv

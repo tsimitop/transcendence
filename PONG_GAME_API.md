@@ -134,7 +134,6 @@ Which X is good? Depends on latency of the connection i guess?
       "id": "string",
       "status": "playing",
       "ball": {
-        // frontend has to calculate the direction of the ball
         // from the previous coordinates and the new coordinates
         // ball speed is constant
         "x": "0.000",  // floats as string

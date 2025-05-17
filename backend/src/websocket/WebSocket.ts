@@ -40,6 +40,7 @@ export function startWebSocketServer(server: any) {
     // Reject connection if no token
     if (!token) {
       socket.close(4001, 'Missing Token');
+      console.error("unauthenticated ws request")
       return;
     }
 
