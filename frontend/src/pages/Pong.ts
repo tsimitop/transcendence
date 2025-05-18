@@ -13,7 +13,9 @@ import { setupMenu } from './PON/PongMenu';
 
 
 export class Pong extends Component {
-  public socket: WebSocket | null = null; // public????
+  public socket: WebSocket | null = null;
+	private reconnectAttempts = 0;
+	private readonly maxReconnectAttempts = 5;
 
   constructor(
     childrenString: ChildrenStringType,
@@ -22,51 +24,6 @@ export class Pong extends Component {
     super(childrenString, ...childElements);
   }
 
-  /********************************************************/
-  initializeGame() {
-    const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
-    if (!canvas) {
-      console.error("Canvas not found in initializeGame!");
-      return;
-    }
-  
-    if (!this.socket) {
-      console.error("WebSocket not initialized!");
-      return;
-    }
-  
-    const game = new PongGame(canvas, this.socket);
-    game.start();
-  }
-  
-  /********************************************************/
-
-  initializeWebSocket(onOpenCallback?: () => void) {
-    const token = localStorage.getItem('access_token');
-    const socketUrl = `wss://localhost:4443/ws?token=${token}`;
-    this.socket = new WebSocket(socketUrl);
-  
-    this.socket.onopen = () => {
-      console.log('WebSocket connected');  
-      if (onOpenCallback) onOpenCallback(); // ✅ call back to start game
-    };
-  
-    this.socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('Received from backend:', data);
-    };
-  
-    this.socket.onclose = (event) => {
-      console.log('WebSocket closed', event);
-      this.socket = null;
-    };
-  
-    this.socket.onerror = (error) => {
-      console.error('WebSocket error', error);
-    };
-  }
-  
-  /********************************************************/
   static create() {
     history.replaceState({ screen: 'menu' }, '', '');
   
@@ -88,17 +45,131 @@ export class Pong extends Component {
     PongInstance.insertChildren();
     PongInstance.classList.add("page");
   
-    PongInstance.initializeWebSocket(() => {
-      setupMenu(PongInstance);  // Mount UI handlers after WS connected
-    });
+  // Now connect socket and start the game logic
+  PongInstance.initSocket(); // socket connects here
+  // ✅ Wait until DOM is ready before setting up menu
+  setTimeout(() => {
+    const menu = document.getElementById('menuScreen');
+    if (menu) menu.style.display = 'flex'; // show the menu
+    else console.warn("menuScreen not found!");
+
+    setupMenu(PongInstance);
+  }, 0);
+
+  return PongInstance;
+  }
+
+  /********************************************************/
+  // initializeGame() {
+  //   const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
+  //   if (!canvas) {
+  //     console.error("Canvas not found in initializeGame!");
+  //     return;
+  //   }
   
-    return PongInstance;
+  //   if (!this.socket) {
+  //     console.error("WebSocket not initialized!");
+  //     return;
+  //   }
+  
+  //   const game = new PongGame(canvas, this.socket);
+  //   game.start();
+  // }
+  
+  /********************************************************/
+
+  // public initializeWebSocket(onOpenCallback?: () => void) {
+  public initSocket(retryCount = 0) :void {
+    const token = localStorage.getItem('access_token');
+
+	  // Retry a few times if token is not yet in localStorage
+	  if (!token) {
+      if (retryCount >= this.maxReconnectAttempts) {
+        console.error("Access token not found. Chat is disabled.");
+        // this.showSystemMessage("[Chat disabled: No token found]", "text-red-500");
+        return;
+      }
+    
+      console.warn(`Access token missing. Retrying in 500ms... (attempt ${retryCount + 1})`);
+      setTimeout(() => this.initSocket(retryCount + 1), 500);
+      return;
+      }
+
+
+    const socketUrl = `wss://localhost:4443/ws?token=${token}`;
+    this.socket = new WebSocket(socketUrl);
+  
+	  // Connection established
+	  this.socket.onopen = () => {
+      console.log("Connected to pong server.");
+      this.reconnectAttempts = 0;
+      // this.showSystemMessage("[Connected to server]", "text-green-500");
+      };
+  
+      this.socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log("Parsed message:", data);
+        } catch (e) {
+          console.error("Failed to parse JSON from backend:", e);
+        }
+      };
+      
+
+	  // Server closed connection
+	  this.socket.onclose = (event) => {
+      console.warn(`WebSocket closed (code: ${event.code}, reason: ${event.reason})`);
+      // this.tryReconnect();
+      };
+  
+    this.socket.onerror = (error) => {
+      console.error('WebSocket error', error);
+    };
   }
   
+  /********************************************************/
+
 }
 export default Pong;
 
 
+
+  // 	/**
+	//  * @brief Attempts to reconnect using exponential backoff.
+	//  */
+	// private tryReconnect(): void {
+	//   if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+	// 	console.error("Max reconnect attempts reached. Chat is permanently offline.");
+	// 	this.showSystemMessage("[Disconnected from server]", "text-red-500");
+	// 	return;
+	//   }
+  
+	//   const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 16000); // 1s, 2s, 4s... max 16s
+	//   console.warn(`Reconnecting in ${delay / 1000}s... (attempt ${this.reconnectAttempts + 1})`);
+	//   this.reconnectAttempts++;
+  
+	//   // Close socket if not already closed
+	//   if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
+	// 	this.socket.close();
+	// 	this.socket = null;
+	//   }
+  
+	//   setTimeout(() => this.initSocket(), delay);
+	// }
+  // 	/**
+	//  * @brief Displays a system message in the chat window.
+	//  * Used for events like connection status.
+	//  */
+	// private showSystemMessage(text: string, cssClass: string): void {
+	//   const msgBox = this.querySelector("#pong-messages");
+	//   if (msgBox) {
+	// 	const message = document.createElement("div");
+	// 	message.textContent = text;
+	// 	message.classList.add(cssClass, "text-center");
+	// 	msgBox.appendChild(message);
+	// 	msgBox.scrollTop = msgBox.scrollHeight;
+	//   }
+	// }
 
 
 

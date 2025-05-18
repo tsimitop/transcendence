@@ -1,8 +1,13 @@
 
+export interface LocalGame {
+    mode: string, 
+    players: [string, string]
+}
+
 
 export interface PongMessage {
     type: string;
-    pong_data: any;  // json data
+    pong_data?: any;  // json data
 }
 
 export interface KeyboardInputData {
