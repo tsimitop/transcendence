@@ -26,6 +26,9 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
       case 'create_game':
         handleCreateGame(senderUsername, payload);
         break;
+      case 'getGames':
+        handleGetGames(senderUsername);
+        break;
       default:
         sendErrorMessage(senderUsername, `Unknown message type: ${message.type}`, 4001);
         console.warn(`[PONG WS] Unknown message type: ${message.type}`);
@@ -41,10 +44,14 @@ function sendMessage(senderUsername: string, type: string, pong_data: any): void
         type: type,
         pong_data: pong_data,
     };
-    
+    const wrapped_msg: WebsocketApiRequest = {
+      target_endpoint: "pong-api",
+      payload: message
+    }
+
     const socket = connectedUsers.get(senderUsername);
     if (socket) {
-        socket.send(JSON.stringify(message));
+        socket.send(JSON.stringify(wrapped_msg));
     } else {
         console.debug(`[PONG WS] User ${senderUsername} not connected, cant send message`);
     }
@@ -132,7 +139,50 @@ function handleKeyboardInput(senderUsername: string, message: KeyboardInputData)
   // TODO: pass to engine
 
   // Handle keyboard input
-  console.debug(`[CHAT] Keyboard input from ${userId}: ${up ? 'UP' : 'DOWN'}`);
+  console.debug(`[PONG] Keyboard input from ${userId}: ${up ? 'UP' : 'DOWN'}`);
 }
 
+function handleGetGames(senderUsername: string): void {
+  console.debug(`[PONG] user ${senderUsername} requested games`);
+  
+  // dummy waiting game for testing the 'lobby'
+  // TODO: Implement return of actual waiting games list
+  const dummy_game: GameStateData = {
+    game: {
+      id: "game-123456",
+      status: "waiting",
+      ball: {
+        x: "0.0",
+        y: "0.0"
+      },
+      leftPaddle: {
+        topPoint: {
+          x: 0.05,
+          y: 0.35
+        },
+        height: 0.2
+      },
+      rightPaddle: {
+        topPoint: {
+          x: 0.95,
+          y: 0.40
+        },
+        height: 0.2
+      },
+      lastUpdateTime: Date.now(),
+      maxScore: 10,
+      scores: {
+        "player1": 3,
+        "player2": 5
+      },
+      countdown: 0
+    }
+  };
+  
+  // TODO add all games into this list, then pass the list to sendMessages
+  const waiting_games: GameStateData[] = [dummy_game];
+ 
+  sendMessage(senderUsername, 'game_states', waiting_games);
+  console.debug(`returning ${waiting_games.length} games`)
+}
 

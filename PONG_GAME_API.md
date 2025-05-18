@@ -49,11 +49,9 @@ Request:
 Response:
 ```json
 {
-  "games": [
-    // list of game_state of all games 
-    {
-      game_states
-    }
+  "type": "game_states",
+  "pong_data": [
+    "<list of game_state messages in waiting state", "...",
   ]
 }
 ```
@@ -93,7 +91,6 @@ game_state response or error
   "pong_data": {
     "userId": "string",
     "gameMode": "classic", // Optional: "classic", "speed", or "chaos"
-    "isPrivate": false,    // Optional: boolean
     "maxScore": 10         // Optional: number
   }
 }
@@ -134,7 +131,6 @@ Which X is good? Depends on latency of the connection i guess?
       "id": "string",
       "status": "playing",
       "ball": {
-        // frontend has to calculate the direction of the ball
         // from the previous coordinates and the new coordinates
         // ball speed is constant
         "x": "0.000",  // floats as string
@@ -149,9 +145,7 @@ Which X is good? Depends on latency of the connection i guess?
       },  // we interpret the paddle as 2D object (a line), which is the line on which the ball will bounce of, how its rendered in 3d is up to the frontend?
       // does this make sense?
       "rightPaddle": { ... },
-      "lastUpdateTime": 1234567890,
-      "gameMode": "classic",
-      "isPrivate": false,
+      "lastUpdateTime": 1234567890,  // creation date for waiting games
       "maxScore": 10,
       "scores": {
         "playerids...": int, //score
@@ -210,7 +204,6 @@ Standard Pong game with consistent ball speed.
 - **waiting**: Waiting for a second player to join
 - **countdown**: Countdown before the game starts (3, 2, 1)
 - **playing**: Game is in progress
-- **paused**: Game is paused
 - **finished**: Game is finished (one player reached the maximum score)
 
 ## Implementation Notes
