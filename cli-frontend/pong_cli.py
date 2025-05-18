@@ -491,6 +491,20 @@ class GameClient(BackendClient):
         # this is supposed to be fast as lag would be annoying in gameplay
         self.outgoing_messages.put_nowait(msg)
 
+    async def create_new_game(self, mode: str, max_score: int):
+        create_game_request = self.to_pong_api_request(
+            {
+                "type": "create_game",
+                "pong_data": {
+                    "userId": self.user_id,
+                    "gameMode": mode,
+                    "maxScore": max_score
+                }
+            }
+        )
+        await self.outgoing_messages.put(create_game_request)
+
+
 
 # curses refresh decorator, pretty useless
 def refresh(func):
@@ -506,6 +520,9 @@ def refresh(func):
 
 
 class PongCli:
+    MAX_SCORE = 30
+    GAME_MODES = ["classic"]
+
     def __init__(self, game_client: GameClient):
         assert game_client.is_connected, "Backend client is not authenticated"
         self.client: GameClient = game_client
@@ -639,9 +656,80 @@ class PongCli:
                 self.client._error = None
                 draw_menu()
 
+    async def create_game_screen(self) -> Optional[PongGame]:
+        max_y, max_x = self.screen_size
+        
+        game_mode = self.GAME_MODES[0]
+        max_score = 10
+        
+        options = [
+            (f"Game Mode: {game_mode}", "mode"),
+            (f"Max Score: {max_score}", "score"),
+            ("Create Game", "create"),
+            ("Cancel", "cancel")
+        ]
+    
+        selected_item = 0
+        
+        def draw_menu():
+            self.stdscr.clear()
+            self.stdscr.addstr(0, 0, "Create a new game:")
+            self.stdscr.addstr(max_y, 0, "Press q to go back")
+            
+            for index, menu_item in enumerate(options):
+                y, x = int((max_y // 2) - ((len(options)//2) - index)), int((max_x//2) - (len(menu_item[0]) // 2))
+                if index == selected_item:
+                    self.stdscr.attron(curses.color_pair(1))
+                    self.stdscr.addstr(y, x, menu_item[0])
+                    self.stdscr.attroff(curses.color_pair(1))
+                else:
+                    self.stdscr.addstr(y, x, menu_item[0])
+            
+            self.stdscr.refresh()
+        
+        draw_menu()
+        while True:
+            key = self.stdscr.getch()
+            if key == curses.ERR:
+                await asyncio.sleep(0.01)
+            elif key == curses.KEY_UP:
+                selected_item = (selected_item - 1) % len(options)
+                draw_menu()
+            elif key == curses.KEY_DOWN:
+                selected_item = (selected_item + 1) % len(options)
+                draw_menu()
+            elif key == ord('q'):
+                return None
+            elif key == curses.KEY_ENTER or key == ord('\n'):
+                option = options[selected_item][1]
+                if option == "score":
+                    max_score = (max_score + 1) % self.MAX_SCORE
+                    options[selected_item] = (f"Max Score: {max_score}", option)
+                    draw_menu()
+                elif option == "mode":
+                    current_index = self.GAME_MODES.index(game_mode)
+                    next_index = (current_index + 1) % len(self.GAME_MODES)
+                    game_mode = self.GAME_MODES[next_index]
+                    options[selected_item] = (f"Game Mode: {game_mode}", option)
+                    draw_menu()
+                elif option == "create":
+                    await self.client.create_new_game(game_mode, max_score)
+                    
+                    msg = "Creating game..."
+                    self.stdscr.clear()
+                    self.stdscr.addstr(max_y//2, (max_x//2) - len(msg)//2, msg)
+                    self.stdscr.refresh()
 
-    async def create_game_screen(self):
-        pass
+                    await asyncio.sleep(0.1)
+                    available_games = await self.client.get_joinable_games()
+                    
+                    if available_games:
+                        return available_games[0]
+                    else:
+                        await self.show_error("Failed to create game")
+                        draw_menu()
+                elif option == "cancel":
+                    return None
 
     async def join_existing_game_screen(self) -> Optional[PongGame]:
         max_y, max_x = self.screen_size
