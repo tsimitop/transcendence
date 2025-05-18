@@ -29,22 +29,22 @@ export function setupMenu(pong: Pong) {
   let selectedMode: 'local' | 'remote' = 'local';
   let remoteSubmode: 'create' | 'join' | null = null;
 
-  showOnly(menu);
+  showOnly(menu, 'menuScreen');
 
   localBtn.onclick = () => {
     selectedMode = 'local';
-    showOnly(alias);
+    showOnly(alias, 'aliasScreen');
     alias2Input.style.display = 'block';
   };
 
   remoteBtn.onclick = () => {
     selectedMode = 'remote';
-    showOnly(remoteOptions);
+    showOnly(remoteOptions, 'remoteOptionScreen');
   };
 
   createGameBtn.onclick = () => {
     remoteSubmode = 'create';
-    showOnly(createSettings);
+    showOnly(createSettings, 'createSettingsScreen');
   };
 
   createGameConfirmBtn.onclick = () => {
@@ -56,7 +56,7 @@ export function setupMenu(pong: Pong) {
       return;
     }
 
-    showOnly(canvas);
+    showOnly(canvas, 'gameCanvas');
     canvas.style.display = 'block';
 
     pong.socket?.send(JSON.stringify({
@@ -92,7 +92,7 @@ export function setupMenu(pong: Pong) {
     }
 
     if (selectedMode === 'local') {
-      showOnly(canvas);
+      showOnly(canvas, 'gameCanvas');
       canvas.style.display = 'block';
 
       pong.socket?.send(JSON.stringify({
@@ -111,12 +111,29 @@ export function setupMenu(pong: Pong) {
   backFromCreateSettingsBtn.onclick = () => showOnly(remoteOptions);
   backFromAliasBtn.onclick = () => showOnly(menu);
 
-  function showOnly(elem: HTMLElement) {
+  window.addEventListener('popstate', (event) => {
+    const state = event.state;
+    const screenId = state?.screen || 'menuScreen';
+    const elem = document.getElementById(screenId);
+    if (elem) {
+      showOnly(elem, screenId, false); // false = do NOT push to history again
+    }
+  });
+  
+  
+  function showOnly(elem: HTMLElement, stateName: string = elem.id, pushToHistory: boolean = true) {
     document.querySelectorAll('.screen').forEach(div => {
       (div as HTMLElement).style.display = 'none';
     });
     elem.style.display = 'flex';
+  
+    // Only push to history if this isn't triggered by a popstate event
+    if (pushToHistory && location.hash !== `#${stateName}`) {
+      history.pushState({ screen: stateName }, "", `#${stateName}`);
+    }
   }
+  
+  
 
   function loadAvailableGames() {
     pong.socket?.send(JSON.stringify({ type: 'list_games' }));

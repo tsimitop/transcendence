@@ -1,29 +1,53 @@
 export function getPongHTML(theme: string): string {
   return `
     <main class="main-container layout-padding theme-primary-${theme}-full">
-      <style>
-        canvas {
-          border: 1px solid black;
-          background: rgb(0, 0, 0);
-          display: none;
-        }
-        .screen {
-          display: none;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 1rem;
-          margin-top: 3rem;
-        }
-        .screen input, .screen select {
-          padding: 0.5rem;
-          font-size: 1rem;
-        }
-        .screen button {
-          font-size: 1.1rem;
-          padding: 0.6rem 1.5rem;
-        }
-      </style>
+<style>
+  canvas {
+    border: 1px solid black;
+    background: rgb(0, 0, 0);
+    display: none;
+
+    /* ✅ Centering canvas */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 3rem;
+  }
+
+  .screen input, .screen select {
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .screen button {
+    font-size: 1.1rem;
+    padding: 0.6rem 1.5rem;
+  }
+
+  /* ✅ Ensure body fills the whole viewport */
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+  }
+
+  main.main-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+
 
       <!-- Menu -->
       <div id="menuScreen" class="screen">
