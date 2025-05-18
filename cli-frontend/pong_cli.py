@@ -6,6 +6,7 @@ import sys
 import os
 import json
 import asyncio
+import traceback
 import ssl 
 from pprint import pprint
 from typing import Any, Dict, List, Optional, Tuple, Union, cast, Literal
@@ -366,9 +367,11 @@ class GameClient(BackendClient):
         super().__init__(username, password, url)
         self.game_id: Optional[str] = None
         self.game_data: Optional[Dict[str, Any]] = None
+        self.debug_mode = asyncio.Event()
+        self.debug_queue = asyncio.Queue()
         self.last_pong = time.time()
         self._error = None
-        self._available_games = []
+        self._available_games = asyncio.Queue()
 
     @property
     def user_id(self) -> str:
@@ -410,22 +413,25 @@ class GameClient(BackendClient):
         while True:
             await asyncio.sleep(30)
             await self.send_to_server(PING_MSG)
-            await asyncio.sleep(5)
-            if not self.last_pong > time.time() - 15:
+            await asyncio.sleep(0.2)
+            if not self.last_pong > time.time() - 15 and not self.debug_mode.is_set():
                 raise ConnectionError("Server doesn't answer, pong timeout")
 
     async def consume_backend_messages(self):
         await self.is_connected.wait()
         while True:
             message = await self.incoming_messages.get()
+            if self.debug_mode.is_set():
+                await self.debug_queue.put(message)
+                continue
             try:
                 message = json.loads(message)
             except Exception as e:
                 continue
-            if message.get('target-endpoint') == "pong":
+            if message.get('target_endpoint') == "pong":
                 self.last_pong = time.time()
                 continue
-            if not message.get('target-endpoint') == "pong-api":
+            if not message.get('target_endpoint') == "pong-api":
                 continue
             message = message.get('payload')
             if not message:
@@ -435,7 +441,7 @@ class GameClient(BackendClient):
             if type == "error":
                 self._error = (pong_data['message'], pong_data['code'])
             elif type == "game_states":
-                self._available_games: List[dict] = pong_data  # list of game_state in waiting state
+                self._available_games.put_nowait(pong_data)
             elif type == "game_state":
                 self.update_game_state(pong_data)
 
@@ -459,14 +465,18 @@ class GameClient(BackendClient):
             }
         )
         await self.send_to_server(get_games_request)
-        while not self._available_games:
-            await asyncio.sleep(0.05)
-        games = [PongGame.from_dict(game) for game in self._available_games]
-        self._available_games = []
-        # filter out ongoing games (even though we shouldn't get them here)
-        games = [game for game in games if game.is_waiting]
-        # sort by creation date (newest first)
-        return sorted(games, key=lambda x: x.lastUpdateTime, reverse=True)
+        try:
+            games = await asyncio.wait_for(self._available_games.get(), timeout=3)
+            self._available_games = asyncio.Queue()
+            games = [PongGame.from_dict(game['game']) for game in games]
+            # filter out ongoing games (even though we shouldn't get them here)
+            games = [game for game in games if game.is_waiting]
+            # sort by creation date (newest first)
+            return sorted(games, key=lambda x: x.lastUpdateTime, reverse=True)
+        except Exception as e:
+            e = traceback.format_exc()
+            self._error = (str(e), 420)
+            return []
     
     def send_key_input(self, *, up: bool):
         msg = self.to_pong_api_request(
@@ -524,13 +534,13 @@ class PongCli:
         await asyncio.wait_for(wait_for_connection(), timeout=60)
         while True:
             # main menu
-            game_id = await self.main_menu()
-            if not game_id:
+            game = await self.main_menu()
+            if not game:
                 break
             # run game
-            game_result = self.game_screen(game_id)
+            game_result = await self.game_screen(game)
             # show game result
-            self.show_game_result(game_result)
+            await self.show_game_result(game_result)
         raise GracefulExit(f"gui cancelled")
 
     def print_at(self, y: int, x: int, text: str) -> None:
@@ -627,6 +637,7 @@ class PongCli:
             if self.client._error:
                 await self.show_error(error_msg=str(self.client._error))
                 self.client._error = None
+                draw_menu()
 
 
     async def create_game_screen(self):
@@ -634,6 +645,13 @@ class PongCli:
 
     async def join_existing_game_screen(self) -> Optional[PongGame]:
         max_y, max_x = self.screen_size
+
+        self.stdscr.clear()
+        self.stdscr.addstr(0, 0, f"Select one of the available games to join:")
+        msg = "Loading games..."
+        self.stdscr.addstr(max_y//2, (max_x//2) - len(msg)//2, msg)
+        self.stdscr.refresh()
+
         available_games = await self.client.get_joinable_games()
         menu = []
         for game in available_games:
@@ -644,14 +662,18 @@ class PongCli:
             self.stdscr.clear()
             self.stdscr.addstr(0, 0, f"Select one of the available games to join:")
             self.stdscr.addstr(max_y, 0, f"Press q to go back")
-            for index, menu_item in enumerate(menu):
-                y, x = int((max_y // 2) - ((len(menu)//2) - index)), int((max_x//2) - (len(menu_item[0]) // 2))
-                if index == selected_item:
-                    self.stdscr.attron(curses.color_pair(1))
-                    self.stdscr.addstr(y, x, menu_item[0])
-                    self.stdscr.attroff(curses.color_pair(1))
-                else:
-                    self.stdscr.addstr(y, x, menu_item[0])
+            if menu:
+                for index, menu_item in enumerate(menu):
+                    y, x = int((max_y // 2) - ((len(menu)//2) - index)), int((max_x//2) - (len(menu_item[0]) // 2))
+                    if index == selected_item:
+                        self.stdscr.attron(curses.color_pair(1))
+                        self.stdscr.addstr(y, x, menu_item[0])
+                        self.stdscr.attroff(curses.color_pair(1))
+                    else:
+                        self.stdscr.addstr(y, x, menu_item[0])
+            else:
+                msg = "No games found."
+                self.stdscr.addstr(max_y//2, (max_x//2) - len(msg)//2, msg)
             self.stdscr.refresh()
         draw_menu()
         while True:
@@ -673,14 +695,15 @@ class PongCli:
 
     async def debug_screen(self) -> None:
         """print websocket messages"""
+        self.client.debug_mode.set()
         await self.client.outgoing_messages.put(PING_MSG)
         await asyncio.sleep(0.3)
         messages = []
         self.print_at(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")
         while True:
             # get messages from the queue
-            while not self.client.incoming_messages.empty():
-                message = await self.client.incoming_messages.get()
+            while not self.client.debug_queue.empty():
+                message = await self.client.debug_queue.get()
                 messages.append(message)
                 if len(messages) > curses.LINES - 1:
                     messages.pop(0)
@@ -695,7 +718,7 @@ class PongCli:
                         break
                     self.stdscr.addstr(index, 0, f"Message {message}")
                 self.stdscr.refresh()
-            
+
             key = await self.wait_until_input()
             if key == 'q':
                 break
@@ -707,6 +730,8 @@ class PongCli:
                     await self.show_error(str(error))
                 self.print_at(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")
 
+        self.client.debug_mode.clear()
+
     async def game_screen(self, game: PongGame) -> dict[str, Any]:
         """
         Screen which shows the game. Returns the game result.
@@ -714,10 +739,11 @@ class PongCli:
         await self.show_error(error_msg=f"Successfully selected a game:\n{str(game)}")
         return {}
 
-    def show_game_result(self, game_result: dict[str, Any]) -> None:
+    async def show_game_result(self, game_result: dict[str, Any]) -> None:
         """
         Show the game result.
         """
+        return
         pprint(f"Game result:\n{game_result}")
         input("Press enter to continue with new game...")
 
@@ -740,7 +766,7 @@ async def main():
     if len(cli_args) != 1:
         print("Usage: ./pong_cli.py <backend_url>", file=sys.stderr)
         sys.exit(1)
-    
+
     backend_url = cli_args[0]
     game_client = GameClient.from_login(backend_url)
     terminal_ui = PongCli(game_client)
