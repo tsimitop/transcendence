@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union, cast
 import aiohttp
 from aiohttp import ClientTimeout, TCPConnector, ClientSession
 
-PING_MSG = '{"target_endpoint": "ping", "payload": ""}'
+PING_MSG = json.dumps({"target_endpoint": "ping", "payload": ""})
 
 class BackendClient:
     def __init__(self, username: str, password: str, url: str) -> None:
@@ -25,6 +25,8 @@ class BackendClient:
         self.user_data: Optional[Dict[str, Any]] = None
         self.websocket_client = None
         self.is_connected: asyncio.Event = asyncio.Event()
+        self.requires_2fa_input = asyncio.Event()
+        self.got_2fa_input = asyncio.Future()
         self.ws = None
         self.incoming_messages = asyncio.Queue()
         self.outgoing_messages = asyncio.Queue()
@@ -70,7 +72,6 @@ class BackendClient:
             _update_token_task = tg.create_task(keep_token_updated())
             # Connect to the websocket server
             _websocket_handler = tg.create_task(self.handle_websocket())
-            _ws_sender = tg.create_task(send_messages_from_queue())
         raise GracefulExit("network ended")
         
     async def handle_websocket(self):
@@ -102,6 +103,11 @@ class BackendClient:
                         break
         self.ws = None
         raise Exception("websocket closed")
+    
+    async def send_to_server(self, data: str):
+        if not self.ws:
+            raise ConnectionError("ws not connected")
+        await self.ws.send_str(data)
 
     async def connect(self) -> aiohttp.ClientSession:
         """Initialize aiohttp client session with cookie support"""
@@ -146,7 +152,9 @@ class BackendClient:
             
             # Check if 2FA is required
             if data.get("errorMessage") and "2FA" in data.get("errorMessage", ""):
-                code_2fa: str = input("Enter your 2FA code: ")
+                self.requires_2fa_input.set()
+                code_2fa: str = await self.got_2fa_input
+                assert code_2fa, f"Invalid 2fa code: {code_2fa}"
                 return await self.validate_2fa(data["user"], code_2fa)
                 
             # Store user data and token for future requests
@@ -261,6 +269,8 @@ class GameClient(BackendClient):
         super().__init__(username, password, url)
         self.game_id: Optional[str] = None
         self.game_data: Optional[Dict[str, Any]] = None
+        self.last_pong = time.time()
+        self._error = None
 
     @property
     def user_id(self) -> str:
@@ -274,7 +284,9 @@ class GameClient(BackendClient):
         # show login screen to enter username and password
         username = input("Enter email/username: ")
         password = input("Enter password: ")
-        username, password = "anonym", "Anonym99!"
+        if not password or not username:
+            # dummy login for development
+            username, password = "anonym", "Anonym99!"
         if url is None:
             url = input("Enter backend URL: ")
         assert url, "Backend URL cannot be empty"
@@ -287,6 +299,64 @@ class GameClient(BackendClient):
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await super().__aexit__(exc_type, exc_val, exc_tb)
+
+    def get_error(self) -> Optional[Tuple[str, int]]:
+        if self._error:
+            error_msg, error_code = self._error
+            self._error = None
+            return error_msg, error_code
+        return None
+
+
+
+    async def ping_server(self):
+        await self.is_connected.wait()
+        while True:
+            await asyncio.sleep(30)
+            await self.send_to_server(PING_MSG)
+            await asyncio.sleep(5)
+            if not self.last_pong > time.time() - 15:
+                raise ConnectionError("Server doesn't answer, pong timeout")
+
+    async def consume_backend_messages(self):
+        await self.is_connected.wait()
+        while True:
+            message = await self.incoming_messages.get()
+            try:
+                message = json.loads(message)
+            except Exception as e:
+                continue
+            if message.get('target-endpoint') == "pong":
+                self.last_pong = time.time()
+                continue
+            if not message.get('target-endpoint') == "pong-api":
+                continue
+            message = message.get('payload')
+            if not message:
+                continue
+            # pong payload
+            type, pong_data = message['type'], message['pong_data']
+            if type == "error":
+                self._error = (pong_data['message'], pong_data['code'])
+            elif type == "game_data":
+                pass
+
+
+    @staticmethod
+    def to_pong_api_request(payload: dict) -> str:
+        return json.dumps({
+            "target_endpoint": "pong-api",
+            "payload": payload
+        })
+
+    async def get_joinable_games(self):
+        get_games_request = self.to_pong_api_request(
+            {
+                "type": "getGames",
+                "pong_data": {}
+            }
+        )
+        await self.send_to_server(get_games_request)
 
 # curses refresh decorator
 def refresh(func):
@@ -309,16 +379,28 @@ class PongCli:
         curses.noecho()
         curses.cbreak()
         curses.curs_set(False)  # Hide the cursor
+        curses.start_color()
+        curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
         self.stdscr.keypad(True)
         self.stdscr.nodelay(True)  # Non-blocking input
         self.stdscr.clear()
         self.stdscr.refresh()
 
     async def run(self):
-        await asyncio.wait_for(self.client.is_connected.wait(), timeout=5)
+        async def wait_for_connection():
+            while True:
+                await asyncio.sleep(0.1)
+                if self.client.requires_2fa_input.is_set():
+                    self.client.got_2fa_input.set_result(
+                        await self.text_input(msg="Enter two-factor authentication code:")
+                    )
+                    self.client.requires_2fa_input.clear()
+                elif self.client.is_connected.is_set():
+                    break
+        await asyncio.wait_for(wait_for_connection(), timeout=60)
         while True:
-            # find new game
-            game_id = await self.new_game_screen()
+            # main menu
+            game_id = await self.main_menu()
             if not game_id:
                 break
             # run game
@@ -375,40 +457,54 @@ class PongCli:
     @property
     def screen_size(self) -> Tuple[int, int]:
         """Get max values for (y, x)"""
-        return curses.LINES - 1, curses.COLS - 1
+        y, x = self.stdscr.getmaxyx()
+        return y - 1, x - 1
 
-    async def new_game_screen(self) -> str:
-        """
-        Screen which lists available matches and allows to create a new match.
-        Returns the game id of the match the user wants to join/created.
-        """
+    async def main_menu(self) -> Optional[str]:
+        max_y, max_x = self.screen_size
+        menu = [
+            ("Create a new game", self.create_game_screen),
+            ("Join an existing game", self.join_existing_game_screen),
+            ("Debug mode", self.debug_screen),
+            ("Quit", None),
+        ]
+        selected_item = 0
         def draw_menu():
             self.stdscr.clear()
             self.stdscr.addstr(0, 0, f"Welcome to Pong CLI {self.client.user_id}!")
-            self.stdscr.addstr(1, 0, "Press 'c' to create a new game")
-            self.stdscr.addstr(2, 0, "Press 'j' to join an existing game")
-            self.stdscr.addstr(3, 0, "Press 'd' to enter debug mode")
-            self.stdscr.addstr(4, 0, "Press 'q' to quit")
+            for index, menu_item in enumerate(menu):
+                y, x = int((max_y // 2) - ((len(menu)//2) - index)), int((max_x//2) - (len(menu_item[0]) // 2))
+                if index == selected_item:
+                    self.stdscr.attron(curses.color_pair(1))
+                    self.stdscr.addstr(y, x, menu_item[0])
+                    self.stdscr.attroff(curses.color_pair(1))
+                else:
+                    self.stdscr.addstr(y, x, menu_item[0])
             self.stdscr.refresh()
         draw_menu()
         while True:
             key = self.stdscr.getch()
             if key == curses.ERR:
-                await asyncio.sleep(0.1)
-            elif key == ord('c'):
-                # create new game
-                self.print_at(0, 0, "Creating new game...")
-            elif key == ord('j'):
-                # join existing game
-                self.print_at(0, 0, "Joining existing game...")
-            elif key == ord('d'):
-                await self.debug_screen()
+                await asyncio.sleep(0.05)
+            elif key == curses.KEY_UP:
+                selected_item = (selected_item - 1) % len(menu)
                 draw_menu()
-            elif key == ord('q'):
-                # quit
-                self.print_at(0, 0, "Quitting...")
-                await asyncio.sleep(0.5)
-                return ""
+            elif key == curses.KEY_DOWN:
+                selected_item = (selected_item + 1) % len(menu)
+                draw_menu()
+            elif key == curses.KEY_ENTER or key == ord('\n'):
+                if menu[selected_item][1]:
+                    if ret_val := await menu[selected_item][1]():
+                        return ret_val
+                else:
+                    return None
+                draw_menu()
+
+    async def create_game_screen(self):
+        pass
+
+    async def join_existing_game_screen(self):
+        pass
 
     async def debug_screen(self) -> None:
         """print websocket messages"""
@@ -486,6 +582,8 @@ async def main():
         async with asyncio.TaskGroup() as tg:
             # run the game client
             _client_task = tg.create_task(game_client.start())
+            _ping_server = tg.create_task(game_client.ping_server())
+            _handle_messages = tg.create_task(game_client.consume_backend_messages())
             # run the terminal UI
             _ui_task = tg.create_task(terminal_ui.run())
     except* Exception as exc_group:

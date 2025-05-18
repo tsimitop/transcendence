@@ -4,7 +4,7 @@ import { handlePongPayload } from "../api/pong/PongMsgHandler";
 import { connectedUsers } from "./WebSocket";
 
 
-interface WebsocketApiRequest {
+export interface WebsocketApiRequest {
     target_endpoint: string;  // chat-api or pong-api
     payload: any;    // The ChatMessage or Pong request
   }

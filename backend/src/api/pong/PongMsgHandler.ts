@@ -1,5 +1,6 @@
 import {PongMessage, PongErrorData, KeyboardInputData} from './PongMessages';
 import { connectedUsers } from '../../websocket/WebSocket';
+import { WebsocketApiRequest } from '../../websocket/MessageHandler';
 
 export function handlePongPayload(senderUsername: string, payload: any): void {
   try {
@@ -28,10 +29,14 @@ function sendMessage(senderUsername: string, type: string, pong_data: any): void
         type: type,
         pong_data: pong_data,
     };
-    
+    const wrapped_msg: WebsocketApiRequest = {
+      target_endpoint: "pong-api",
+      payload: message
+    }
+
     const socket = connectedUsers.get(senderUsername);
     if (socket) {
-        socket.send(JSON.stringify(message));
+        socket.send(JSON.stringify(wrapped_msg));
     } else {
         console.debug(`[PONG WS] User ${senderUsername} not connected, cant send message`);
     }

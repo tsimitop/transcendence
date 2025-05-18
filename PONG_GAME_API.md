@@ -49,11 +49,9 @@ Request:
 Response:
 ```json
 {
-  "games": [
-    // list of game_state of all games 
-    {
-      game_states
-    }
+  "type": "game_states",
+  "pong_data": [
+    "<list of game_state messages in waiting state", "...",
   ]
 }
 ```
