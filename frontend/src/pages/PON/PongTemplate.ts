@@ -52,16 +52,16 @@ export function getPongHTML(theme: string): string {
       <!-- Menu -->
       <div id="menuScreen" class="screen">
         <h2>Select Game Mode</h2>
-        <button id="localPlayBtn">Local Play</button>
-        <button id="remotePlayBtn">Remote Play</button>
+        <button id="LocalGameButton">Local</button>
+        <button id="RemoteGameButton">Remote</button>
       </div>
 
       <!-- Remote Option -->
       <div id="remoteOptionScreen" class="screen">
         <h2>Remote Game Options</h2>
         <input id="remoteAliasInput" placeholder="Your alias" />
-        <button id="createGameBtn">Create New Game</button>
-        <button id="joinGamePageBtn">Join Existing Game</button>
+        <button id="createRemoteGameBtn">Create New Game</button>
+        <button id="joinRemoteGamePageBtn">Join Existing Game</button>
         <button id="backFromRemoteOptionsBtn">Back</button>
       </div>
 
@@ -77,29 +77,29 @@ export function getPongHTML(theme: string): string {
         <h2>Game Settings</h2>
         <label>
           Mode:
-          <select id="ModeSelect">
+          <select id="MultiplayerModeSelect">
             <option value="VS">VS</option>
             <option value="Tournament">Tournament</option>
           </select>
         </label>
         <label>
           Max Players:
-          <select id="maxPlayersSelect">
+          <select id="MultiplayerMaxPlayersSelect">
             <option value="2">2</option>
             <option value="4">4</option>
           </select>
         </label>
-        <button id="createGameConfirmBtn">Create Game</button>
+        <button id="createRemoteGameConfirmBtn">Create Game</button>
         <button id="backFromCreateSettingsBtn">Back</button>
       </div>
 
-      <!-- Alias Entry -->
-      <div id="aliasScreen" class="screen">
+      <!-- LocalGameSettings -->
+      <div id="LocalGameSettings" class="screen">
         <h2>Enter Player Name</h2>
-        <input id="player1Input" placeholder="Your alias" />
+        <input id="player1Input" placeholder="Player 1 alias" />
         <input id="player2Input" placeholder="Player 2 alias" style="display: none;" />
-        <button id="startGameBtn">Start Game</button>
-        <button id="backFromAliasBtn">Back</button>
+        <button id="startLocalGameBtn">Start Game</button>
+        <button id="backLocalGameSettingsBtn">Back</button>
       </div>
 
       <!-- Game Canvas -->
