@@ -1,5 +1,3 @@
-
-
 export interface PongMessage {
     type: string;
     pong_data: any;  // json data
@@ -30,26 +28,29 @@ export interface GameStateData {
         id: string;
         status: string;
         ball: {
-            x: number;
-            y: number;
-            radius: number;
-            dx: number;
-            dy: number;
-            speed: number;
+            x: string;  // floats as string
+            y: string;  // top left corner is (0/0)
         };
         leftPaddle: {
-            x: any; // TODO: Define the type
-        }
+            topPoint: {
+                x: number;
+                y: number;
+            };
+            height: number;  // percentage of window height (0-1)
+        };
         rightPaddle: {
-            x: any; // TODO: Define the type
-        }
-        width: number;
-        height: number;
+            topPoint: {
+                x: number;
+                y: number;
+            };
+            height: number;  // percentage of window height (0-1)
+        };
         lastUpdateTime: number;
-        gameMode: string;
-        isPrivate: boolean;
         maxScore: number;
-        countdown: number;
+        scores: {
+            [playerId: string]: number;  // player IDs mapped to their scores
+        };
+        countdown: number; // Only relevant during countdown
     }
 }
 

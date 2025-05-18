@@ -1,5 +1,7 @@
 {
-	debug
+	log {
+		level warn
+	}
 }
 
 localhost {

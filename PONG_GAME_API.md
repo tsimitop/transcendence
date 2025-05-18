@@ -145,7 +145,7 @@ Which X is good? Depends on latency of the connection i guess?
       },  // we interpret the paddle as 2D object (a line), which is the line on which the ball will bounce of, how its rendered in 3d is up to the frontend?
       // does this make sense?
       "rightPaddle": { ... },
-      "lastUpdateTime": 1234567890,
+      "lastUpdateTime": 1234567890,  // creation date for waiting games
       "maxScore": 10,
       "scores": {
         "playerids...": int, //score
@@ -204,7 +204,6 @@ Standard Pong game with consistent ball speed.
 - **waiting**: Waiting for a second player to join
 - **countdown**: Countdown before the game starts (3, 2, 1)
 - **playing**: Game is in progress
-- **paused**: Game is paused
 - **finished**: Game is finished (one player reached the maximum score)
 
 ## Implementation Notes

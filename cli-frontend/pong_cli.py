@@ -15,8 +15,8 @@ from datetime import datetime
 import aiohttp
 from aiohttp import ClientTimeout, TCPConnector, ClientSession
 
-PING_MSG = json.dumps({"target_endpoint": "ping", "payload": ""})
 
+PING_MSG = json.dumps({"target_endpoint": "ping", "payload": ""})
 
 
 @dataclass
@@ -64,7 +64,7 @@ class Ball:
 @dataclass
 class PongGame:
     id: str
-    status: Literal["waiting", "playing", "finished"]
+    status: Literal["waiting", "countdown", "playing", "finished"]
     ball: Ball
     leftPaddle: Paddle
     rightPaddle: Paddle
@@ -126,7 +126,7 @@ class BackendClient:
         self.ws = None
         self.incoming_messages = asyncio.Queue()
         self.outgoing_messages = asyncio.Queue()
-    
+
     async def __aenter__(self) -> "BackendClient":
         """Enter the context manager"""
         try:
@@ -136,7 +136,7 @@ class BackendClient:
             raise e
         pprint(f"Connected to backend at {self.url}")
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         """Exit the context manager"""
         await self.close()
@@ -440,7 +440,7 @@ class GameClient(BackendClient):
                 self.update_game_state(pong_data)
 
     def update_game_state(self, pong_data_payload: dict):
-        game = pong_data_payload.get('game')
+        game = pong_data_payload['game']
         if not game:
             return
 
@@ -461,9 +461,12 @@ class GameClient(BackendClient):
         await self.send_to_server(get_games_request)
         while not self._available_games:
             await asyncio.sleep(0.05)
-        games = self._available_games
+        games = [PongGame.from_dict(game) for game in self._available_games]
         self._available_games = []
-        return games
+        # filter out ongoing games (even though we shouldn't get them here)
+        games = [game for game in games if game.is_waiting]
+        # sort by creation date (newest first)
+        return sorted(games, key=lambda x: x.lastUpdateTime, reverse=True)
     
     def send_key_input(self, *, up: bool):
         msg = self.to_pong_api_request(
@@ -581,7 +584,7 @@ class PongCli:
         y, x = self.stdscr.getmaxyx()
         return y - 1, x - 1
 
-    async def main_menu(self) -> Optional[str]:
+    async def main_menu(self) -> Optional[PongGame]:
         max_y, max_x = self.screen_size
         menu = [
             ("Create a new game", self.create_game_screen),
@@ -621,11 +624,52 @@ class PongCli:
                     return None
                 draw_menu()
 
+            if self.client._error:
+                await self.show_error(error_msg=str(self.client._error))
+                self.client._error = None
+
+
     async def create_game_screen(self):
         pass
 
-    async def join_existing_game_screen(self):
-        pass
+    async def join_existing_game_screen(self) -> Optional[PongGame]:
+        max_y, max_x = self.screen_size
+        available_games = await self.client.get_joinable_games()
+        menu = []
+        for game in available_games:
+            menu.append((f"ID: {game.id} | MAX SCORE: {game.maxScore}", game))
+
+        selected_item = 0
+        def draw_menu():
+            self.stdscr.clear()
+            self.stdscr.addstr(0, 0, f"Select one of the available games to join:")
+            self.stdscr.addstr(max_y, 0, f"Press q to go back")
+            for index, menu_item in enumerate(menu):
+                y, x = int((max_y // 2) - ((len(menu)//2) - index)), int((max_x//2) - (len(menu_item[0]) // 2))
+                if index == selected_item:
+                    self.stdscr.attron(curses.color_pair(1))
+                    self.stdscr.addstr(y, x, menu_item[0])
+                    self.stdscr.attroff(curses.color_pair(1))
+                else:
+                    self.stdscr.addstr(y, x, menu_item[0])
+            self.stdscr.refresh()
+        draw_menu()
+        while True:
+            key = self.stdscr.getch()
+            if key == curses.ERR:
+                await asyncio.sleep(0.05)
+            elif key == curses.KEY_UP:
+                selected_item = (selected_item - 1) % len(menu)
+                draw_menu()
+            elif key == curses.KEY_DOWN:
+                selected_item = (selected_item + 1) % len(menu)
+                draw_menu()
+            elif key == ord('q'):
+                return None
+            elif key == curses.KEY_ENTER or key == ord('\n'):
+                if menu[selected_item]:
+                    return menu[selected_item][1]  # game
+                draw_menu()
 
     async def debug_screen(self) -> None:
         """print websocket messages"""
@@ -663,10 +707,11 @@ class PongCli:
                     await self.show_error(str(error))
                 self.print_at(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")
 
-    def game_screen(self, game_id: str) -> dict[str, Any]:
+    async def game_screen(self, game: PongGame) -> dict[str, Any]:
         """
         Screen which shows the game. Returns the game result.
         """
+        await self.show_error(error_msg=f"Successfully selected a game:\n{str(game)}")
         return {}
 
     def show_game_result(self, game_result: dict[str, Any]) -> None:
