@@ -560,19 +560,22 @@ class PongCli:
             await self.show_game_result(game_result)
         raise GracefulExit(f"gui cancelled")
 
-    def print_at(self, y: int, x: int, text: str) -> None:
+    def print_at(self, lines: List[Tuple[int, int, str]], refresh: bool = True) -> None:
         """
         Print text at the given coordinates (y, x).
         """
         max_y, max_x = self.screen_size
-        if y < 0 or y >= max_y or x < 0 or x >= max_x:
-            raise ValueError(f"Coordinates out of bounds: ({y}, {x})")
-        self.stdscr.clear()
-        self.stdscr.addstr(y, x, text)
-        self.stdscr.refresh()
+        if refresh:
+            self.stdscr.clear()
+        for y, x, msg in lines:
+            if y < 0 or y >= max_y or x < 0 or x >= max_x:
+                raise ValueError(f"Coordinates out of bounds: ({y}, {x})")
+            self.stdscr.addstr(y, x, msg)
+        if refresh:
+            self.stdscr.refresh()
 
     async def text_input(self, y = 0, x = 0, msg = "Enter text:") -> str:
-        self.print_at(y, x, msg)
+        self.print_at([(y, x, msg)])
         result = ""
         while True:
             key = self.stdscr.getch()
@@ -585,7 +588,7 @@ class PongCli:
                 result = result[:-1]
             else:
                 result += chr(key)
-            self.print_at(y, x, f"{msg} {result}")
+            self.print_at([(y, x, f"{msg} {result}")])
     
     async def show_error(self, error_msg: str):
         self.stdscr.clear()
@@ -787,7 +790,7 @@ class PongCli:
         await self.client.outgoing_messages.put(PING_MSG)
         await asyncio.sleep(0.3)
         messages = []
-        self.print_at(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")
+        self.print_at([(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")])
         while True:
             # get messages from the queue
             while not self.client.debug_queue.empty():
@@ -816,7 +819,7 @@ class PongCli:
                     await self.client.outgoing_messages.put(input_str)
                 except Exception as error:
                     await self.show_error(str(error))
-                self.print_at(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")
+                self.print_at([(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")])
 
         self.client.debug_mode.clear()
 
@@ -833,7 +836,7 @@ class PongCli:
         """
         if not game_result:
             return
-        self.print_at(5, 5, str(game_result))
+        self.print_at([(5, 5, str(game_result))])
         await self.wait_until_input()
 
     def cleanup(self) -> None:
