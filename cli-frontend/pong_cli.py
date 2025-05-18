@@ -831,9 +831,10 @@ class PongCli:
         """
         Show the game result.
         """
-        return
-        pprint(f"Game result:\n{game_result}")
-        input("Press enter to continue with new game...")
+        if not game_result:
+            return
+        self.print_at(5, 5, str(game_result))
+        await self.wait_until_input()
 
     def cleanup(self) -> None:
         try:
