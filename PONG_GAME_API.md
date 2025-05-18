@@ -148,6 +148,7 @@ Which X is good? Depends on latency of the connection i guess?
       "lastUpdateTime": 1234567890,  // creation date for waiting games
       "gameMode": "classic",
       "maxScore": 10,
+      "gameMode": "classic",
       "scores": {
         "playerids...": int, //score
       }

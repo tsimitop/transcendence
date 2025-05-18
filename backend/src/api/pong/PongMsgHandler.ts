@@ -19,7 +19,7 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
         break;
       default:
         sendErrorMessage(senderUsername, `Unknown message type: ${message.type}`, 4001);
-        console.warn(`[PONG WS] Unknown message type: ${message.type}`);
+        console.warn(`[PONG WS] Unknown message: ${message}`);
     }
   } catch (err) {
     console.error(`[PONG WS] Failed to process message ${payload}:`, err);
