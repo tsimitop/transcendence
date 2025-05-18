@@ -91,7 +91,6 @@ game_state response or error
   "pong_data": {
     "userId": "string",
     "gameMode": "classic", // Optional: "classic", "speed", or "chaos"
-    "isPrivate": false,    // Optional: boolean
     "maxScore": 10         // Optional: number
   }
 }
@@ -147,8 +146,6 @@ Which X is good? Depends on latency of the connection i guess?
       // does this make sense?
       "rightPaddle": { ... },
       "lastUpdateTime": 1234567890,
-      "gameMode": "classic",
-      "isPrivate": false,
       "maxScore": 10,
       "scores": {
         "playerids...": int, //score

@@ -8,12 +8,108 @@ import json
 import asyncio
 import ssl 
 from pprint import pprint
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast, Literal
+from dataclasses import dataclass, field
+from datetime import datetime
 
 import aiohttp
 from aiohttp import ClientTimeout, TCPConnector, ClientSession
 
 PING_MSG = json.dumps({"target_endpoint": "ping", "payload": ""})
+
+
+
+@dataclass
+class Point:
+    x: float
+    y: float
+
+    @classmethod
+    def from_str_or_float(cls, x, y):
+        """Create a Point from string or float values"""
+        return cls(
+            x=float(x) if isinstance(x, str) else x,
+            y=float(y) if isinstance(y, str) else y
+        )
+
+@dataclass
+class Paddle:
+    topPoint: Point
+    height: float
+    
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Create a Paddle from a dictionary"""
+        return cls(
+            topPoint=Point.from_str_or_float(
+                data["topPoint"]["x"],
+                data["topPoint"]["y"]
+            ),
+            height=float(data["height"])
+        )
+
+@dataclass
+class Ball:
+    x: float
+    y: float
+    
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Create a Ball from a dictionary"""
+        return cls(
+            x=float(data["x"]) if isinstance(data["x"], str) else data["x"],
+            y=float(data["y"]) if isinstance(data["y"], str) else data["y"]
+        )
+
+@dataclass
+class PongGame:
+    id: str
+    status: Literal["waiting", "playing", "finished"]
+    ball: Ball
+    leftPaddle: Paddle
+    rightPaddle: Paddle
+    lastUpdateTime: int
+    gameMode: Literal["classic"]
+    maxScore: int
+    scores: Dict[str, int] = field(default_factory=dict)
+    countdown: Optional[int] = None
+    
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Create a PongGame from a dictionary"""
+        return cls(
+            id=data["id"],
+            status=data["status"],
+            ball=Ball.from_dict(data["ball"]),
+            leftPaddle=Paddle.from_dict(data["leftPaddle"]),
+            rightPaddle=Paddle.from_dict(data["rightPaddle"]),
+            lastUpdateTime=data["lastUpdateTime"],
+            gameMode=data["gameMode"],
+            maxScore=data["maxScore"],
+            scores=data.get("scores", {}),
+            countdown=data.get("countdown")
+        )
+
+    @property
+    def is_playing(self) -> bool:
+        """Check if the game is in playing state"""
+        return self.status == "playing"
+
+    @property
+    def is_finished(self) -> bool:
+        """Check if the game is finished"""
+        return self.status == "finished"
+    
+    @property
+    def is_waiting(self) -> bool:
+        """Check if the game is waiting for players"""
+        return self.status == "waiting"
+    
+    @property
+    def last_update_datetime(self) -> datetime:
+        """Convert lastUpdateTime to datetime"""
+        return datetime.fromtimestamp(self.lastUpdateTime / 1000)
+
 
 class BackendClient:
     def __init__(self, username: str, password: str, url: str) -> None:
@@ -66,12 +162,13 @@ class BackendClient:
                 message = await self.outgoing_messages.get()
                 if message is None:
                     break
-                await self.ws.send_str(message)
+                await self.send_to_server(message)
         
         async with asyncio.TaskGroup() as tg:
             _update_token_task = tg.create_task(keep_token_updated())
             # Connect to the websocket server
             _websocket_handler = tg.create_task(self.handle_websocket())
+            _outbox = tg.create_task(send_messages_from_queue())
         raise GracefulExit("network ended")
         
     async def handle_websocket(self):
@@ -271,6 +368,7 @@ class GameClient(BackendClient):
         self.game_data: Optional[Dict[str, Any]] = None
         self.last_pong = time.time()
         self._error = None
+        self._available_games = []
 
     @property
     def user_id(self) -> str:
@@ -307,8 +405,6 @@ class GameClient(BackendClient):
             return error_msg, error_code
         return None
 
-
-
     async def ping_server(self):
         await self.is_connected.wait()
         while True:
@@ -338,9 +434,15 @@ class GameClient(BackendClient):
             type, pong_data = message['type'], message['pong_data']
             if type == "error":
                 self._error = (pong_data['message'], pong_data['code'])
-            elif type == "game_data":
-                pass
+            elif type == "game_states":
+                self._available_games: List[dict] = pong_data  # list of game_state in waiting state
+            elif type == "game_state":
+                self.update_game_state(pong_data)
 
+    def update_game_state(self, pong_data_payload: dict):
+        game = pong_data_payload.get('game')
+        if not game:
+            return
 
     @staticmethod
     def to_pong_api_request(payload: dict) -> str:
@@ -357,8 +459,27 @@ class GameClient(BackendClient):
             }
         )
         await self.send_to_server(get_games_request)
+        while not self._available_games:
+            await asyncio.sleep(0.05)
+        games = self._available_games
+        self._available_games = []
+        return games
+    
+    def send_key_input(self, *, up: bool):
+        msg = self.to_pong_api_request(
+            {
+                "type": input,
+                "pong_data": {
+                    "userId": self.user_id,
+                    "up": up
+                }
+            }
+        )
+        # this is supposed to be fast as lag would be annoying in gameplay
+        self.outgoing_messages.put_nowait(msg)
 
-# curses refresh decorator
+
+# curses refresh decorator, pretty useless
 def refresh(func):
     def wrapper(self, *args, **kwargs):
         try:
