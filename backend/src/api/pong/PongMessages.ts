@@ -46,6 +46,7 @@ export interface GameStateData {
             height: number;  // percentage of window height (0-1)
         };
         lastUpdateTime: number;
+        gameMode: string;
         maxScore: number;
         scores: {
             [playerId: string]: number;  // player IDs mapped to their scores

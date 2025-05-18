@@ -98,6 +98,7 @@ function handleGetGames(senderUsername: string): void {
         height: 0.2
       },
       lastUpdateTime: Date.now(),
+      gameMode: "classic",
       maxScore: 10,
       scores: {
         "player1": 3,
