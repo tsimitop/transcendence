@@ -1,6 +1,7 @@
 import {PongMessage, PongErrorData, KeyboardInputData, LocalGame} from './PongMessages';
 import { connectedUsers } from '../../websocket/WebSocket';
 import { PongGame } from './PongGame';
+import { JoinGameData } from './PongMessages';
 
 
 const waitingPlayers: string[] = [];
@@ -22,6 +23,9 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
     switch (payload.type) {
       case 'game_list':
         handleListGames(senderUsername, payload);
+        break;
+      case 'join_game':
+        handlerJoinGame(senderUsername, payload);
         break;
       case 'create_game':
         handleCreateGame(senderUsername, payload);
@@ -64,6 +68,14 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
 /*****************************************************/
 /************** ajehles Methods  *********************/
 /*****************************************************/
+
+function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
+  const senderSocket = connectedUsers.get(senderUsername);
+  if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
+
+  console.log(pong_data);
+
+}
 
 function handleListGames(senderUsername: string, pong_data: LocalGame): void {
   const senderSocket = connectedUsers.get(senderUsername);
