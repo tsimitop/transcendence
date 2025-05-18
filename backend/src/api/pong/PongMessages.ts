@@ -19,7 +19,6 @@ export interface JoinGameData {
 export interface CreateGameData {
     userId: string;
     gameMode: string;
-    isPrivate: boolean;
     maxScore: number;
 }
 

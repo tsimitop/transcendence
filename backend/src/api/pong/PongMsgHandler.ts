@@ -1,4 +1,4 @@
-import {PongMessage, PongErrorData, KeyboardInputData, GameStateData} from './PongMessages';
+import {PongMessage, PongErrorData, KeyboardInputData, GameStateData, CreateGameData} from './PongMessages';
 import { connectedUsers } from '../../websocket/WebSocket';
 import { WebsocketApiRequest } from '../../websocket/MessageHandler';
 
@@ -16,6 +16,9 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
         break;
       case 'getGames':
         handleGetGames(senderUsername);
+        break;
+      case 'create_game':  // mhhh mixed case types
+        handleCreateGame(senderUsername, message.pong_data);
         break;
       default:
         sendErrorMessage(senderUsername, `Unknown message type: ${message.type}`, 4001);
@@ -115,3 +118,6 @@ function handleGetGames(senderUsername: string): void {
   console.debug(`returning ${waiting_games.length} games`)
 }
 
+function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
+  console.log(`got create game ${pong_data}`)
+}
