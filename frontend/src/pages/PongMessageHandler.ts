@@ -1,18 +1,21 @@
 
 
-
-
-
 export function     handlePongMessage(data: any, socket: WebSocket | null ) {
+    console.log("data.type", data.type)
     if (!data.type) {
       console.error("Received message without type");
       return;
     }
-  
     switch (data.type) {
-    //   case 'create_game':
-    //     handleCreateGame(data);
-    //     break;
+      case 'join_game':
+        handleJoinGame(data, socket);
+        break;
+      case 'game_created':
+        handleWaitingForUser(data, socket);
+        break;
+      case 'create_game':
+        handleCreateGame(data, socket);
+        break;
       case 'game_list':
         handleListGames(data, socket);
         break;
@@ -24,6 +27,60 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
         break;
     }
   }
+
+  export function handleJoinGame(data: any, socket: WebSocket | null) {
+
+
+
+  }
+
+
+
+
+  export function handleWaitingForUser(data: any, socket: WebSocket | null) {
+    console.log("handleWaitingForUser");
+  
+    const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+    if (!canvas) {
+      console.error("Canvas element not found");
+      return;
+    }
+  
+  // ✅ Make canvas visible
+  canvas.style.display = "block";
+
+  // ✅ Ensure it has dimensions
+  if (!canvas.width || !canvas.height) {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+  }
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.error("Failed to get 2D context");
+      return;
+    }
+  
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Set text properties
+    ctx.font = "32px Arial";
+    ctx.fillStyle = "red";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+  
+    // Draw "Waiting for players..." in the center
+    ctx.fillText("Waiting for players...", canvas.width / 2, canvas.height / 2);
+  }
+  
+
+  
+  export function handleCreateGame(data: any, socket: WebSocket | null)  {
+    console.log(data);
+    console.log(data.gameId);
+  }
+
   
   export function handleListGames(data: any, socket: WebSocket | null) {
     console.log("Received game list:", data);

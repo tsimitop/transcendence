@@ -14,21 +14,20 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
     console.error("payload:", payload.type);
 
     // The payload is already parsed in MessageHandler.ts
-    // const message: PongMessage = {
-    //   type: payload.type,
-    //   pong_data: payload.pong_data,
-    // };
+    const message: PongMessage = {
+      type: payload.type,
+      pong_data: payload.pong_data,
+    };
 
-    const message: PongMessage = payload;    
-    switch (payload.type) {
+    switch (message.type) {
       case 'game_list':
-        handleListGames(senderUsername, payload);
+        handleListGames(senderUsername);
         break;
       case 'join_game':
-        handlerJoinGame(senderUsername, payload);
+        handlerJoinGame(senderUsername, message.pong_data);
         break;
       case 'create_game':
-        handleCreateGame(senderUsername, payload);
+        handleCreateGame(senderUsername, message.pong_data);
         break;
       case 'getGames':
         handleGetGames(senderUsername);
@@ -48,17 +47,17 @@ function sendMessage(senderUsername: string, type: string, pong_data: any): void
         type: type,
         pong_data: pong_data,
     };
-    const wrapped_msg: WebsocketApiRequest = {
-      target_endpoint: "pong-api",
-      payload: message
-    }
+    // const wrapped_msg: WebsocketApiRequest = {
+    //   target_endpoint: "pong-api",
+    //   payload: message
+    // }
 
-    const socket = connectedUsers.get(senderUsername);
-    if (socket) {
-        socket.send(JSON.stringify(wrapped_msg));
-    } else {
-        console.debug(`[PONG WS] User ${senderUsername} not connected, cant send message`);
-    }
+    // const socket = connectedUsers.get(senderUsername);
+    // if (socket) {
+    //     socket.send(JSON.stringify(wrapped_msg));
+    // } else {
+    //     console.debug(`[PONG WS] User ${senderUsername} not connected, cant send message`);
+    // }
 }
 
 function sendErrorMessage(senderUsername: string, errorMessage: string, errorCode: number = 69420): void {
@@ -80,11 +79,15 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   const senderSocket = connectedUsers.get(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
-  console.log(pong_data);
+  console.log("game id", pong_data.id);
+  for (const [username, game] of currentGames.entries()) {
+    // tester-1747586665376
+    // tester-1747586665376
+  }
 
 }
 
-function handleListGames(senderUsername: string, pong_data: LocalGame): void {
+function handleListGames(senderUsername: string): void {
   const senderSocket = connectedUsers.get(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
@@ -113,17 +116,17 @@ function handleListGames(senderUsername: string, pong_data: LocalGame): void {
 
 function handleCreateGame(senderUsername: string, pong_data: LocalGame): void {
 
+  // mode needs to be checked
   const uniqueGameID = `${senderUsername}-${Date.now()}`;
-  const newGame = new PongGame(uniqueGameID);
+  const newGame = new PongGame(uniqueGameID, "Player1");
   currentGames.set(senderUsername, newGame);
 
-  // Step 4: Notify the creator (if socket exists and is open)
   const senderSocket = connectedUsers.get(senderUsername);
   if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
     const response = {
+      target_endpoint: 'pong-api',
       type: 'game_created',
-      gameId: uniqueGameID,
-      status: 'waiting',
+      gameId: uniqueGameID
     };
     senderSocket.send(JSON.stringify(response));
   }
@@ -169,42 +172,42 @@ function handleGetGames(senderUsername: string): void {
   
   // dummy waiting game for testing the 'lobby'
   // TODO: Implement return of actual waiting games list
-  const dummy_game: GameStateData = {
-    game: {
-      id: "game-123456",
-      status: "waiting",
-      ball: {
-        x: "0.0",
-        y: "0.0"
-      },
-      leftPaddle: {
-        topPoint: {
-          x: 0.05,
-          y: 0.35
-        },
-        height: 0.2
-      },
-      rightPaddle: {
-        topPoint: {
-          x: 0.95,
-          y: 0.40
-        },
-        height: 0.2
-      },
-      lastUpdateTime: Date.now(),
-      maxScore: 10,
-      scores: {
-        "player1": 3,
-        "player2": 5
-      },
-      countdown: 0
-    }
-  };
+  // const dummy_game: GameStateData = {
+  //   game: {
+  //     id: "game-123456",
+  //     status: "waiting",
+  //     ball: {
+  //       x: "0.0",
+  //       y: "0.0"
+  //     },
+  //     leftPaddle: {
+  //       topPoint: {
+  //         x: 0.05,
+  //         y: 0.35
+  //       },
+  //       height: 0.2
+  //     },
+  //     rightPaddle: {
+  //       topPoint: {
+  //         x: 0.95,
+  //         y: 0.40
+  //       },
+  //       height: 0.2
+  //     },
+  //     lastUpdateTime: Date.now(),
+  //     maxScore: 10,
+  //     scores: {
+  //       "player1": 3,
+  //       "player2": 5
+  //     },
+  //     countdown: 0
+  //   }
+  // };
   
   // TODO add all games into this list, then pass the list to sendMessages
-  const waiting_games: GameStateData[] = [dummy_game];
+  // const waiting_games: GameStateData[] = [dummy_game];
  
-  sendMessage(senderUsername, 'game_states', waiting_games);
-  console.debug(`returning ${waiting_games.length} games`)
+  // sendMessage(senderUsername, 'game_states', waiting_games);
+  // console.debug(`returning ${waiting_games.length} games`)
 }
 

@@ -6,15 +6,18 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 
-import { getPongHTML } from './PON/PongTemplate';
-import { setupMenu } from './PON/PongMenu';
+import { getPongHTML } from './pong/PongTemplate';
+import { setupMenu } from './pong/PongMenu';
 import { handlePongMessage } from "./PongMessageHandler";
+// import { PongGame } from "./pong/PongGame";
+
 
 
 export class Pong extends Component {
   public socket: WebSocket | null = null;
 	private reconnectAttempts = 0;
 	private readonly maxReconnectAttempts = 5;
+  // public game: PongGame;
 
   constructor(
     childrenString: ChildrenStringType,

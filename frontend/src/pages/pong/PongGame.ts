@@ -1,4 +1,4 @@
-import { PongGameBall } from "./PongBall";
+// import { PongGameBall } from "./PongBall";
 // import { PongGamePaddle } from "./PongPaddle";
 
 type GameState = 'waiting' | 'countdown' | 'playing' | 'paused' | 'finished';
@@ -27,9 +27,11 @@ export class PongGame {
 
 
 
-constructor(uniqueID: string, lPlayerName: string ) {
+constructor(uniqueID: string, lPlayerName: string, rPlayerName: string ) {
   this.uniqueID = uniqueID;
   this.lPlayerName = lPlayerName;
+  this.rPlayerName = rPlayerName;
+
 
   }
 
@@ -41,7 +43,6 @@ constructor(uniqueID: string, lPlayerName: string ) {
 
     getUniqeID() : string { return this.uniqueID; }
     getGameState() : GameState { return this.gameState; }
-    
 
 
 

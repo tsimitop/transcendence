@@ -133,8 +133,10 @@ Which X is good? Depends on latency of the connection i guess?
       "ball": {
         // from the previous coordinates and the new coordinates
         // ball speed is constant
-        "x": "0.000",  // floats as string
-        "y": "0.000",  // top left corner is (0/0)
+        "x": "0.500",  // floats as string
+        "y": "0.500",  // top left corner is (0/0)
+        "lPayerName": "string",
+        "rPayerName": "string"
       },
       "leftPaddle": { 
           "topPoint": {
