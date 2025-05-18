@@ -90,11 +90,12 @@ game_state response or error
   "type": "create_game",
   "pong_data": {
     "userId": "string",
-    "gameMode": "classic", // Optional: "classic", "speed", or "chaos"
-    "maxScore": 10         // Optional: number
-  }
+    "gameMode": "classic", // "classic""
+    "maxScore": 10
+    }
 }
 ```
+No response, just fetch available games and take the newest one i guess? :D
 
 ##### Player Input
 What is "up"/"down" though? What if the user keeps up pressed? Let's define a single "up" as a press of at most X ms, if the user keeps the button pressed > X ms a new "input" is sent and the timer is reset.
@@ -148,7 +149,6 @@ Which X is good? Depends on latency of the connection i guess?
       "lastUpdateTime": 1234567890,  // creation date for waiting games
       "gameMode": "classic",
       "maxScore": 10,
-      "gameMode": "classic",
       "scores": {
         "playerids...": int, //score
       }
