@@ -2,22 +2,13 @@ import dotenv from "dotenv";
 import { sign, verify, Secret, Algorithm } from "jsonwebtoken";
 dotenv.config({ path: "./.env" });
 
-// export const signJwtAccessToken = function (userId: string) {
-//   const algorithm = process.env.ACCESS_TOKEN_ALGORITHM as Algorithm;
-//   return sign({ userId }, process.env.ACCESS_TOKEN_SECRET!, {
-//     algorithm,
-//     expiresIn: "15m",
-//   });
-// };
-
-export const signJwtAccessToken = function (userId: string, username: string) {
-	const algorithm = process.env.ACCESS_TOKEN_ALGORITHM as Algorithm;
-	return sign({ userId, username }, process.env.ACCESS_TOKEN_SECRET!, {
-	  algorithm,
-	  expiresIn: "15m",
-	});
-  };
-  
+export const signJwtAccessToken = function (userId: string) {
+  const algorithm = process.env.ACCESS_TOKEN_ALGORITHM as Algorithm;
+  return sign({ userId }, process.env.ACCESS_TOKEN_SECRET!, {
+    algorithm,
+    expiresIn: "15m",
+  });
+};
 
 export const signJwtRefreshToken = function (userId: string) {
   const algorithm = process.env.REFRESH_TOKEN_ALGORITHM as Algorithm;

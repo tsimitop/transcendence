@@ -13,7 +13,7 @@ export const fastify = Fastify({
 
 const start = async function () {
   const secret = crypto.randomBytes(64).toString("hex");
-
+  
   try {
     await fastify.register(fastifyFormbody);
     await fastify.register(fastifyCookie);
@@ -23,20 +23,20 @@ const start = async function () {
         httpOnly: true,
         secure: false,
         sameSite: "lax",
-      },
+	},
       saveUninitialized: false,
       cookieName: SESSION_COOKIE_NAME,
     });
 
-    fastify.get("/ws-health", (req, reply) => {
-      reply.send({ status: "WebSocket server is bound on /ws" });
-    });
+	fastify.get("/ws-health", (req, reply) => {
+		reply.send({ status: "WebSocket server is bound on /ws" });
+		});
 
     await fastify.listen({ port: 3000, host: "0.0.0.0" });
     console.log("APP IS RUNNING ON PORT 3000");
 
-    startWebSocketServer(fastify.server);
-
+	startWebSocketServer(fastify.server);
+	
   } catch (error) {
     fastify.log.error(error);
     process.exit(1);

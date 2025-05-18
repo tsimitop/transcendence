@@ -3,12 +3,17 @@ import Router from "./models/Router";
 import Chat from "./components/Chat";
 import { userContext } from "./context/UserContext";
 
+// Boolean flag to prevent multiple chat instances from being created
+let chatStartInProgress = false;
+
 /**
  * @brief Initializes the chat component if the user is signed in and has a valid JWT token.
  * Waits for userContext to be fully populated if necessary.
  */
 async function maybeStartChat(): Promise<void> {
-  console.log("UserContext on maybeStartChat start:", userContext.state);
+  console.log("Try UserContext on maybeStartChat start:", userContext.state);
+  if (chatStartInProgress) return;
+  chatStartInProgress = true;
 
   let tries = 0;
 
@@ -32,17 +37,23 @@ async function maybeStartChat(): Promise<void> {
     // Prevent duplicate chat instances
     if (!document.querySelector("chat-component")) {
       const chat = Chat.create();
-      document.body.appendChild(chat);
 
-      // Initialize the WebSocket connection in the next animation frame
-      requestAnimationFrame(() => {
-        chat.initSocket();
-      });
+      if (chat && chat instanceof HTMLElement) {
+        document.body.appendChild(chat);
+
+		// Initialize the WebSocket connection in the next animation frame
+		requestAnimationFrame(() => {
+          chat.initSocket();
+        });
+      } else {
+        console.warn("Chat.create() returned invalid instance:", chat);
+      }
     }
 
   } else {
     console.error("User still not signed in after waiting, final state:", userContext.state);
   }
+  chatStartInProgress = false;
 }
 
 /**
@@ -56,9 +67,23 @@ const renderApp = async function (): Promise<void> {
   Header.highlightActiveNavLink();
   Router.listenForRouteChange();
   Router.handleBackAndForward();
-
-  maybeStartChat(); // Start chat after main rendering
 };
+
+/**
+ * @brief Removes the chat component and clears the access token if it exists.
+ */
+function maybeStopChat(): void {
+	const chat = document.querySelector("chat-component");
+	if (chat) {
+	  chat.remove();
+	  Chat.isInitialized = false;
+	  console.log("Chat stopped and removed from DOM.");
+	}
+  
+	localStorage.removeItem("access_token");
+}
 
 // Execute application setup once the DOM is ready
 document.addEventListener("DOMContentLoaded", renderApp);
+
+export { maybeStartChat, maybeStopChat };

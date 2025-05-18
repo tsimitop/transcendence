@@ -181,6 +181,7 @@ class SignIn extends Component {
         isSignedIn,
         jwtAccessToken: jwtAccessToken,
       });
+	  localStorage.setItem("access_token", jwtAccessToken);
       await Router.redirect("/");
     } catch (error) {
       const formAndValidationErrorContainer = document.querySelector(
