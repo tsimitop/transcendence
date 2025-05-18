@@ -6,10 +6,9 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 
-import { PongGame } from "./pong/PongMain2";
-
 import { getPongHTML } from './PON/PongTemplate';
 import { setupMenu } from './PON/PongMenu';
+import { handlePongMessage } from "./PongMessageHandler";
 
 
 export class Pong extends Component {
@@ -109,7 +108,11 @@ export class Pong extends Component {
       this.socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("Parsed message:", data);
+          if(data.target_endpoint == 'pong-api')
+          {
+            console.log("Parsed message:", data);
+            handlePongMessage(data);
+          }
         } catch (e) {
           console.error("Failed to parse JSON from backend:", e);
         }
