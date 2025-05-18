@@ -106,14 +106,15 @@ export class Pong extends Component {
       // this.showSystemMessage("[Connected to server]", "text-green-500");
       };
   
-    this.socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('[[[[[[[Received from backend]]]]]]]:', data);
-      } catch (err) {
-        console.error("Failed to parse message:", event.data, err);
-      }
-    };
+      this.socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log("Parsed message:", data);
+        } catch (e) {
+          console.error("Failed to parse JSON from backend:", e);
+        }
+      };
+      
 
 	  // Server closed connection
 	  this.socket.onclose = (event) => {

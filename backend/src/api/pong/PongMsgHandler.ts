@@ -68,14 +68,29 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
 function handleListGames(senderUsername: string, pong_data: LocalGame): void {
   
   for (const [username, socket] of connectedUsers.entries()) {
-    if (socket.readyState !== WebSocket.OPEN) continue;
+    if (socket.readyState !== WebSocket.OPEN){
+      console.log("not readyyyyyyyyyyyyyy")
+      continue;
+    } 
+      
 
     console.log("Sending message to:", username);
     console.log("Socket readyState:", socket.readyState);
-  socket.send(JSON.stringify({
-    type: 'CHAT',
-    from: "backend"
-  }));
+    
+    // const message = JSON.stringify({
+    //   target_endpoint: 'pong-api',
+    //   payload: {
+      //     type: "PONG",
+      //     from: "backend"
+      //   }
+      // })
+      // console.log(message);
+      // socket.send(message);
+      socket.send(JSON.stringify({
+      target_endpoint: 'pong-api',
+      type: 'afadsfafds',
+      from: "sender"
+    }));
   }
 }
 
