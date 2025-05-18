@@ -11,7 +11,7 @@ const currentGames: Map<string, PongGame> = new Map(); // player -> game
 export function handlePongPayload(senderUsername: string, payload: any): void {
   try {
     console.error("|\n| THIS IS AN INPUT\nV");
-    console.error("payload:", payload.type);
+    console.error("payload:", payload);
 
     // The payload is already parsed in MessageHandler.ts
     const message: PongMessage = {
@@ -79,12 +79,48 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   const senderSocket = connectedUsers.get(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
-  console.log("game id", pong_data.id);
+  let opponent: string = "";
+  console.log("game id", pong_data);
   for (const [username, game] of currentGames.entries()) {
-    // tester-1747586665376
-    // tester-1747586665376
-  }
+    if(pong_data.gameId === game.getUniqeID()){
+      game.setGameState('countdown');
+      opponent = username;
+      break;
 
+    }
+  }
+  console.log("opponent ", opponent);
+  const opponentSocket = connectedUsers.get(opponent);
+  if (!opponentSocket || opponentSocket.readyState !== WebSocket.OPEN) return;
+  const response = {
+    target_endpoint: 'pong-api',
+    type: 'countdown',
+    value : '3'
+  };
+  
+  console.log("response:", response); 
+  senderSocket.send(JSON.stringify(response));
+  opponentSocket.send(JSON.stringify(response));
+
+    let countdown = 3;
+    const interval = setInterval(() => {
+    countdown--;
+    if (countdown <= 0) {
+      clearInterval(interval);
+      
+      // Optional: start game after short delay
+      setTimeout(() => {
+      }, 1000);
+    } else {
+      const response = {
+        target_endpoint: 'pong-api',
+        type: 'countdown',
+        value : countdown
+      };
+      senderSocket.send(JSON.stringify(response));
+      opponentSocket.send(JSON.stringify(response));
+    }
+  }, 1000);
 }
 
 function handleListGames(senderUsername: string): void {
@@ -98,7 +134,7 @@ function handleListGames(senderUsername: string): void {
       id: game.getUniqeID(),
       owner: username,
       state: game.getGameState(),
-      // optionally include player names, number of players, etc.
+      // optionally include player names, number of players, etc. tournament?
     });
   }
   

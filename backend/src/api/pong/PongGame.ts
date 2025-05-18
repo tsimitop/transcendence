@@ -42,6 +42,12 @@ constructor(uniqueID: string, lPlayerName: string ) {
     getUniqeID() : string { return this.uniqueID; }
     getGameState() : GameState { return this.gameState; }
     
+    setGameState(state : GameState) : void { 
+      this.gameState = state;
+      console.log( this.getUniqeID(), "new GameState:", this.gameState);
+    }
+
+    
 
 
 

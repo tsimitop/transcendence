@@ -16,11 +16,11 @@ export interface KeyboardInputData {
 }
 
 export interface GameByIdData {
-    id: string;
+    gameId: string;
 }
 
 export interface JoinGameData {
-    id: string;
+    gameId: string;
 }
 
 export interface CreateGameData {

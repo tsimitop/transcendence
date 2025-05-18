@@ -7,39 +7,109 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       return;
     }
     switch (data.type) {
-      case 'join_game':
-        handleJoinGame(data, socket);
+      case 'countdown':
+        handleCountdownGame(data);
         break;
       case 'game_created':
-        handleWaitingForUser(data, socket);
+        handleWaitingForUser();
         break;
-      case 'create_game':
-        handleCreateGame(data, socket);
+      case 'update_game':
+        handleUpdateGame(data);
         break;
       case 'game_list':
         handleListGames(data, socket);
-        break;
-  
-      // add more cases here for other message types like join_game, play_move, etc.
-  
+        break;  
       default:
         console.warn("Unknown message type:", data.type);
         break;
     }
   }
 
-  export function handleJoinGame(data: any, socket: WebSocket | null) {
-
-
-
-  }
-
-
-
-
-  export function handleWaitingForUser(data: any, socket: WebSocket | null) {
-    console.log("handleWaitingForUser");
   
+  export function handleCountdownGame(data: any) {
+    const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+    if (!canvas) {
+      console.error("Canvas element not found");
+      return;
+    }
+  
+    // Hide all UI screens
+    document.querySelectorAll(".screen").forEach((el) => {
+      (el as HTMLElement).style.display = "none";
+    });
+  
+    // Show canvas
+    canvas.style.display = "block";
+  
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.error("Failed to get 2D context");
+      return;
+    }
+  
+    let countdown = data.value ?? 3;
+  
+    const drawCountdown = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "72px Arial";
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(countdown), canvas.width / 2, canvas.height / 2);
+    };
+  
+    drawCountdown();
+  
+    const interval = setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        clearInterval(interval);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillText("GO!", canvas.width / 2, canvas.height / 2);
+        setTimeout(() => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // Continue to main game render logic here
+        }, 1000);
+      } else {
+        drawCountdown();
+      }
+    }, 1000);
+  }
+  
+    
+  // export function handleCountdownGame(data: any) {
+  //   const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+  //   if (!canvas) {
+  //     console.error("Canvas element not found");
+  //     return;
+  //   }
+  
+  //   canvas.style.display = "block";
+  //   const ctx = canvas.getContext("2d");
+  //   if (!ctx) {
+  //     console.error("Failed to get 2D context");
+  //     return;
+  //   }
+  
+  //   let countdown = data.value;
+  
+  //   const drawCountdown = () => {
+  //     ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  //     ctx.font = "72px Arial";
+  //     ctx.fillStyle = "white";
+  //     ctx.textAlign = "center";
+  //     ctx.textBaseline = "middle";
+  
+  //     ctx.fillText(String(countdown), canvas.width / 2, canvas.height / 2);
+  //   };
+  
+  //   drawCountdown();
+  // }
+  
+
+
+  export function handleWaitingForUser() {
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
       console.error("Canvas element not found");
@@ -61,22 +131,24 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       return;
     }
   
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Set text properties
-    ctx.font = "32px Arial";
-    ctx.fillStyle = "red";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+
+    const drawWaiting = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-    // Draw "Waiting for players..." in the center
-    ctx.fillText("Waiting for players...", canvas.width / 2, canvas.height / 2);
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+  
+      ctx.fillText("Waiting for players...", canvas.width / 2, canvas.height / 2);
+    };
+  
+    drawWaiting();
   }
   
 
   
-  export function handleCreateGame(data: any, socket: WebSocket | null)  {
+  export function handleUpdateGame(data: any)  {
     console.log(data);
     console.log(data.gameId);
   }
@@ -114,10 +186,13 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
           target_endpoint: 'pong-api',
           payload: {
             type: 'join_game',
-            gameId: game.id
+            pong_data: {
+              gameId: game.id
+            }
           }
         };
-  
+        
+        console.log(joinRequest);
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify(joinRequest));
             console.log(`Sent join request for game ${game.id}`);

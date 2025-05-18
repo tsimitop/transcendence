@@ -85,7 +85,7 @@ export class Pong extends Component {
 	  this.socket.onopen = () => {
       console.log("Connected to pong server.");
       this.reconnectAttempts = 0;
-      // this.showSystemMessage("[Connected to server]", "text-green-500");
+      this.showSystemMessage("[Connected to server]", "text-green-500");
       };
   
       this.socket.onmessage = (event) => {
@@ -105,7 +105,7 @@ export class Pong extends Component {
 	  // Server closed connection
 	  this.socket.onclose = (event) => {
       console.warn(`WebSocket closed (code: ${event.code}, reason: ${event.reason})`);
-      // this.tryReconnect();
+      this.tryReconnect();
       };
   
     this.socket.onerror = (error) => {
@@ -115,46 +115,46 @@ export class Pong extends Component {
   
   /********************************************************/
 
+  
+  
+      /**
+     * @brief Attempts to reconnect using exponential backoff.
+     */
+    private tryReconnect(): void {
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error("Max reconnect attempts reached. Chat is permanently offline.");
+      this.showSystemMessage("[Disconnected from server]", "text-red-500");
+      return;
+      }
+    
+      const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 16000); // 1s, 2s, 4s... max 16s
+      console.warn(`Reconnecting in ${delay / 1000}s... (attempt ${this.reconnectAttempts + 1})`);
+      this.reconnectAttempts++;
+    
+      // Close socket if not already closed
+      if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
+      this.socket.close();
+      this.socket = null;
+      }
+    
+      setTimeout(() => this.initSocket(), delay);
+    }
+      /**
+     * @brief Displays a system message in the chat window.
+     * Used for events like connection status.
+     */
+    private showSystemMessage(text: string, cssClass: string): void {
+      const msgBox = this.querySelector("#pong-messages");
+      if (msgBox) {
+      const message = document.createElement("div");
+      message.textContent = text;
+      message.classList.add(cssClass, "text-center");
+      msgBox.appendChild(message);
+      msgBox.scrollTop = msgBox.scrollHeight;
+      }
+    }
 }
 export default Pong;
 
-
-
-  // 	/**
-	//  * @brief Attempts to reconnect using exponential backoff.
-	//  */
-	// private tryReconnect(): void {
-	//   if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-	// 	console.error("Max reconnect attempts reached. Chat is permanently offline.");
-	// 	this.showSystemMessage("[Disconnected from server]", "text-red-500");
-	// 	return;
-	//   }
-  
-	//   const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 16000); // 1s, 2s, 4s... max 16s
-	//   console.warn(`Reconnecting in ${delay / 1000}s... (attempt ${this.reconnectAttempts + 1})`);
-	//   this.reconnectAttempts++;
-  
-	//   // Close socket if not already closed
-	//   if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
-	// 	this.socket.close();
-	// 	this.socket = null;
-	//   }
-  
-	//   setTimeout(() => this.initSocket(), delay);
-	// }
-  // 	/**
-	//  * @brief Displays a system message in the chat window.
-	//  * Used for events like connection status.
-	//  */
-	// private showSystemMessage(text: string, cssClass: string): void {
-	//   const msgBox = this.querySelector("#pong-messages");
-	//   if (msgBox) {
-	// 	const message = document.createElement("div");
-	// 	message.textContent = text;
-	// 	message.classList.add(cssClass, "text-center");
-	// 	msgBox.appendChild(message);
-	// 	msgBox.scrollTop = msgBox.scrollHeight;
-	//   }
-	// }
 
 

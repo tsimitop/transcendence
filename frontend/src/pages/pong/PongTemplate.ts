@@ -2,17 +2,19 @@ export function getPongHTML(theme: string): string {
   return `
     <main class="main-container layout-padding theme-primary-${theme}-full">
 <style>
-  canvas {
-    border: 1px solid black;
-    background: rgb(0, 0, 0);
-    display: none;
-    width: 80%;
-    min-width: 200px;
-    margin: auto;
-    min-height: 400px;
-    max-height: 1200px;
-    height: 100%;
-  }
+
+canvas {
+  border: 1px solid black;
+  background: rgb(0, 0, 0);
+  display: none;
+  width: 80%;
+  min-width: 200px;
+  margin: auto;
+  min-height: 400px;
+  max-height: 1200px;
+  height: 100%;
+}
+
 @media only screen and (max-width: 600px) {
   canvas {
     width: 98%;
