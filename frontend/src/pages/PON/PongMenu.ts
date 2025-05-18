@@ -89,7 +89,7 @@ export function setupMenu(pong: Pong) {
     pong.socket?.send(JSON.stringify({
       target_endpoint: 'pong-api',
       payload: {
-        type: 'list_games'
+        type: 'game_list'
       }
     }));
 

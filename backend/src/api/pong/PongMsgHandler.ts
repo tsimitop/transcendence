@@ -1,10 +1,11 @@
 import {PongMessage, PongErrorData, KeyboardInputData, LocalGame} from './PongMessages';
 import { connectedUsers } from '../../websocket/WebSocket';
 import { PongGame } from './PongGame';
+import { JoinGameData } from './PongMessages';
 
 
 const waitingPlayers: string[] = [];
-const activeGames: Map<string, PongGame> = new Map(); // player -> game
+const currentGames: Map<string, PongGame> = new Map(); // player -> game
 
 
 export function handlePongPayload(senderUsername: string, payload: any): void {
@@ -20,8 +21,11 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
 
     const message: PongMessage = payload;    
     switch (payload.type) {
-      case 'list_games':
+      case 'game_list':
         handleListGames(senderUsername, payload);
+        break;
+      case 'join_game':
+        handlerJoinGame(senderUsername, payload);
         break;
       case 'create_game':
         handleCreateGame(senderUsername, payload);
@@ -72,51 +76,69 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
 /************** ajehles Methods  *********************/
 /*****************************************************/
 
-function handleListGames(senderUsername: string, pong_data: LocalGame): void {
-  
-  for (const [username, socket] of connectedUsers.entries()) {
-    if (socket.readyState !== WebSocket.OPEN){
-      console.log("not readyyyyyyyyyyyyyy")
-      continue;
-    } 
-      
+function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
+  const senderSocket = connectedUsers.get(senderUsername);
+  if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
-    console.log("Sending message to:", username);
-    console.log("Socket readyState:", socket.readyState);
-    
-    // const message = JSON.stringify({
-    //   target_endpoint: 'pong-api',
-    //   payload: {
-      //     type: "PONG",
-      //     from: "backend"
-      //   }
-      // })
-      // console.log(message);
-      // socket.send(message);
-      socket.send(JSON.stringify({
-      target_endpoint: 'pong-api',
-      type: 'afadsfafds',
-      from: "sender"
-    }));
-  }
+  console.log(pong_data);
+
 }
+
+function handleListGames(senderUsername: string, pong_data: LocalGame): void {
+  const senderSocket = connectedUsers.get(senderUsername);
+  if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
+
+  const gameList = [];
+
+  for (const [username, game] of currentGames.entries()) {
+    gameList.push({
+      id: game.getUniqeID(),
+      owner: username,
+      state: game.getGameState(),
+      // optionally include player names, number of players, etc.
+    });
+  }
+  
+  const response = {
+    target_endpoint: 'pong-api',
+    type: 'game_list',
+    games: gameList,
+  };
+  
+  console.log("response:", response); 
+  senderSocket.send(JSON.stringify(response));
+}
+
 
 
 function handleCreateGame(senderUsername: string, pong_data: LocalGame): void {
-  
-  for (const [username, socket] of connectedUsers.entries()) {
-    if (socket.readyState !== WebSocket.OPEN) continue;
 
-    console.log(pong_data);
-    if(pong_data.mode === 'local')
-      console.log("LOCAL");
-    if(pong_data.mode === 'remote')
-      console.log("REMOTE");
-    else
-      console.log("NO LOCAL");
+  const uniqueGameID = `${senderUsername}-${Date.now()}`;
+  const newGame = new PongGame(uniqueGameID);
+  currentGames.set(senderUsername, newGame);
 
+  // Step 4: Notify the creator (if socket exists and is open)
+  const senderSocket = connectedUsers.get(senderUsername);
+  if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
+    const response = {
+      type: 'game_created',
+      gameId: uniqueGameID,
+      status: 'waiting',
+    };
+    senderSocket.send(JSON.stringify(response));
   }
+
+  console.log(`Game created by ${senderUsername} with ID: ${uniqueGameID}`);
 }
+
+
+// console.log(pong_data);
+// if(pong_data.mode === 'local')
+//   console.log("LOCAL");
+// if(pong_data.mode === 'remote')
+//   console.log("REMOTE");
+// else
+//   console.log("NO LOCAL");
 
 
 

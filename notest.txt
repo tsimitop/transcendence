@@ -35,7 +35,7 @@ process all:
  pong.socket?.send(JSON.stringify({
       target_endpoint: 'pong-api',
       payload: {
-        type: 'list_games'
+        type: 'game_list'
       }
     }));
 

@@ -1,5 +1,7 @@
-import { WebSocket } from 'ws';
+import { PongGameBall } from "./PongBall";
+import { PongGamePaddle } from "./PongPaddle";
 
+type GameState = 'waiting' | 'countdown' | 'playing' | 'paused' | 'finished';
 
 
 export class PongGame {
@@ -8,7 +10,13 @@ export class PongGame {
 /*****************************************************/
 /**************     Variables    *********************/
 /*****************************************************/
-// private socket: WebSocket;
+  private uniqueID: string;
+  // private backendBall: PongGameBall;
+  // private lPlayerPaddle: PongGamePaddle;
+  // private rPlayerPaddle: PongGamePaddle;
+  private gameState: GameState = "waiting";
+
+
 
 
 /*****************************************************/
@@ -17,18 +25,23 @@ export class PongGame {
 
 
 
-constructor(socket: WebSocket) {
-
-    socket.send(JSON.stringify({
-              target_endpoint: 'pong-api', // <== match what frontend expects
-              payload: {
-                type: 'match_found',
-                pong_data: {
-                  match_id: 'abc123'
-                }
-              }
-            }));
+constructor(uniqueID: string) {
+  this.uniqueID = uniqueID;
 
     }
+
+
+
+/*****************************************************/
+/**************        Methods   *********************/
+/*****************************************************/
+
+    getUniqeID() : string { return this.uniqueID; }
+    getGameState() : GameState { return this.gameState; }
+
+
+
+
+
 
 }

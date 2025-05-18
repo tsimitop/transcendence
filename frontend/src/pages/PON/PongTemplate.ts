@@ -6,14 +6,18 @@ export function getPongHTML(theme: string): string {
     border: 1px solid black;
     background: rgb(0, 0, 0);
     display: none;
-
-    /* ✅ Centering canvas */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    width: 80%;
+    min-width: 200px;
+    margin: auto;
+    min-height: 400px;
+    max-height: 1200px;
+    height: 100%;
   }
-
+@media only screen and (max-width: 600px) {
+  canvas {
+    width: 98%;
+  }
+}
   .screen {
     display: none;
     flex-direction: column;
@@ -103,7 +107,7 @@ export function getPongHTML(theme: string): string {
       </div>
 
       <!-- Game Canvas -->
-      <canvas id="gameCanvas" width="800" height="600"></canvas>
+      <canvas id="gameCanvas"></canvas>
     </main>
   `;
 }
