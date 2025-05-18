@@ -8,6 +8,7 @@ import json
 import asyncio
 import traceback
 import ssl 
+import random
 from pprint import pprint
 from typing import Any, Dict, List, Optional, Tuple, Union, cast, Literal
 from dataclasses import dataclass, field
@@ -358,7 +359,7 @@ class BackendClient:
             await self.session.close()
         self.is_connected.clear()
         self.session = None
-        pprint("Closed backend client session")
+        print("Closed backend client session")
 
 
 class GameClient(BackendClient):
@@ -591,10 +592,11 @@ class PongCli:
             self.print_at([(y, x, f"{msg} {result}")])
     
     async def show_error(self, error_msg: str):
+        y, x = self.screen_size
         self.stdscr.clear()
         self.stdscr.addstr(0, 0, "An error occured:")
         self.stdscr.addstr(3, 0, error_msg)
-        self.stdscr.addstr(6, 0, "Press q to return")
+        self.stdscr.addstr(y, 0, "Press q to return")
         self.stdscr.refresh()
         await self.wait_until_input("q")
 
@@ -677,7 +679,6 @@ class PongCli:
         def draw_menu():
             self.stdscr.clear()
             self.stdscr.addstr(0, 0, "Create a new game:")
-            self.stdscr.addstr(max_y, 0, "Press q to go back")
             
             for index, menu_item in enumerate(options):
                 y, x = int((max_y // 2) - ((len(options)//2) - index)), int((max_x//2) - (len(menu_item[0]) // 2))
@@ -807,7 +808,7 @@ class PongCli:
                     index += 3
                     if index >= curses.LINES - 1:
                         break
-                    self.stdscr.addstr(index, 0, f"Message {message}")
+                    self.stdscr.addstr(index, 0, f"Message {index-3}: {message}")
                 self.stdscr.refresh()
 
             key = await self.wait_until_input()
@@ -824,11 +825,142 @@ class PongCli:
         self.client.debug_mode.clear()
 
     async def game_screen(self, game: PongGame) -> dict[str, Any]:
-        """
-        Screen which shows the game. Returns the game result.
-        """
-        await self.show_error(error_msg=f"Successfully selected a game:\n{str(game)}")
-        return {}
+        """just a dummy for now"""
+        max_y, max_x = self.screen_size
+        
+        game_width = max_x - 10
+        game_height = max_y - 6
+        start_x = 5
+        start_y = 3
+        
+        paddle_height = 5
+        paddle_width = 1
+        left_paddle_x = start_x + 1
+        right_paddle_x = start_x + game_width - 2
+        
+        ball_x = start_x + game_width // 2
+        ball_y = start_y + game_height // 2
+        
+        ball_dx = 1
+        ball_dy = 0.5
+        
+        left_score = 0
+        right_score = 0
+        
+        game_id = game.id
+        max_score = game.maxScore
+        
+        running = True
+        frame_counter = 0
+        last_time = time.time()
+        fps = 60
+        frame_duration = 1.0 / fps
+        
+        instructions = "Press 'q' to quit, ↑/↓ to move paddle (not implemented yet)"
+        
+        while running:
+            current_time = time.time()
+            if current_time - last_time < frame_duration:
+                await asyncio.sleep(frame_duration - (current_time - last_time))
+            last_time = time.time()
+            
+            self.stdscr.clear()
+            
+            self.stdscr.addstr(0, 0, f"Game ID: {game_id} | Max Score: {max_score}")
+            self.stdscr.addstr(1, 0, instructions)
+            
+            score_x = start_x + (game_width // 2) - 5
+            self.stdscr.addstr(start_y - 2, score_x, f"{left_score}   -   {right_score}")
+            
+            for x in range(start_x, start_x + game_width + 1):
+                self.stdscr.addch(start_y, x, curses.ACS_HLINE)
+                self.stdscr.addch(start_y + game_height, x, curses.ACS_HLINE)
+            
+            for y in range(start_y, start_y + game_height + 1):
+                self.stdscr.addch(y, start_x, curses.ACS_VLINE)
+                self.stdscr.addch(y, start_x + game_width, curses.ACS_VLINE)
+            
+            self.stdscr.addch(start_y, start_x, curses.ACS_ULCORNER)
+            self.stdscr.addch(start_y, start_x + game_width, curses.ACS_URCORNER)
+            self.stdscr.addch(start_y + game_height, start_x, curses.ACS_LLCORNER)
+            self.stdscr.addch(start_y + game_height, start_x + game_width, curses.ACS_LRCORNER)
+            
+            center_x = start_x + (game_width // 2)
+            for y in range(start_y + 1, start_y + game_height):
+                if y % 2 == 0:  # Dotted line
+                    self.stdscr.addch(y, center_x, '|')
+            
+            left_paddle_y = start_y + (game_height // 2) - (paddle_height // 2)
+            right_paddle_y = start_y + (game_height // 2) - (paddle_height // 2)
+            
+            # Left paddle
+            for y in range(paddle_height):
+                self.stdscr.addch(left_paddle_y + y, left_paddle_x, '█')
+            
+            # Right paddle
+            for y in range(paddle_height):
+                self.stdscr.addch(right_paddle_y + y, right_paddle_x, '█')
+            
+            # Draw ball
+            try:
+                self.stdscr.addch(int(ball_y), int(ball_x), 'O')
+            except curses.error:
+                # Handle potential curses error when writing to near into corner
+                pass
+            
+            ball_x += ball_dx
+            ball_y += ball_dy
+            
+            if ball_y <= start_y + 1 or ball_y >= start_y + game_height - 1:
+                ball_dy = -ball_dy
+            
+            if (ball_x <= left_paddle_x + 1 and 
+                left_paddle_y <= ball_y <= left_paddle_y + paddle_height):
+                ball_dx = -ball_dx
+                # Randomize a bit
+                ball_dy = (ball_y - (left_paddle_y + paddle_height // 2)) / 3
+            
+            if (ball_x >= right_paddle_x - 1 and 
+                right_paddle_y <= ball_y <= right_paddle_y + paddle_height):
+                ball_dx = -ball_dx
+                ball_dy = (ball_y - (right_paddle_y + paddle_height // 2)) / 3
+            
+            if ball_x < start_x + 1:
+                right_score += 1
+                ball_x = start_x + game_width // 2
+                ball_y = start_y + game_height // 2
+                ball_dx = 1
+                ball_dy = 0.5
+            elif ball_x > start_x + game_width - 1:
+                left_score += 1
+                ball_x = start_x + game_width // 2
+                ball_y = start_y + game_height // 2
+                ball_dx = -1
+                ball_dy = -0.5
+            
+            key = self.stdscr.getch()
+            if key == ord('q'):
+                running = False
+            elif key == curses.KEY_UP:
+                pass
+            elif key == curses.KEY_DOWN:
+                pass
+            
+            self.stdscr.refresh()
+            
+            frame_counter += 1
+            if frame_counter % 50 == 0:
+                ball_dy += (random.random() - 0.5) / 2
+            
+            if left_score >= max_score or right_score >= max_score:
+                running = False
+        
+        return {
+            "left_score": left_score,
+            "right_score": right_score,
+            "winner": "left" if left_score > right_score else "right",
+            "game_id": game_id
+        }
 
     async def show_game_result(self, game_result: dict[str, Any]) -> None:
         """
