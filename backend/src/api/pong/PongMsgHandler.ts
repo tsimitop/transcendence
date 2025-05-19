@@ -1,8 +1,7 @@
-import {PongMessage, PongErrorData, KeyboardInputData, LocalGame} from './PongMessages';
+import {PongMessage, PongErrorData, KeyboardInputData, LocalGame, CreateGameData} from './PongMessages';
 import { connectedUsers } from '../../websocket/WebSocket';
 import { PongGame } from './PongGame';
 import { JoinGameData } from './PongMessages';
-import { CreateGameData } from './PongMessages';
 
 
 const currentGames: Map<string, PongGame> = new Map(); // player -> game
@@ -70,9 +69,12 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
       case 'getGames':
         handleGetGames(senderUsername);
         break;
+      case 'create_game':  // mhhh mixed case types
+        handleCreateGame(senderUsername, message.pong_data);
+        break;
       default:
         sendErrorMessage(senderUsername, `Unknown message type: ${message.type}`, 4001);
-        console.warn(`[PONG WS] Unknown message type: ${message.type}`);
+        console.warn(`[PONG WS] Unknown message: ${message}`);
     }
   } catch (err) {
     console.error(`[PONG WS] Failed to process message ${payload}:`, err);
@@ -387,3 +389,6 @@ function handleGetGames(senderUsername: string): void {
   // console.debug(`returning ${waiting_games.length} games`)
 }
 
+function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
+  console.log(`got create game ${pong_data}`)
+}

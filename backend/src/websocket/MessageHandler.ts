@@ -13,6 +13,8 @@ export interface WebsocketApiRequest {
 export function handleWebsocketPayload(senderUsername: string, rawData: any): void {
   try {
     const parsed: WebsocketApiRequest = JSON.parse(rawData.toString());
+    console.debug(`got ws message: ${rawData.toString()}`);
+
     switch (parsed.target_endpoint) {
       case 'chat-api':
         handleChatPayload(senderUsername, parsed.payload);
@@ -23,7 +25,11 @@ export function handleWebsocketPayload(senderUsername: string, rawData: any): vo
       case 'ping':
           const socket = connectedUsers.get(senderUsername);
           if (socket) {
-              socket.send("pong");
+              const pong_msg: WebsocketApiRequest = {
+                target_endpoint: "pong",
+                payload: {},
+              }
+              socket.send(JSON.stringify(pong_msg));
           } else {
               console.debug(`[PONG WS] User ${senderUsername} not connected, cant send message`);
           }
