@@ -59,12 +59,12 @@ class UserDb extends Sqlite {
 
     const getAllUsersStatement = userDb.prepare(QueryUser.SELECT_ALL_USERS);
 	const allUsers = getAllUsersStatement.all() as User[];
-	console.log("ALL USERS:");
-	console.log(allUsers);
+	// console.log("ALL USERS:");
+	// console.log(allUsers);
 	const existingUsers = allUsers.filter((u) => u.id !== newUserId);
 	const tables = userDb.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
-	console.log("TABLES:");
-	console.log(tables);
+	// console.log("TABLES:");
+	// console.log(tables);
     const insertFriendStatement = userDb.prepare(QueryFriend.INSERT_NEW_FRIEND_USER);
     for (const existingUser of existingUsers) {
       insertFriendStatement.run(newUserId, existingUser.id, 'default');
@@ -321,8 +321,9 @@ New methods:
 
 sendFriendRequest(userId, friendId)
 acceptFriendRequest(userId, friendId)
-getFriends(userId)
+getFriends(userId) -> for list
 removeFriend(userId, friendId)
+blockUser(userId, friendId)
 
 Existing:
 findUserInDb() or userExistsInUserDb() to look up id values from usernames.

@@ -59,7 +59,20 @@ class Header extends Component {
 				<div class="flex items-center gap-10 justify-self-end">
 					${
             userContext.state.isSignedIn
-              ? `<a class="nav-link profile-link ${ROUTER_CLASS_NAME}" href="/profile">${
+              ? `
+			  <input 
+				  type="text" 
+				  id="user-searched"
+				  placeholder="Search users..." 
+				  class="px-3 py-1 rounded-md border border-gray-300 focus:outline-none focus:ring focus:border-blue-300 text-sm"
+				/>
+				<a 
+				  id="search-link"
+				  class="nav-link user-link cursor-pointer ${ROUTER_CLASS_NAME}" href="/users"
+				>
+				  Search
+				</a>
+			  <a class="nav-link profile-link ${ROUTER_CLASS_NAME}" href="/profile">${
                   userContext.state.username ||
                   userContext.state.email ||
                   "profile"
@@ -77,12 +90,18 @@ class Header extends Component {
 				</div>
 			</nav>
 		`;
-
     const header = document.createElement("header");
     header.classList.add("grow");
     header.insertAdjacentHTML("beforeend", html);
     header.addEventListener("click", event => Header.handleClick(event));
     return header;
+  }
+
+  public static async handleSearch() {
+    // const searchInput = document.querySelector('#user-searched') as HTMLInputElement;
+    // const username = searchInput.value.trim();
+	urlContext.setState({ ...urlContext.state, path: "/users" });
+	// fetch("/api/update-path", { method: "POST", body: JSON.stringify({ path: "/users" }) });
   }
 
   public static handleClick(event: MouseEvent) {
@@ -96,7 +115,9 @@ class Header extends Component {
       Header.handleClickNavLink(target);
     } else if (target.classList.contains("profile-link")) {
       Header.handleNavigateToProfile();
-    }
+    } else if (target.classList.contains("user-link")) {
+	  Header.handleSearch();
+	}
   }
 
   public static handleChangeTheme(target: HTMLElement) {

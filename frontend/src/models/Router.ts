@@ -5,6 +5,7 @@ import NotFound from "../pages/NotFound";
 import Pong from "../pages/Pong";
 import Header from "../components/Header";
 import Profile from "../pages/Profile";
+import Users from "../pages/Users";
 import SignIn from "../pages/SignIn";
 import Auth2Fa from "../pages/Auth2Fa";
 import Dashboard from "../pages/Dashboard";
@@ -49,10 +50,11 @@ abstract class Router {
     "/sign-in": SignIn,
     "/pong": Pong,
     "/profile": Profile,
+    "/users": Users,
     "/2fa": Auth2Fa,
 	"/dashboard": Dashboard,
   };
-  static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile"];
+  static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile", "/users"];
   static guestUsersRoutes: ValidUrlPathsType[] = [
     "/sign-in",
     "/sign-up",
