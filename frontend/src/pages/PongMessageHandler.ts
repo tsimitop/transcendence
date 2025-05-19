@@ -30,10 +30,41 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
   
   export function handleGameState(data: any) {
+    console.log("handleGameStateFunction", data);
+    console.log("handleGameStateFunction", data.game.id);
 
+    const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+    if (!canvas) {
+      console.error("Canvas element not found");
+      return;
+    }
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    canvas.style.display = "block";
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.error("Failed to get 2D context");
+      return;
+    }
+  // Clear previous frame
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  const relX = 0.5;    // 50%
+  const relY = 0.3;    // 30%
+  const relRadius = 0.03; // 3%
+  
+  const x = canvas.width * relX;
+  const y = canvas.height * relY;
+  const radius = canvas.width * relRadius; // Based on width to keep it round
+  
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = "white";
+  ctx.fill();
 
   }
+
+
   export function handleCountdownGame(data: any) {
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
@@ -45,6 +76,8 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       (el as HTMLElement).style.display = "none";
     });
     // Show canvas
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
     canvas.style.display = "block";
     const ctx = canvas.getContext("2d");
     if (!ctx) {
@@ -95,12 +128,14 @@ export function handleWaitingForUser() {
   // ✅ Make canvas visible
   canvas.style.display = "block";
 
-  // ✅ Ensure it has dimensions
-  if (!canvas.width || !canvas.height) {
+  // // ✅ Ensure it has dimensions
+  // if (!canvas.width || !canvas.height) {
+  //   canvas.width = canvas.clientWidth;
+  //   canvas.height = canvas.clientHeight;
+  // }
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-  }
-
+    
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       console.error("Failed to get 2D context");

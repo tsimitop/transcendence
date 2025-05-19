@@ -19,7 +19,9 @@ export class PongGame {
   private rPlayerAlias: string = "Player2";
   private lPlayerName: string = "Player1";
   private rPlayerName: string = "Player2";
-
+  
+  private lPlayerSocket: any;
+  private rPlayerSocket: any;
 
 
 
@@ -44,8 +46,18 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string ) {
 
     getUniqeID() : string { return this.uniqueID; }
     getGameState() : GameState { return this.gameState; }
-    // getPlayers():
-
+    getPlayers(){
+      const players = [];
+      if (this.lPlayerName) players.push(this.lPlayerName);
+      if (this.rPlayerName) players.push(this.rPlayerName);
+      return players;
+    }
+    setSockets(lPlayerSocket: any, rPlayerSocket: any){
+      this.lPlayerSocket = lPlayerSocket;
+      this.rPlayerSocket = rPlayerSocket;
+    }
+    getlPlayerSocket(): any{ return this.lPlayerSocket; }
+    getrPlayerSocket(): any{ return this.rPlayerSocket; }
 
     setOpponentName(opponentName: string, opponentAlias: string){
       this.rPlayerName = opponentName;

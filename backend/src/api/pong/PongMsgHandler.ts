@@ -103,6 +103,10 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   senderSocket.send(JSON.stringify(response));
   opponentSocket.send(JSON.stringify(response));
 
+  // set sockets to current instance
+  currentGames.get(opponent)?.setSockets(senderSocket, opponentSocket);
+  
+
     let countdown = 3;
     const interval = setInterval(() => {
     countdown--;
@@ -151,14 +155,79 @@ function startGameLoop(game: PongGame) {
 
     // Broadcast the updated game state to players
     const gameState = game.getGameStatePayload();
+
     
+    const response = {
+          target_endpoint: 'pong-api',
+          type: 'game_state',
+          game: {
+            id: game.getUniqeID(),
+            status: 'playing'
+            // ball: {
+            //     x: string;  // floats as string
+            //     y: string;  // top left corner is (0/0)
+            // };
+            // leftPaddle: {
+            //     topPoint: {
+            //         x: number;
+            //         y: number;
+            //     };
+            //     height: number;  // percentage of window height (0-1)
+            // };
+            // rightPaddle: {
+            //     topPoint: {
+            //         x: number;
+            //         y: number;
+            //     };
+            //     height: number;  // percentage of window height (0-1)
+            // };
+            // lastUpdateTime: number;
+            // maxScore: number;
+            // scores: {
+            //     [playerId: string]: number;  // player IDs mapped to their scores
+            }
+            // countdown: number; // Only relevant during countdown
+    };
+
+    // console.log("response:", response); 
+    game.getlPlayerSocket().send(JSON.stringify(response));
+    game.getrPlayerSocket().send(JSON.stringify(response));
+
     // for (const playerUsername of game.getPlayers()) {
     //   const socket = connectedUsers.get(playerUsername);
     //   if (socket && socket.readyState === WebSocket.OPEN) {
     //     socket.send(JSON.stringify({
     //       target_endpoint: 'pong-api',
     //       type: 'game_state',
-    //       pong_data: gameState,
+    //       game: {
+    //         id: game.getUniqeID(),
+    //         status: 'playing',
+    //         // ball: {
+    //         //     x: string;  // floats as string
+    //         //     y: string;  // top left corner is (0/0)
+    //         // };
+    //         // leftPaddle: {
+    //         //     topPoint: {
+    //         //         x: number;
+    //         //         y: number;
+    //         //     };
+    //         //     height: number;  // percentage of window height (0-1)
+    //         // };
+    //         // rightPaddle: {
+    //         //     topPoint: {
+    //         //         x: number;
+    //         //         y: number;
+    //         //     };
+    //         //     height: number;  // percentage of window height (0-1)
+    //         // };
+    //         // lastUpdateTime: number;
+    //         // maxScore: number;
+    //         // scores: {
+    //         //     [playerId: string]: number;  // player IDs mapped to their scores
+    //         // };
+    //         // countdown: number; // Only relevant during countdown
+            
+    //       }
     //     }));
     //   }
     // }
