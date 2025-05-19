@@ -139,22 +139,18 @@ export function setupMenu(pong: Pong) {
       showOnly(elem, screenId, false); // false = do NOT push to history again
     }
   });
-  
-  
-  function showOnly(elem: HTMLElement, stateName: string = elem.id, pushToHistory: boolean = true) {
-    document.querySelectorAll('.screen').forEach(div => {
-      (div as HTMLElement).style.display = 'none';
-    });
-      elem.style.display = elem.tagName === 'CANVAS' ? 'block' : 'flex';
-    // elem.style.display = 'flex';
-  
-    // Only push to history if this isn't triggered by a popstate event
-    if (pushToHistory && location.hash !== `#${stateName}`) {
-      history.pushState({ screen: stateName }, "", `#${stateName}`);
-    }
+}
+
+
+export function showOnly(elem: HTMLElement, stateName: string = elem.id, pushToHistory: boolean = true) {
+  document.querySelectorAll('.screen').forEach(div => {
+    (div as HTMLElement).style.display = 'none';
+  });
+    elem.style.display = elem.tagName === 'CANVAS' ? 'block' : 'flex';
+  // elem.style.display = 'flex';
+
+  // Only push to history if this isn't triggered by a popstate event
+  if (pushToHistory && location.hash !== `#${stateName}`) {
+    history.pushState({ screen: stateName }, "", `#${stateName}`);
   }
-  
-  
-
-
 }

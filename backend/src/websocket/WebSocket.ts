@@ -5,6 +5,9 @@ import { IncomingMessage } from 'http';
 import UserDb from "../user-database/UserDb";
 import { handleWebsocketPayload } from './MessageHandler';
 
+import { endGameWithuser } from '../api/pong/PongMsgHandler';
+
+
 // Load environment variables from .env file
 dotenv.config();
 
@@ -79,7 +82,11 @@ export function startWebSocketServer(server: any) {
     socket.on('close', () => {
       console.log(`[WS] User disconnected: ${username}`);
       unregisterUser(username);
+
+      endGameWithuser(username);
+
       // end game if there is a current game running?
+
     });
 
     // Send welcome message

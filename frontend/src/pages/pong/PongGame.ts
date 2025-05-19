@@ -1,52 +1,42 @@
-// import { PongGameBall } from "./PongBall";
-// import { PongGamePaddle } from "./PongPaddle";
-
-type GameState = 'waiting' | 'countdown' | 'playing' | 'paused' | 'finished';
 
 
-export class PongGame {
-
-
-/*****************************************************/
-/**************     Variables    *********************/
-/*****************************************************/
-  private uniqueID: string;
-  // private backendBall: PongGameBall;
-  // private lPlayerPaddle: PongGamePaddle;
-  // private rPlayerPaddle: PongGamePaddle;
-  private gameState: GameState = "waiting";
-  private lPlayerName: string = "Player1";
-  private rPlayerName: string = "Player2";
-
-
-
-
-/*****************************************************/
-/**************     Constructor  *********************/
-/*****************************************************/
-
-
-
-constructor(uniqueID: string, lPlayerName: string, rPlayerName: string ) {
-  this.uniqueID = uniqueID;
-  this.lPlayerName = lPlayerName;
-  this.rPlayerName = rPlayerName;
-
-
+export interface GameStateData {
+  game: {
+      id: string;
+      status: string;
+      ball: {
+          x: number;  // floats as string
+          y: number;  // top left corner is (0/0)
+      };
+      leftPaddle: {
+          topPoint: {
+              x: number;
+              y: number;
+          };
+          height: number;  // percentage of window height (0-1)
+      };
+      rightPaddle: {
+          topPoint: {
+              x: number;
+              y: number;
+          };
+          height: number;  // percentage of window height (0-1)
+      };
+      lastUpdateTime: number;
+      maxScore: number;
+      scores: {
+          [playerId: string]: number;  // player IDs mapped to their scores
+      };
+      countdown: number; // Only relevant during countdown
   }
+}
 
-
-
-/*****************************************************/
-/**************        Methods   *********************/
-/*****************************************************/
-
-    getUniqeID() : string { return this.uniqueID; }
-    getGameState() : GameState { return this.gameState; }
-
-
-
-
-
-
+export interface GameOverData {
+    gameId: string;
+    winnerId: string;
+    message: string;
+    finalScore: {
+        left: number;
+        right: number;
+    }
 }

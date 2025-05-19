@@ -9,15 +9,12 @@ import Component, {
 import { getPongHTML } from './pong/PongTemplate';
 import { setupMenu } from './pong/PongMenu';
 import { handlePongMessage } from "./PongMessageHandler";
-// import { PongGame } from "./pong/PongGame";
-
 
 
 export class Pong extends Component {
   public socket: WebSocket | null = null;
 	private reconnectAttempts = 0;
 	private readonly maxReconnectAttempts = 5;
-  // public game: PongGame;
 
   constructor(
     childrenString: ChildrenStringType,
@@ -93,7 +90,7 @@ export class Pong extends Component {
           const data = JSON.parse(event.data);
           if(data.target_endpoint == 'pong-api')
           {
-            console.log("Parsed message:", data);
+            // console.log("Parsed message:", data);
             handlePongMessage(data, this.socket);
           }
         } catch (e) {
@@ -104,7 +101,7 @@ export class Pong extends Component {
 
 	  // Server closed connection
 	  this.socket.onclose = (event) => {
-      console.warn(`WebSocket closed (code: ${event.code}, reason: ${event.reason})`);
+      console.warn(`WebSocket closed (code: ${event.code}, reason: ${event.reason}), event: ${event}`);
       this.tryReconnect();
       };
   

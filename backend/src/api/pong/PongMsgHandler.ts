@@ -5,8 +5,42 @@ import { JoinGameData } from './PongMessages';
 import { CreateGameData } from './PongMessages';
 
 
-const waitingPlayers: string[] = [];
 const currentGames: Map<string, PongGame> = new Map(); // player -> game
+
+
+export function endGameWithuser(user: string) {
+  for (const [username, game] of currentGames.entries()) {
+    if(user === game.getlPlayerName() || user === game.getrPlayerName())
+    {
+      game.setGameState("finished");
+      const response = {
+        target_endpoint: 'pong-api',
+        type: 'game_over',
+        pong_data: {
+          gameId: game.getUniqeID(),
+          winnerId: "string",
+          message: "WIN THROUGH DISSCONNETION",
+          finalScore: {
+            left: game.getlPlayerScore(),
+            right: game.getrPlayerScore()
+        }
+        }
+      }
+      const lsocket = game.getlPlayerSocket();
+      const rsocket = game.getrPlayerSocket();
+      if (lsocket || lsocket.readyState === WebSocket.OPEN){
+        console.log("message l player");
+        lsocket.send(JSON.stringify(response));
+      }
+      if (rsocket || rsocket.readyState === WebSocket.OPEN){
+        console.log("message r player");
+        rsocket.send(JSON.stringify(response));
+      }
+    }
+  }
+}
+
+
 
 
 export function handlePongPayload(senderUsername: string, payload: any): void {
@@ -75,6 +109,7 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
 /*****************************************************/
 /************** ajehles Methods  *********************/
 /*****************************************************/
+
 
 function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
   const senderSocket = connectedUsers.get(senderUsername);
@@ -150,7 +185,7 @@ function startGameLoop(game: PongGame) {
   // game.isRunning = true;
 
   const intervalId = setInterval(() => {
-    // Run one step of the game engine (e.g. move ball, handle collisions)
+    // console.log("game update is running");
     game.update();
 
     // Broadcast the updated game state to players
@@ -162,75 +197,37 @@ function startGameLoop(game: PongGame) {
           type: 'game_state',
           game: {
             id: game.getUniqeID(),
-            status: 'playing'
-            // ball: {
-            //     x: string;  // floats as string
-            //     y: string;  // top left corner is (0/0)
-            // };
-            // leftPaddle: {
-            //     topPoint: {
-            //         x: number;
-            //         y: number;
-            //     };
-            //     height: number;  // percentage of window height (0-1)
-            // };
-            // rightPaddle: {
-            //     topPoint: {
-            //         x: number;
-            //         y: number;
-            //     };
-            //     height: number;  // percentage of window height (0-1)
-            // };
-            // lastUpdateTime: number;
-            // maxScore: number;
-            // scores: {
-            //     [playerId: string]: number;  // player IDs mapped to their scores
-            }
-            // countdown: number; // Only relevant during countdown
-    };
+            status: 'playing',
+            ball: {
+                x: gameState.game.ball.x,  // floats as string
+                y: gameState.game.ball.y,  // top left corner is (0/0)
+            },
+            leftPaddle: {
+                topPoint: {
+                    x: 0.1,
+                    y: 0.1,
+                },
+                height: 0.2,  // percentage of window height (0-1)
+              },
+              rightPaddle: {
+              topPoint: {
+                  x: 0.1,
+                  y: 0.1,
+              },
+              height: 0.2,  // percentage of window height (0-1)
+            },
+            lastUpdateTime: 1,
+            maxScore: 10,
+            scores: {
+                ["playerId: string"]: 1,  // player IDs mapped to their scores
+            },
+            countdown: 1,
+      }
+  };
 
     // console.log("response:", response); 
     game.getlPlayerSocket().send(JSON.stringify(response));
     game.getrPlayerSocket().send(JSON.stringify(response));
-
-    // for (const playerUsername of game.getPlayers()) {
-    //   const socket = connectedUsers.get(playerUsername);
-    //   if (socket && socket.readyState === WebSocket.OPEN) {
-    //     socket.send(JSON.stringify({
-    //       target_endpoint: 'pong-api',
-    //       type: 'game_state',
-    //       game: {
-    //         id: game.getUniqeID(),
-    //         status: 'playing',
-    //         // ball: {
-    //         //     x: string;  // floats as string
-    //         //     y: string;  // top left corner is (0/0)
-    //         // };
-    //         // leftPaddle: {
-    //         //     topPoint: {
-    //         //         x: number;
-    //         //         y: number;
-    //         //     };
-    //         //     height: number;  // percentage of window height (0-1)
-    //         // };
-    //         // rightPaddle: {
-    //         //     topPoint: {
-    //         //         x: number;
-    //         //         y: number;
-    //         //     };
-    //         //     height: number;  // percentage of window height (0-1)
-    //         // };
-    //         // lastUpdateTime: number;
-    //         // maxScore: number;
-    //         // scores: {
-    //         //     [playerId: string]: number;  // player IDs mapped to their scores
-    //         // };
-    //         // countdown: number; // Only relevant during countdown
-            
-    //       }
-    //     }));
-    //   }
-    // }
 
 
     // Check if game is finished

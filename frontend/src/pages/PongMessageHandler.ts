@@ -1,12 +1,21 @@
 
+import { GameStateData } from "./pong/PongGame";
+import { GameOverData } from "./pong/PongGame";
+import { showOnly } from "./pong/PongMenu"
+  
+
+
 
 export function     handlePongMessage(data: any, socket: WebSocket | null ) {
-    console.log("data.type", data.type)
+    // console.log("data.type", data.type)
     if (!data.type) {
       console.error("Received message without type");
       return;
     }
     switch (data.type) {
+      case 'game_over':
+        handleGameOver(data.pong_data);
+        break;
       case 'game_state':
         handleGameState(data);
         break;
@@ -15,9 +24,6 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
         break;
       case 'game_created':
         handleWaitingForUser();
-        break;
-      case 'update_game':
-        handleUpdateGame(data);
         break;
       case 'game_list':
         handleListGames(data, socket);
@@ -28,40 +34,96 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     }
   }
 
+  export function handleGameOver(data: GameOverData) {
+    console.log(data);
+    const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error("Canvas context not available");
   
-  export function handleGameState(data: any) {
-    console.log("handleGameStateFunction", data);
-    console.log("handleGameStateFunction", data.game.id);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+    ctx.font = "30px Arial";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+  
+    const scoreText = `${data.finalScore.left} : ${data.finalScore.right}`;
+    ctx.fillText(scoreText, canvas.width / 2, canvas.height / 2 - 20);
+  
+    ctx.font = "20px Arial";
+    ctx.fillText(data.message, canvas.width / 2, canvas.height / 2 + 20);
+  
+    setTimeout(() => {
+      const menu = document.getElementById('menuScreen');
+      const gameCanvas = document.getElementById('gameCanvas');
+    
+      if (gameCanvas) {
+        gameCanvas.style.display = 'none'; // Hide the game canvas
+      }
+    
+      if (menu) {
+        menu.style.display = 'flex'; // Show menu screen
+      }
+    }, 5000);
+    
+  }
+
+  
+  export function   handleGameState(data: any) {
+    // console.log("handleGameStateFunction", data);
+    // console.log("handleGameStateFunction", data.game.id);
+    
+    
+    const gameStateData = data as GameStateData;
+    const game = gameStateData.game;
+    // console.log(game);
 
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
       console.error("Canvas element not found");
       return;
     }
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-    canvas.style.display = "block";
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       console.error("Failed to get 2D context");
       return;
     }
-  // Clear previous frame
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    canvas.style.display = "block";
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const relX = 0.5;    // 50%
-  const relY = 0.3;    // 30%
-  const relRadius = 0.03; // 3%
-  
-  const x = canvas.width * relX;
-  const y = canvas.height * relY;
-  const radius = canvas.width * relRadius; // Based on width to keep it round
-  
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
-  ctx.fillStyle = "white";
-  ctx.fill();
 
+    // Ball
+    const ballX = game.ball.x * canvas.width;
+    const ballY = game.ball.y * canvas.height;
+    const ballRadius = canvas.width * 0.01;
+    // console.log(ballX, game.ball.y);  
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+    ctx.fillStyle = "white";
+    ctx.fill();
+
+    // Left paddle
+    const lp = game.leftPaddle;
+    ctx.fillRect(
+      lp.topPoint.x * canvas.width,
+      lp.topPoint.y * canvas.height,
+      canvas.width * 0.01,
+      canvas.height * lp.height
+    );
+
+    // Right paddle
+    const rp = game.rightPaddle;
+    ctx.fillRect(
+      rp.topPoint.x * canvas.width,
+      rp.topPoint.y * canvas.height,
+      canvas.width * 0.01,
+      canvas.height * rp.height
+    );
+
+    // Optional: Draw scores or countdown
+    ctx.font = "20px Arial";
+    ctx.fillText(`Score: ${Object.values(game.scores).join(" : ")}`, 10, 30);
   }
 
 
@@ -135,7 +197,7 @@ export function handleWaitingForUser() {
   // }
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    
+
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       console.error("Failed to get 2D context");
@@ -156,13 +218,8 @@ export function handleWaitingForUser() {
   
     drawWaiting();
   }
-  
 
   
-  export function handleUpdateGame(data: any)  {
-    console.log(data);
-    console.log(data.gameId);
-  }
 
   
   export function handleListGames(data: any, socket: WebSocket | null) {
@@ -170,7 +227,7 @@ export function handleWaitingForUser() {
     const alias = aliasInput.value.trim();
     localStorage.setItem('pong_alias', alias);  // ✅ store alias
 
-    console.log("Received game list:", data);
+    // console.log("Received game list:", data);
   
     const container = document.getElementById('availableGamesList');
     if (!container) {
@@ -198,7 +255,7 @@ export function handleWaitingForUser() {
   
 
       const alias = localStorage.getItem('pong_alias');
-      console.log("Alias:", alias);
+      // console.log("Alias:", alias);
       
       
 
@@ -217,7 +274,7 @@ export function handleWaitingForUser() {
         console.log(joinRequest);
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify(joinRequest));
-            console.log(`Sent join request for game ${game.id}`);
+            // console.log(`Sent join request for game ${game.id}`);
           } else {
             console.error("Socket is not open");
           }
@@ -230,13 +287,4 @@ export function handleWaitingForUser() {
   
     container.appendChild(ul);
   }
-  
-
-  // function showScreen(screenId: string) {
-  //   document.querySelectorAll(".screen").forEach(el => {
-  //     (el as HTMLElement).style.display = "none";
-  //   });
-  //   const screen = document.getElementById(screenId);
-  //   if (screen) screen.style.display = "flex";
-  // }
   
