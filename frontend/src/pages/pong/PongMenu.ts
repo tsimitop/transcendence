@@ -25,8 +25,8 @@ export function setupMenu(pong: Pong) {
   const createRemoteGameConfirmBtn = get('createRemoteGameConfirmBtn');
   const startLocalGameBtn = get('startLocalGameBtn');
 
-  const MultiplayerModeSelect = get('MultiplayerModeSelect') as HTMLSelectElement;
-  const MultiplayerMaxPlayersSelect = get('MultiplayerMaxPlayersSelect') as HTMLSelectElement;
+  // const MultiplayerModeSelect = get('MultiplayerModeSelect') as HTMLSelectElement;
+  // const MultiplayerMaxPlayersSelect = get('MultiplayerMaxPlayersSelect') as HTMLSelectElement;
   const alias1Input = get('player1Input') as HTMLInputElement;
   const alias2Input = get('player2Input') as HTMLInputElement;
   const remoteAliasInput = get('remoteAliasInput') as HTMLInputElement;
@@ -54,8 +54,7 @@ export function setupMenu(pong: Pong) {
 
   createRemoteGameConfirmBtn.onclick = () => {
     const alias1 = remoteAliasInput.value.trim();
-    const MultiplayerMaxPlayers = parseInt(MultiplayerMaxPlayersSelect.value);
-
+    // const MultiplayerMaxPlayers = parseInt(MultiplayerMaxPlayersSelect.value);
 
     if (!alias1) {
       alert("Please enter your alias");
@@ -69,10 +68,14 @@ export function setupMenu(pong: Pong) {
       target_endpoint: 'pong-api',
       payload: {
         type: 'create_game',
-        mode: 'remote',
-        alias: alias1,
-        MultiplayerMaxPlayers: MultiplayerMaxPlayers, 
-        modeSelect: MultiplayerModeSelect.value
+        pong_data : {
+          // playerName: string,
+          playerAlias: alias1,
+          gameMode: 'remote'
+          // MultiplayerMaxPlayers: MultiplayerMaxPlayers, 
+          // modeSelect: MultiplayerModeSelect.value
+
+        }
       }
     }));
   };

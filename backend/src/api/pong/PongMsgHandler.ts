@@ -2,6 +2,7 @@ import {PongMessage, PongErrorData, KeyboardInputData, LocalGame} from './PongMe
 import { connectedUsers } from '../../websocket/WebSocket';
 import { PongGame } from './PongGame';
 import { JoinGameData } from './PongMessages';
+import { CreateGameData } from './PongMessages';
 
 
 const waitingPlayers: string[] = [];
@@ -84,9 +85,9 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   for (const [username, game] of currentGames.entries()) {
     if(pong_data.gameId === game.getUniqeID()){
       game.setGameState('countdown');
+      game.setOpponentName(senderUsername, pong_data.OpponentAlias);
       opponent = username;
       break;
-
     }
   }
   console.log("opponent ", opponent);
@@ -107,8 +108,17 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
     countdown--;
     if (countdown <= 0) {
       clearInterval(interval);
-      
-      // Optional: start game after short delay
+      for (const [username, game] of currentGames.entries()) {
+        if(pong_data.gameId === game.getUniqeID()){
+          game.setGameState('playing');
+          opponent = username;
+          break; 
+        }
+      }
+      startGameLoop(currentGames.get(opponent)!);
+
+
+
       setTimeout(() => {
       }, 1000);
     } else {
@@ -122,6 +132,67 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
     }
   }, 1000);
 }
+
+
+function startGameLoop(game: PongGame) {
+  const fps = 30;
+  const intervalMs = 1000 / fps;
+
+  // if (game.isRunning) {
+  //   console.warn(`Game ${game.getUniqeID()} is already running.`);
+  //   return;
+  // }
+  
+  // game.isRunning = true;
+
+  const intervalId = setInterval(() => {
+    // Run one step of the game engine (e.g. move ball, handle collisions)
+    game.update();
+
+    // Broadcast the updated game state to players
+    const gameState = game.getGameStatePayload();
+    
+    // for (const playerUsername of game.getPlayers()) {
+    //   const socket = connectedUsers.get(playerUsername);
+    //   if (socket && socket.readyState === WebSocket.OPEN) {
+    //     socket.send(JSON.stringify({
+    //       target_endpoint: 'pong-api',
+    //       type: 'game_state',
+    //       pong_data: gameState,
+    //     }));
+    //   }
+    // }
+
+
+    // Check if game is finished
+    if (game.getGameState() === 'finished') {
+      clearInterval(intervalId);
+      // game.isRunning = false;
+
+      // // Notify players about game over
+      // const gameOverPayload = game.getGameOverPayload();
+      // for (const playerUsername of game.getPlayers()) {
+      //   const socket = connectedUsers.get(playerUsername);
+      //   if (socket && socket.readyState === WebSocket.OPEN) {
+      //     socket.send(JSON.stringify({
+      //       target_endpoint: 'pong-api',
+      //       type: 'game_over',
+      //       pong_data: gameOverPayload,
+      //     }));
+      //   }
+      // }
+      
+      // // Optionally remove game from currentGames map
+      // for (const playerUsername of game.getPlayers()) {
+      //   currentGames.delete(playerUsername);
+      // }
+
+      console.log(`Game ${game.getUniqeID()} ended.`);
+    }
+  }, intervalMs);
+}
+
+
 
 function handleListGames(senderUsername: string): void {
   const senderSocket = connectedUsers.get(senderUsername);
@@ -150,11 +221,11 @@ function handleListGames(senderUsername: string): void {
 
 
 
-function handleCreateGame(senderUsername: string, pong_data: LocalGame): void {
+function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
 
   // mode needs to be checked
   const uniqueGameID = `${senderUsername}-${Date.now()}`;
-  const newGame = new PongGame(uniqueGameID, "Player1");
+  const newGame = new PongGame(uniqueGameID, senderUsername, pong_data.playerAlias);
   currentGames.set(senderUsername, newGame);
 
   const senderSocket = connectedUsers.get(senderUsername);

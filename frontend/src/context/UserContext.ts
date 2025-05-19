@@ -44,7 +44,7 @@ class UserContext extends StateManager<UserStateType> {
       const data = (await response.json()) as ValidateAccessTokenResponseType;
       return data;
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       return null;
     }
   }

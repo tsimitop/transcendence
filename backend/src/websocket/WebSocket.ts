@@ -72,14 +72,14 @@ export function startWebSocketServer(server: any) {
 
     // Handle incoming messages
     socket.on('message', (data) => {
-    //   handleMessage(username, data); // debug Chat delete later
-	handleWebsocketPayload(username, data);
+	  handleWebsocketPayload(username, data);
     });
 
     // Handle socket close event
     socket.on('close', () => {
       console.log(`[WS] User disconnected: ${username}`);
       unregisterUser(username);
+      // end game if there is a current game running?
     });
 
     // Send welcome message

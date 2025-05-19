@@ -7,6 +7,9 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       return;
     }
     switch (data.type) {
+      case 'game_state':
+        handleGameState(data);
+        break;
       case 'countdown':
         handleCountdownGame(data);
         break;
@@ -26,21 +29,23 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   }
 
   
+  export function handleGameState(data: any) {
+
+
+
+  }
   export function handleCountdownGame(data: any) {
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
       console.error("Canvas element not found");
       return;
     }
-  
     // Hide all UI screens
     document.querySelectorAll(".screen").forEach((el) => {
       (el as HTMLElement).style.display = "none";
     });
-  
     // Show canvas
     canvas.style.display = "block";
-  
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       console.error("Failed to get 2D context");
@@ -75,47 +80,18 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       }
     }, 1000);
   }
-  
-    
-  // export function handleCountdownGame(data: any) {
-  //   const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
-  //   if (!canvas) {
-  //     console.error("Canvas element not found");
-  //     return;
-  //   }
-  
-  //   canvas.style.display = "block";
-  //   const ctx = canvas.getContext("2d");
-  //   if (!ctx) {
-  //     console.error("Failed to get 2D context");
-  //     return;
-  //   }
-  
-  //   let countdown = data.value;
-  
-  //   const drawCountdown = () => {
-  //     ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  //     ctx.font = "72px Arial";
-  //     ctx.fillStyle = "white";
-  //     ctx.textAlign = "center";
-  //     ctx.textBaseline = "middle";
-  
-  //     ctx.fillText(String(countdown), canvas.width / 2, canvas.height / 2);
-  //   };
-  
-  //   drawCountdown();
-  // }
-  
 
 
-  export function handleWaitingForUser() {
+export function handleWaitingForUser() {
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
       console.error("Canvas element not found");
       return;
     }
-  
+   // Hide all UI screens
+   document.querySelectorAll(".screen").forEach((el) => {
+    (el as HTMLElement).style.display = "none";
+  });
   // ✅ Make canvas visible
   canvas.style.display = "block";
 
@@ -155,6 +131,10 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
   
   export function handleListGames(data: any, socket: WebSocket | null) {
+    const aliasInput = document.getElementById('remoteAliasInput') as HTMLInputElement;
+    const alias = aliasInput.value.trim();
+    localStorage.setItem('pong_alias', alias);  // ✅ store alias
+
     console.log("Received game list:", data);
   
     const container = document.getElementById('availableGamesList');
@@ -181,12 +161,19 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       joinBtn.textContent = 'Join';
       joinBtn.disabled = game.state !== 'waiting';
   
+
+      const alias = localStorage.getItem('pong_alias');
+      console.log("Alias:", alias);
+      
+      
+
       joinBtn.addEventListener('click', () => {
         const joinRequest = {
           target_endpoint: 'pong-api',
           payload: {
             type: 'join_game',
             pong_data: {
+              OpponentAlias: alias,
               gameId: game.id
             }
           }
@@ -208,4 +195,13 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   
     container.appendChild(ul);
   }
+  
+
+  // function showScreen(screenId: string) {
+  //   document.querySelectorAll(".screen").forEach(el => {
+  //     (el as HTMLElement).style.display = "none";
+  //   });
+  //   const screen = document.getElementById(screenId);
+  //   if (screen) screen.style.display = "flex";
+  // }
   

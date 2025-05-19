@@ -20,14 +20,17 @@ export interface GameByIdData {
 }
 
 export interface JoinGameData {
+    OpponentName: string;
+    OpponentAlias: string;
     gameId: string;
 }
 
 export interface CreateGameData {
-    userId: string;
+    // playerName: string;
+    playerAlias: string;
     gameMode: string;
-    isPrivate: boolean;
-    maxScore: number;
+    // isPrivate: boolean;
+    // maxScore: number;
 }
 
 export interface GameStateData {
