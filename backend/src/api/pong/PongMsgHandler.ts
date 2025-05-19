@@ -10,9 +10,9 @@ const currentGames: Map<string, PongGame> = new Map(); // player -> game
 
 export function endGameWithuser(user: string) {
   for (const [username, game] of currentGames.entries()) {
-    if(user === game.getlPlayerName() || user === game.getrPlayerName())
-    {
+    if(user === game.getlPlayerName() || user === game.getrPlayerName()) {
       game.setGameState("finished");
+
       const response = {
         target_endpoint: 'pong-api',
         type: 'game_over',
@@ -28,6 +28,7 @@ export function endGameWithuser(user: string) {
       }
       const lsocket = game.getlPlayerSocket();
       const rsocket = game.getrPlayerSocket();
+      currentGames.delete(username);
       if (lsocket || lsocket.readyState === WebSocket.OPEN){
         console.log("message l player");
         lsocket.send(JSON.stringify(response));
@@ -37,6 +38,8 @@ export function endGameWithuser(user: string) {
         rsocket.send(JSON.stringify(response));
       }
     }
+    console.log(`Game with key ${username} removed from currentGames`);
+    break;
   }
 }
 
