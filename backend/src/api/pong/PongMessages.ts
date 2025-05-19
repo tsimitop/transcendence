@@ -26,11 +26,10 @@ export interface JoinGameData {
 }
 
 export interface CreateGameData {
-    // playerName: string;
     playerAlias: string;
     gameMode: string;
-    // isPrivate: boolean;
-    // maxScore: number;
+    localOpponent: string;
+
 }
 
     export interface GameStateData {

@@ -168,7 +168,6 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
         ctx.fillText("GO!", canvas.width / 2, canvas.height / 2);
         setTimeout(() => {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          // Continue to main game render logic here
         }, 1000);
       } else {
         drawCountdown();

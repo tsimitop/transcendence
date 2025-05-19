@@ -69,12 +69,9 @@ export function setupMenu(pong: Pong) {
       payload: {
         type: 'create_game',
         pong_data : {
-          // playerName: string,
           playerAlias: alias1,
-          gameMode: 'remote'
-          // MultiplayerMaxPlayers: MultiplayerMaxPlayers, 
-          // modeSelect: MultiplayerModeSelect.value
-
+          gameMode: 'remote',
+          localOpponent: "" 
         }
       }
     }));
@@ -115,8 +112,11 @@ export function setupMenu(pong: Pong) {
         target_endpoint: 'pong-api',
         payload: {
           type: 'create_game',
-          mode: 'local',
-          players: [alias1, alias2]
+          pong_data : {
+            playerAlias: alias1,
+            gameMode: 'local',
+            localOpponent: alias2
+          }
         }
       }));
     }

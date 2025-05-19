@@ -147,6 +147,7 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   currentGames.get(opponent)?.setSockets(senderSocket, opponentSocket);
   
 
+  
     let countdown = 3;
     const interval = setInterval(() => {
     countdown--;
@@ -182,13 +183,7 @@ function startGameLoop(game: PongGame) {
   const fps = 30;
   const intervalMs = 1000 / fps;
 
-  // if (game.isRunning) {
-  //   console.warn(`Game ${game.getUniqeID()} is already running.`);
-  //   return;
-  // }
-  
-  // game.isRunning = true;
-
+  console.log()
   const intervalId = setInterval(() => {
      
       if (game.getGameState() === 'finished') {
@@ -237,10 +232,20 @@ function startGameLoop(game: PongGame) {
       }
   };
 
-    // console.log("response:", response); 
-    game.getlPlayerSocket().send(JSON.stringify(response));
-    game.getrPlayerSocket().send(JSON.stringify(response));
-
+  const lPlayerSocket = game.getlPlayerSocket();
+  const rPlayerSocket = game.getrPlayerSocket();
+  
+  if (lPlayerSocket && lPlayerSocket.readyState === WebSocket.OPEN) {
+    lPlayerSocket.send(JSON.stringify(response));
+  }
+  if (rPlayerSocket && rPlayerSocket.readyState === WebSocket.OPEN) {
+    rPlayerSocket.send(JSON.stringify(response));
+  }
+  
+  console.log(`[GAMELOOP] Sending state for game ${game.getUniqeID()}`);
+  console.log(`[GAMELOOP] lPlayerSocket:`, !!lPlayerSocket, lPlayerSocket?.readyState);
+  console.log(`[GAMELOOP] rPlayerSocket:`, !!rPlayerSocket, rPlayerSocket?.readyState);
+  
 
 
   }, intervalMs);
@@ -277,34 +282,57 @@ function handleListGames(senderUsername: string): void {
 
 function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
 
-  // mode needs to be checked
+  console.log(pong_data.gameMode);
   const uniqueGameID = `${senderUsername}-${Date.now()}`;
   const newGame = new PongGame(uniqueGameID, senderUsername, pong_data.playerAlias);
   currentGames.set(senderUsername, newGame);
 
   const senderSocket = connectedUsers.get(senderUsername);
-  if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
+  if(pong_data.gameMode === "remote"){
+    if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
+      const response = {
+        target_endpoint: 'pong-api',
+        type: 'game_created',
+        gameId: uniqueGameID
+      };
+      senderSocket.send(JSON.stringify(response));
+    }
+    // console.log(`Game created by ${senderUsername} with ID: ${uniqueGameID}`);
+    return;
+  }
+  else {
+    // LOCAL GAME
+    newGame.setOpponentName(pong_data.localOpponent, pong_data.localOpponent);
+    newGame.setGameState("countdown");
+    if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
+
+
+/********* */
+// jsut for local testing
+newGame.setSockets(senderSocket, senderSocket);
+/********* */
+
     const response = {
       target_endpoint: 'pong-api',
-      type: 'game_created',
-      gameId: uniqueGameID
+      type: 'countdown',
+      value : '3'
     };
+    console.log("response:", response); 
     senderSocket.send(JSON.stringify(response));
+    
+
+
+    let countdown = 3;
+    const interval = setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        clearInterval(interval);
+        newGame.setGameState("playing")
+        startGameLoop(newGame);
+      }
+    }, 1000);
   }
-
-  console.log(`Game created by ${senderUsername} with ID: ${uniqueGameID}`);
 }
-
-
-// console.log(pong_data);
-// if(pong_data.mode === 'local')
-//   console.log("LOCAL");
-// if(pong_data.mode === 'remote')
-//   console.log("REMOTE");
-// else
-//   console.log("NO LOCAL");
-
-
 
 
   
