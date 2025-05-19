@@ -69,9 +69,9 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
       case 'getGames':
         handleGetGames(senderUsername);
         break;
-      case 'create_game':  // mhhh mixed case types
-        handleCreateGame(senderUsername, message.pong_data);
-        break;
+      // case 'create_game':  // mhhh mixed case types
+      //   handleCreateGame(senderUsername, message.pong_data);
+      //   break;
       default:
         sendErrorMessage(senderUsername, `Unknown message type: ${message.type}`, 4001);
         console.warn(`[PONG WS] Unknown message: ${message}`);
@@ -190,6 +190,13 @@ function startGameLoop(game: PongGame) {
   // game.isRunning = true;
 
   const intervalId = setInterval(() => {
+     
+      if (game.getGameState() === 'finished') {
+        clearInterval(intervalId);
+        console.log(`Game ${game.getUniqeID()} ended.`);
+        return;
+    }
+
     // console.log("game update is running");
     game.update();
 
@@ -235,31 +242,7 @@ function startGameLoop(game: PongGame) {
     game.getrPlayerSocket().send(JSON.stringify(response));
 
 
-    // Check if game is finished
-    if (game.getGameState() === 'finished') {
-      clearInterval(intervalId);
-      // game.isRunning = false;
 
-      // // Notify players about game over
-      // const gameOverPayload = game.getGameOverPayload();
-      // for (const playerUsername of game.getPlayers()) {
-      //   const socket = connectedUsers.get(playerUsername);
-      //   if (socket && socket.readyState === WebSocket.OPEN) {
-      //     socket.send(JSON.stringify({
-      //       target_endpoint: 'pong-api',
-      //       type: 'game_over',
-      //       pong_data: gameOverPayload,
-      //     }));
-      //   }
-      // }
-      
-      // // Optionally remove game from currentGames map
-      // for (const playerUsername of game.getPlayers()) {
-      //   currentGames.delete(playerUsername);
-      // }
-
-      console.log(`Game ${game.getUniqeID()} ended.`);
-    }
   }, intervalMs);
 }
 
@@ -389,6 +372,6 @@ function handleGetGames(senderUsername: string): void {
   // console.debug(`returning ${waiting_games.length} games`)
 }
 
-function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
-  console.log(`got create game ${pong_data}`)
-}
+// function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
+//   console.log(`got create game ${pong_data}`)
+// }

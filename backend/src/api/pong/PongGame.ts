@@ -51,6 +51,7 @@ export class PongGame {
         height: 0.2
       },
       lastUpdateTime: Date.now(),
+      gameMode: "string",
       maxScore: 5,
       scores: {},
       countdown: 0
