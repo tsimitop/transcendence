@@ -26,7 +26,8 @@ displaying all - ball paddles scores
 moving paddles
 moving ball
 updating scores
-collision
+collision to wall✅
+collision to paddle
 end of game
 reload via pong button on top doesnt work properly
 

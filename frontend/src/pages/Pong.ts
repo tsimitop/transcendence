@@ -58,7 +58,7 @@ export class Pong extends Component {
   return PongInstance;
   }
 
-  public initSocket(retryCount = 0) :void {
+  public initSocket(retryCount = 0): void {
     const token = localStorage.getItem('access_token');
 
 	  // Retry a few times if token is not yet in localStorage
@@ -154,4 +154,100 @@ export class Pong extends Component {
 export default Pong;
 
 
+/******************************************/
+// keyboard input
+/******************************************/
+const SPEED = 5
+const TICKRATE = 15 // 15ms
 
+const keys = {
+  up: {
+    pressed: false
+  },
+
+  down: {
+    pressed: false
+  },
+  w: {
+    pressed: false
+  },
+
+  s: {
+    pressed: false
+  },
+}
+
+setInterval(() => {
+  if(keys.up.pressed) {
+    console.log("UP IS PRESSED")
+
+    // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: -SPEED})
+    // frontendPlayers[socket.id].y -= SPEED;     // Moving via Frontend
+    // socket.emit('keydown',{keycode: 'KeyW', sequenceNumber})          // Moving via Backend
+  }
+  if(keys.down.pressed) {
+    console.log("DOWN IS PRESSED")
+    // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: SPEED})
+    // frontendPlayers[socket.id].y += SPEED;
+    // socket.emit('keydown', {keycode: 'KeyS', sequenceNumber})
+  }
+  if(keys.w.pressed) {
+    console.log("W IS PRESSED")
+    // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: -SPEED})
+    // frontendPlayers[socket.id].y -= SPEED;     // Moving via Frontend
+    // socket.emit('keydown',{keycode: 'KeyW', sequenceNumber})          // Moving via Backend
+  }
+  if(keys.s.pressed) {
+    console.log("S IS PRESSED")
+    // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: SPEED})
+    // frontendPlayers[socket.id].y += SPEED;
+    // socket.emit('keydown', {keycode: 'KeyS', sequenceNumber})
+  }
+}, TICKRATE); 
+
+window.addEventListener('keydown', (event) => {
+  // if(!frontendPlayers[socket.id])
+  //   return;
+  // console.log(event);
+  switch(event.code){
+    case 'ArrowDown':{
+      keys.down.pressed = true;
+      break;
+    }
+    case 'ArrowUp':{
+      keys.up.pressed = true;
+      break;
+    }
+    case 'KeyW':{
+      keys.w.pressed = true;
+      break;
+    }
+    case 'KeyS':{
+      keys.s.pressed = true;
+      break;
+    }
+  }
+})
+
+window.addEventListener('keyup', (event) => {
+  // if(!frontendPlayers[socket.id])
+  //   return;
+  switch(event.code){
+    case 'ArrowDown':{
+      keys.down.pressed = false;
+      break;
+    }
+    case 'ArrowUp':{
+      keys.up.pressed = false;
+      break;
+    }
+    case 'KeyW':{
+      keys.w.pressed = false;
+      break;
+    }
+    case 'KeyS':{
+      keys.s.pressed = false;
+      break;
+    }
+  }
+})

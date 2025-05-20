@@ -57,6 +57,9 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
     };
 
     switch (message.type) {
+      case 'input':
+        handleInput(senderUsername, message.pong_data);
+        break;
       case 'game_list':
         handleListGames(senderUsername);
         break;
@@ -114,7 +117,13 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
 /*****************************************************/
 /************** ajehles Methods  *********************/
 /*****************************************************/
+function handleInput(senderUsername: string, pong_data: KeyboardInputData): void {
+    
+  
+  console.log(pong_data);
 
+
+}
 
 function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
   const senderSocket = connectedUsers.get(senderUsername);
@@ -250,6 +259,8 @@ function startGameLoop(game: PongGame) {
 
   }, intervalMs);
 }
+
+
 
 
 
