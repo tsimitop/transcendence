@@ -38,14 +38,14 @@ export class PongGame {
       },
       leftPaddle: {
         topPoint: {
-          x: 0,
+          x: 0.05,
           y: 0.4
         },
         height: 0.2
       },
       rightPaddle: {
         topPoint: {
-          x: 0.9,
+          x: 0.95,
           y: 0.4
         },
         height: 0.2
@@ -70,7 +70,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string ) {
   this.uniqueID = uniqueID;
   this.lPlayerName = lPlayerName;
   this.lPlayerAlias = lPlayerAlias;
-  this.backendBall = new PongGameBall({ x: 0.5, y: 0.5, radius: 0.1 });
+  this.backendBall = new PongGameBall({ x: 0.5, y: 0.5, radius: 0.01 });
 
   }
 
@@ -119,18 +119,36 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string ) {
         return;
 
 
-      this.gameStateData.game.ball.x += this.backendBall.getVx();
-      this.gameStateData.game.ball.y += this.backendBall.getVy();
+      this.gameStateData.game.ball.x += this.backendBall.getVx() * this.backendBall.getSpeed();
+      this.gameStateData.game.ball.y += this.backendBall.getVy() * this.backendBall.getSpeed();
 
+      console.log(this.backendBall.getVx(), " ", this.backendBall.getVy())
 
-    // Bounce off top and bottom
-    if (this.gameStateData.game.ball.y - this.backendBall.getRadius() < 0 || this.gameStateData.game.ball.y + this.backendBall.getRadius() > 1) {
-      this.backendBall.setVy(-1);
-    }
-
-    // Bounce off left and right (basic handling, later you can add scoring here)
-    if (this.gameStateData.game.ball.x - this.backendBall.getRadius() < 0 || this.gameStateData.game.ball.x + this.backendBall.getRadius() > 1) {
+      
+      
+      // Bounce off top and bottom
+      if (this.gameStateData.game.ball.y - (this.backendBall.getRadius() * 2) < 0){
+        // console.log("y < 0");
+        // console.log(this.gameStateData.game.ball.y)
+        this.backendBall.setVy(-1);
+      }
+      
+      if(this.gameStateData.game.ball.y + (this.backendBall.getRadius() * 2) > 1) {
+        // console.log("y > 1");
+        // console.log(this.gameStateData.game.ball.y + this.backendBall.getRadius());
+        this.backendBall.setVy(-1);
+      }
+      
+      // Bounce off left and right (basic handling, later you can add scoring here)
+      if (this.gameStateData.game.ball.x - this.backendBall.getRadius() < 0)
+        {
+      // console.log("x < 0");
       this.backendBall.setVx(-1);
+    } 
+    if(this.gameStateData.game.ball.x + this.backendBall.getRadius() > 1) {
+        // console.log("x > 1");
+      this.backendBall.setVx(-1);
+
     }
     // console.log('vx:', this.backendBall.getVx(), 'vy:', this.backendBall.getVy());
     // console.log('vx:', this.gameStateData.game.ball.x, 'vy:', this.gameStateData.game.ball.y);

@@ -211,15 +211,15 @@ function startGameLoop(game: PongGame) {
             },
             leftPaddle: {
                 topPoint: {
-                    x: 0.1,
-                    y: 0.1,
+                    x: 0,
+                    y: 0.5,
                 },
                 height: 0.2,  // percentage of window height (0-1)
               },
               rightPaddle: {
               topPoint: {
-                  x: 0.1,
-                  y: 0.1,
+                  x: 0.9,
+                  y: 0.5,
               },
               height: 0.2,  // percentage of window height (0-1)
             },
@@ -242,9 +242,9 @@ function startGameLoop(game: PongGame) {
     rPlayerSocket.send(JSON.stringify(response));
   }
   
-  console.log(`[GAMELOOP] Sending state for game ${game.getUniqeID()}`);
-  console.log(`[GAMELOOP] lPlayerSocket:`, !!lPlayerSocket, lPlayerSocket?.readyState);
-  console.log(`[GAMELOOP] rPlayerSocket:`, !!rPlayerSocket, rPlayerSocket?.readyState);
+  // console.log(`[GAMELOOP] Sending state for game ${game.getUniqeID()}`);
+  // console.log(`[GAMELOOP] lPlayerSocket:`, !!lPlayerSocket, lPlayerSocket?.readyState);
+  // console.log(`[GAMELOOP] rPlayerSocket:`, !!rPlayerSocket, rPlayerSocket?.readyState);
   
 
 

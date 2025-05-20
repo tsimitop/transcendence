@@ -69,6 +69,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
   
   export function   handleGameState(data: any) {
+    console.log("handleGameStateFunction");
     // console.log("handleGameStateFunction", data);
     // console.log("handleGameStateFunction", data.game.id);
     
@@ -106,8 +107,10 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     // Left paddle
     const lp = game.leftPaddle;
     ctx.fillRect(
-      lp.topPoint.x * canvas.width,
-      lp.topPoint.y * canvas.height,
+      lp.topPoint.x,
+      lp.topPoint.y,
+      // lp.topPoint.x * canvas.width,
+      // lp.topPoint.y * canvas.height,
       canvas.width * 0.01,
       canvas.height * lp.height
     );
@@ -122,8 +125,11 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     );
 
     // Optional: Draw scores or countdown
-    ctx.font = "20px Arial";
-    ctx.fillText(`Score: ${Object.values(game.scores).join(" : ")}`, 10, 30);
+    // ctx.font = "20px Arial";
+    // ctx.fillText(`Score: ${Object.values(game.scores).join(" : ")}`, 10, 30);
+
+    // console.log("Canvas size:", canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight);
+
   }
 
 

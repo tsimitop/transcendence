@@ -14,7 +14,7 @@ export class PongGameBall {
 	private y: number;
 	private vx: number;
 	private vy: number;
-	private speed: number = 0.5;
+	private speed: number = 1.3;
 	private size: number = 15;
 	private lcollisionCount: number = 0;
 	private rcollisionCount: number = 0;
@@ -49,6 +49,7 @@ const randomSignedValue = Math.random() > 0.5 ? (0.001 + Math.random() * (0.005 
   getVx(): number { return this.vx; }
   getVy(): number { return this.vy; }
   getRadius(): number { return this.size; }
+  getSpeed(): number { return this.speed; }
 
   setVx(x: number) { this.vx *= x; }
   setVy(y: number) { this.vy *= y; }
