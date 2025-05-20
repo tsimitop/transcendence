@@ -84,35 +84,6 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
   }
 }
 
-function sendMessage(senderUsername: string, type: string, pong_data: any): void {
-    // used to send messages to the client
-    const message: PongMessage = {
-        type: type,
-        pong_data: pong_data,
-    };
-    // const wrapped_msg: WebsocketApiRequest = {
-    //   target_endpoint: "pong-api",
-    //   payload: message
-    // }
-
-    // const socket = connectedUsers.get(senderUsername);
-    // if (socket) {
-    //     socket.send(JSON.stringify(wrapped_msg));
-    // } else {
-    //     console.debug(`[PONG WS] User ${senderUsername} not connected, cant send message`);
-    // }
-}
-
-function sendErrorMessage(senderUsername: string, errorMessage: string, errorCode: number = 69420): void {
-    // used to send error messages to the client
-
-    const errorData: PongErrorData = {
-        message: errorMessage,
-        code: errorCode,  // do we really need this?
-    };
-    sendMessage(senderUsername, 'error', errorData);
-    console.debug(`[PONG WS] Error message sent to ${senderUsername}: ${errorMessage} (code: ${errorCode})`);
-}
 
 /*****************************************************/
 /************** ajehles Methods  *********************/
@@ -120,20 +91,37 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
 function handleInput(senderUsername: string, pong_data: KeyboardInputData): void {
     
   
-  // console.log(pong_data);
-  if(pong_data.up === true){
-    for (const [username, game] of currentGames.entries()) {
-      if(username === senderUsername){
-        game.lPlayerPaddle.updatePos(false, true);
-        break;
+  console.log(senderUsername, " ", pong_data.userId);
+  for (const [username, game] of currentGames.entries()) {
+    if(username === senderUsername) {
+      if(pong_data.userId === "left"){
+        if(pong_data.up === true){
+          game.lPlayerPaddle.updatePos(false, true);
+          break;
+        }
+        else if(pong_data.up === false){
+          
+          game.lPlayerPaddle.updatePos(true, false);
+          break;
+        }
+        else {
+          break;
+        }
       }
-    }
-  }
-  if(pong_data.up === false){
-    for (const [username, game] of currentGames.entries()) {
-      if(username === senderUsername){
-        game.lPlayerPaddle.updatePos(true, false);
-        break;
+      else if(pong_data.userId === "right"){
+        if(pong_data.up === true){
+          
+          game.rPlayerPaddle.updatePos(false, true);
+          break;
+        }
+        else if(pong_data.up === false){
+          
+          game.rPlayerPaddle.updatePos(true, false);
+          break;
+        }
+        else {
+          break;
+        }
       }
     }
   }
@@ -172,7 +160,7 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   
 
   
-    let countdown = 3;
+    let countdown = 3; // not working is somewhere hardcoded in frontend?!?!?!
     const interval = setInterval(() => {
     countdown--;
     if (countdown <= 0) {
@@ -213,15 +201,9 @@ function startGameLoop(game: PongGame) {
         clearInterval(intervalId);
         console.log(`Game ${game.getUniqeID()} ended.`);
         return;
-    }
-
-    // console.log("game update is running");
+        }
     game.update();
-
-    // Broadcast the updated game state to players
     const gameState = game.getGameStatePayload();
-
-    // console.log(gameState.game.leftPaddle.topPoint.y)
     const response = {
           target_endpoint: 'pong-api',
           type: 'game_state',
@@ -229,8 +211,8 @@ function startGameLoop(game: PongGame) {
             id: game.getUniqeID(),
             status: 'playing',
             ball: {
-                x: gameState.game.ball.x,  // floats as string
-                y: gameState.game.ball.y,  // top left corner is (0/0)
+                x: gameState.game.ball.x,
+                y: gameState.game.ball.y,
             },
             leftPaddle: {
                 topPoint: {
@@ -241,8 +223,8 @@ function startGameLoop(game: PongGame) {
               },
               rightPaddle: {
               topPoint: {
-                  x: 0.9,
-                  y: gameState.game.leftPaddle.topPoint.x,
+                  x: 0.99,
+                  y: gameState.game.rightPaddle.topPoint.y,
               },
               height: 0.2,  // percentage of window height (0-1)
             },
@@ -252,25 +234,18 @@ function startGameLoop(game: PongGame) {
                 ["playerId: string"]: 1,  // player IDs mapped to their scores
             },
             countdown: 1,
+            // gameMode: "missing" // not needed here?
       }
   };
 
-  const lPlayerSocket = game.getlPlayerSocket();
-  const rPlayerSocket = game.getrPlayerSocket();
-  
-  if (lPlayerSocket && lPlayerSocket.readyState === WebSocket.OPEN) {
-    lPlayerSocket.send(JSON.stringify(response));
-  }
-  if (rPlayerSocket && rPlayerSocket.readyState === WebSocket.OPEN) {
-    rPlayerSocket.send(JSON.stringify(response));
-  }
-  
-  // console.log(`[GAMELOOP] Sending state for game ${game.getUniqeID()}`);
-  // console.log(`[GAMELOOP] lPlayerSocket:`, !!lPlayerSocket, lPlayerSocket?.readyState);
-  // console.log(`[GAMELOOP] rPlayerSocket:`, !!rPlayerSocket, rPlayerSocket?.readyState);
-  
-
-
+    const lPlayerSocket = game.getlPlayerSocket();
+    const rPlayerSocket = game.getrPlayerSocket();
+    if (lPlayerSocket && lPlayerSocket.readyState === WebSocket.OPEN) {
+      lPlayerSocket.send(JSON.stringify(response));
+    }
+    if (rPlayerSocket && rPlayerSocket.readyState === WebSocket.OPEN) {
+      rPlayerSocket.send(JSON.stringify(response));
+    }
   }, intervalMs);
 }
 
@@ -307,9 +282,9 @@ function handleListGames(senderUsername: string): void {
 
 function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
 
-  console.log(pong_data.gameMode);
+  console.log("pong_data.gameMode ", pong_data.gameMode);
   const uniqueGameID = `${senderUsername}-${Date.now()}`;
-  const newGame = new PongGame(uniqueGameID, senderUsername, pong_data.playerAlias);
+  const newGame = new PongGame(uniqueGameID, senderUsername, pong_data.playerAlias, pong_data.gameMode);
   currentGames.set(senderUsername, newGame);
 
   const senderSocket = connectedUsers.get(senderUsername);
@@ -333,7 +308,7 @@ function handleCreateGame(senderUsername: string, pong_data: CreateGameData): vo
 
 
 /********* */
-// jsut for local testing
+// jsut for local testing NEEEEEDED!!!!!?
 newGame.setSockets(senderSocket, senderSocket);
 /********* */
 
@@ -367,19 +342,19 @@ newGame.setSockets(senderSocket, senderSocket);
 
 
 
-function handleKeyboardInput(senderUsername: string, message: KeyboardInputData): void {
-  const { userId, up } = message;
-  if (userId !== senderUsername) {
-    console.warn(`[PONG] User ID mismatch: expected ${senderUsername}, got ${userId}`);
-    sendErrorMessage(senderUsername, `User ID mismatch, you trying to cheat?`, 4002);
-    return;
-  }
+// function handleKeyboardInput(senderUsername: string, message: KeyboardInputData): void {
+//   const { userId, lup } = message;
+//   if (userId !== senderUsername) {
+//     console.warn(`[PONG] User ID mismatch: expected ${senderUsername}, got ${userId}`);
+//     sendErrorMessage(senderUsername, `User ID mismatch, you trying to cheat?`, 4002);
+//     return;
+//   }
 
-  // TODO: pass to engine
+//   // TODO: pass to engine
 
-  // Handle keyboard input
-  console.debug(`[PONG] Keyboard input from ${userId}: ${up ? 'UP' : 'DOWN'}`);
-}
+//   // Handle keyboard input
+//   console.debug(`[PONG] Keyboard input from ${userId}: ${lup ? 'UP' : 'DOWN'}`);
+// }
 
 function handleGetGames(senderUsername: string): void {
   console.debug(`[PONG] user ${senderUsername} requested games`);
@@ -428,3 +403,35 @@ function handleGetGames(senderUsername: string): void {
 // function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
 //   console.log(`got create game ${pong_data}`)
 // }
+
+
+
+function sendMessage(senderUsername: string, type: string, pong_data: any): void {
+  // used to send messages to the client
+  const message: PongMessage = {
+      type: type,
+      pong_data: pong_data,
+  };
+  // const wrapped_msg: WebsocketApiRequest = {
+  //   target_endpoint: "pong-api",
+  //   payload: message
+  // }
+
+  // const socket = connectedUsers.get(senderUsername);
+  // if (socket) {
+  //     socket.send(JSON.stringify(wrapped_msg));
+  // } else {
+  //     console.debug(`[PONG WS] User ${senderUsername} not connected, cant send message`);
+  // }
+}
+
+function sendErrorMessage(senderUsername: string, errorMessage: string, errorCode: number = 69420): void {
+  // used to send error messages to the client
+
+  const errorData: PongErrorData = {
+      message: errorMessage,
+      code: errorCode,  // do we really need this?
+  };
+  sendMessage(senderUsername, 'error', errorData);
+  console.debug(`[PONG WS] Error message sent to ${senderUsername}: ${errorMessage} (code: ${errorCode})`);
+}

@@ -14,7 +14,7 @@ export class PongGameBall {
 	private y: number;
 	private vx: number;
 	private vy: number;
-	private speed: number = 1.3;
+	private speed: number = 2;
 	private size: number = 15;
 	private lcollisionCount: number = 0;
 	private rcollisionCount: number = 0;
@@ -28,18 +28,10 @@ export class PongGameBall {
 constructor({x , y, radius}: BallParams) {
     this.x = x;
     this.y = y;
-    // this.vx = 0.001 + Math.random() * (0.005 - 0.001);
-    // this.vy = 0.001 + Math.random() * (0.005 - 0.001);
     this.vx = Math.random() > 0.5 ? (0.001 + Math.random() * (0.005 - 0.001)) : -(0.001 + Math.random() * (0.005 - 0.001));
     this.vy = Math.random() > 0.5 ? (0.001 + Math.random() * (0.005 - 0.001)) : -(0.001 + Math.random() * (0.005 - 0.001));
     this.size = radius;
-    // this.color = color;
   }
-
-/*
-const base = (0.001 + Math.random() * (0.005 - 0.001));
-const randomSignedValue = Math.random() > 0.5 ? (0.001 + Math.random() * (0.005 - 0.001)) : -(0.001 + Math.random() * (0.005 - 0.001));
-*/
 
   
 /*****************************************************/

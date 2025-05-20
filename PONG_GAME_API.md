@@ -149,7 +149,7 @@ Which X is good? Depends on latency of the connection i guess?
       // does this make sense?
       "rightPaddle": { ... },
       "lastUpdateTime": 1234567890,  // creation date for waiting games
-      "gameMode": "classic",
+      "gameMode": "classic",  // used for local or remote
       "maxScore": 10,
       "scores": {
         "playerids...": int, //score

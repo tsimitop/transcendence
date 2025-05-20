@@ -15,7 +15,9 @@ export class PongGame {
   private backendBall: PongGameBall;
 
   public lPlayerPaddle: PongGamePaddle;
-  private rPlayerPaddle: PongGamePaddle;
+  public rPlayerPaddle: PongGamePaddle;
+
+  
   private gameState: GameState = "waiting";
   private lPlayerAlias: string = "Player1";
   private rPlayerAlias: string = "Player2";
@@ -51,10 +53,10 @@ export class PongGame {
         height: 0.2
       },
       lastUpdateTime: Date.now(),
-      gameMode: "string",
-      maxScore: 5,
+      gameMode: "remote or local",
+      maxScore: 5, // always 5 ???
       scores: {},
-      countdown: 0
+      countdown: 0 // not implemented
     }
   };
   
@@ -66,7 +68,7 @@ export class PongGame {
 
 
 
-constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string ) {
+constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMode: string ) {
   this.uniqueID = uniqueID;
   this.lPlayerName = lPlayerName;
   this.lPlayerAlias = lPlayerAlias;
@@ -74,6 +76,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string ) {
 
   this.lPlayerPaddle = new PongGamePaddle({x: 0.5, height: 0.2});
   this.rPlayerPaddle = new PongGamePaddle({x: 0.5, height: 0.2});
+  this.gameStateData.game.gameMode = gameMode;
 
   }
 

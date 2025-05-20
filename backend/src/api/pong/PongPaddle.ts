@@ -34,7 +34,6 @@ export class PongGamePaddle {
 	// getPaddleWidth():number{return this.paddleWidth};
 	// getPaddleHeight():number{return this.paddleHeight};
 
-
 	updatePos(paddleDown: boolean, paddleUp: boolean) {
 		if (paddleDown) {
 			// Check that the bottom of the paddle doesn't exceed 1.0

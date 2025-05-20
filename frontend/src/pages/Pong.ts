@@ -94,7 +94,7 @@ export class Pong extends Component {
       console.log("Connected to pong server.");
       this.reconnectAttempts = 0;
       this.showSystemMessage("[Connected to server]", "text-green-500");
-      this.inputHandler = new PongInputHandler(this.socket!, "emptY" );
+      this.inputHandler = new PongInputHandler(this.socket!, "emptYYY" );
       this.inputHandler.start();
 
 
