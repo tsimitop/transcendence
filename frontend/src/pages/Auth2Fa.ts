@@ -8,6 +8,7 @@ import Component from "../models/Component";
 import Router from "../models/Router";
 import { displayFormValidationError } from "../utils/display-form-validation-error";
 import Profile from "./Profile";
+import { maybeStartChat } from "../main";
 
 class Auth2Fa extends Component {
   static validationErrorClassName = "code-2fa-error";
@@ -108,18 +109,27 @@ class Auth2Fa extends Component {
         // throw new Error("Wrong 2FA code!");
         throw data;
       }
-      const routeToGo = "/profile";
-      urlContext.setState({ ...urlContext.state, path: routeToGo });
-      window.history.pushState({}, "", routeToGo);
-      userContext.setState({
-        ...userContext.state,
-        jwtAccessToken: data.jwtAccessToken,
-      });
-      const viewToRender = await Router.findViewToRender(routeToGo);
-      Router.renderPageBasedOnPath(viewToRender);
-      Header.highlightActiveNavLink();
-      Router.listenForRouteChange();
-      Router.handleBackAndForward();
+	const routeToGo = "/profile";
+	urlContext.setState({ ...urlContext.state, path: routeToGo });
+	window.history.pushState({}, "", routeToGo);
+	const { jwtAccessToken, user: validuser } = data;
+	if (!validuser || !jwtAccessToken) {
+		throw new Error("Invalid response from server: user or token missing");
+	  }
+	localStorage.setItem("access_token", jwtAccessToken);
+	userContext.setState({
+	id: validuser.id,
+	email: validuser.email,
+	username: validuser.username,
+	jwtAccessToken,
+	isSignedIn: true,
+	});
+	await maybeStartChat();
+	const viewToRender = await Router.findViewToRender(routeToGo);
+	Router.renderPageBasedOnPath(viewToRender);
+	Header.highlightActiveNavLink();
+	Router.listenForRouteChange();
+	Router.handleBackAndForward();
     } catch (error) {
       const formAndValidationErrorContainer = document.querySelector(
         ".form-and-validation-container"
