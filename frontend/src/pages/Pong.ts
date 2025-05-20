@@ -8,14 +8,22 @@ import Component, {
 
 import { getPongHTML } from './pong/PongTemplate';
 import { setupMenu } from './pong/PongMenu';
-import { handlePongMessage } from "./PongMessageHandler";
+import { handlePongMessage } from "./pong/PongMessageHandler";
+import { PongInputHandler } from "./pong/PongInputHandler";
 
 
 export class Pong extends Component {
+/*****************************************************/
+/**************     Variables    *********************/
+/*****************************************************/
   public socket: WebSocket | null = null;
 	private reconnectAttempts = 0;
 	private readonly maxReconnectAttempts = 5;
+  private inputHandler: PongInputHandler | null = null;
 
+  /*****************************************************/
+/**************     Constructor  *********************/
+/*****************************************************/
   constructor(
     childrenString: ChildrenStringType,
     ...childElements: ChildElementType[]
@@ -23,6 +31,9 @@ export class Pong extends Component {
     super(childrenString, ...childElements);
   }
 
+/*****************************************************/
+/**************        Methods   *********************/
+/*****************************************************/
   static create() {
     history.replaceState({ screen: 'menu' }, '', '');
   
@@ -44,8 +55,8 @@ export class Pong extends Component {
     PongInstance.insertChildren();
     PongInstance.classList.add("page");
   
-  // Now connect socket and start the game logic
   PongInstance.initSocket(); // socket connects here
+
   // ✅ Wait until DOM is ready before setting up menu
   setTimeout(() => {
     const menu = document.getElementById('menuScreen');
@@ -83,6 +94,11 @@ export class Pong extends Component {
       console.log("Connected to pong server.");
       this.reconnectAttempts = 0;
       this.showSystemMessage("[Connected to server]", "text-green-500");
+      this.inputHandler = new PongInputHandler(this.socket!, "emptY" );
+      this.inputHandler.start();
+
+
+
       };
   
       this.socket.onmessage = (event) => {
@@ -103,6 +119,10 @@ export class Pong extends Component {
 	  this.socket.onclose = (event) => {
       console.warn(`WebSocket closed (code: ${event.code}, reason: ${event.reason}), event: ${event}`);
       this.tryReconnect();
+      if (this.inputHandler) {
+        this.inputHandler.stop();
+        this.inputHandler = null;
+      }
       };
   
     this.socket.onerror = (error) => {
@@ -153,101 +173,3 @@ export class Pong extends Component {
 }
 export default Pong;
 
-
-/******************************************/
-// keyboard input
-/******************************************/
-const SPEED = 5
-const TICKRATE = 15 // 15ms
-
-const keys = {
-  up: {
-    pressed: false
-  },
-
-  down: {
-    pressed: false
-  },
-  w: {
-    pressed: false
-  },
-
-  s: {
-    pressed: false
-  },
-}
-
-setInterval(() => {
-  if(keys.up.pressed) {
-    console.log("UP IS PRESSED")
-
-    // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: -SPEED})
-    // frontendPlayers[socket.id].y -= SPEED;     // Moving via Frontend
-    // socket.emit('keydown',{keycode: 'KeyW', sequenceNumber})          // Moving via Backend
-  }
-  if(keys.down.pressed) {
-    console.log("DOWN IS PRESSED")
-    // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: SPEED})
-    // frontendPlayers[socket.id].y += SPEED;
-    // socket.emit('keydown', {keycode: 'KeyS', sequenceNumber})
-  }
-  if(keys.w.pressed) {
-    console.log("W IS PRESSED")
-    // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: -SPEED})
-    // frontendPlayers[socket.id].y -= SPEED;     // Moving via Frontend
-    // socket.emit('keydown',{keycode: 'KeyW', sequenceNumber})          // Moving via Backend
-  }
-  if(keys.s.pressed) {
-    console.log("S IS PRESSED")
-    // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: SPEED})
-    // frontendPlayers[socket.id].y += SPEED;
-    // socket.emit('keydown', {keycode: 'KeyS', sequenceNumber})
-  }
-}, TICKRATE); 
-
-window.addEventListener('keydown', (event) => {
-  // if(!frontendPlayers[socket.id])
-  //   return;
-  // console.log(event);
-  switch(event.code){
-    case 'ArrowDown':{
-      keys.down.pressed = true;
-      break;
-    }
-    case 'ArrowUp':{
-      keys.up.pressed = true;
-      break;
-    }
-    case 'KeyW':{
-      keys.w.pressed = true;
-      break;
-    }
-    case 'KeyS':{
-      keys.s.pressed = true;
-      break;
-    }
-  }
-})
-
-window.addEventListener('keyup', (event) => {
-  // if(!frontendPlayers[socket.id])
-  //   return;
-  switch(event.code){
-    case 'ArrowDown':{
-      keys.down.pressed = false;
-      break;
-    }
-    case 'ArrowUp':{
-      keys.up.pressed = false;
-      break;
-    }
-    case 'KeyW':{
-      keys.w.pressed = false;
-      break;
-    }
-    case 'KeyS':{
-      keys.s.pressed = false;
-      break;
-    }
-  }
-})

@@ -1,7 +1,7 @@
 
-import { GameStateData } from "./pong/PongGame";
-import { GameOverData } from "./pong/PongGame";
-import { showOnly } from "./pong/PongMenu"
+import { GameStateData } from "./PongGame";
+import { GameOverData } from "./PongGame";
+// import { showOnly } from "./PongMenu"
   
 
 
