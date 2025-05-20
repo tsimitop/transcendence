@@ -1,5 +1,5 @@
 import { PongGameBall } from "./PongBall";
-// import { PongGamePaddle } from "./PongPaddle";
+import { PongGamePaddle } from "./PongPaddle";
 import { GameStateData } from "./PongMessages";
 
 type GameState = 'waiting' | 'countdown' | 'playing' | 'paused' | 'finished';
@@ -14,8 +14,8 @@ export class PongGame {
   private uniqueID: string;
   private backendBall: PongGameBall;
 
-  // private lPlayerPaddle: PongGamePaddle;
-  // private rPlayerPaddle: PongGamePaddle;
+  public lPlayerPaddle: PongGamePaddle;
+  private rPlayerPaddle: PongGamePaddle;
   private gameState: GameState = "waiting";
   private lPlayerAlias: string = "Player1";
   private rPlayerAlias: string = "Player2";
@@ -25,9 +25,9 @@ export class PongGame {
   private rPlayerScore: number = 0;
   
 
-  
   private lPlayerSocket: any;
   private rPlayerSocket: any;
+
   private gameStateData: GameStateData = {
     game: {
       id: "",
@@ -39,7 +39,7 @@ export class PongGame {
       leftPaddle: {
         topPoint: {
           x: 0.05,
-          y: 0.4
+          y: 0.4,
         },
         height: 0.2
       },
@@ -72,6 +72,9 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string ) {
   this.lPlayerAlias = lPlayerAlias;
   this.backendBall = new PongGameBall({ x: 0.5, y: 0.5, radius: 0.01 });
 
+  this.lPlayerPaddle = new PongGamePaddle({x: 0.5, height: 0.2});
+  this.rPlayerPaddle = new PongGamePaddle({x: 0.5, height: 0.2});
+
   }
 
 
@@ -82,12 +85,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string ) {
 
     getUniqeID() : string { return this.uniqueID; }
     getGameState() : GameState { return this.gameState; }
-    // getPlayers(){
-    //   const players = [];
-    //   if (this.lPlayerName) players.push(this.lPlayerName);
-    //   if (this.rPlayerName) players.push(this.rPlayerName);
-    //   return players;
-    // }
+
     getlPlayerScore() : number { return this.lPlayerScore }
     getrPlayerScore() : number { return this.rPlayerScore }
 
@@ -111,18 +109,20 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string ) {
 
     setGameState(state : GameState) : void { 
       this.gameState = state;
-      console.log( this.getUniqeID(), "new GameState:", this.gameState);
+      // console.log( this.getUniqeID(), "new GameState:", this.gameState);
     }
 
     update(){
       if(this.gameState === "finished")
         return;
 
+      this.gameStateData.game.leftPaddle.topPoint.y = this.lPlayerPaddle.getY();
+      this.gameStateData.game.rightPaddle.topPoint.y = this.rPlayerPaddle.getY();
 
       this.gameStateData.game.ball.x += this.backendBall.getVx() * this.backendBall.getSpeed();
       this.gameStateData.game.ball.y += this.backendBall.getVy() * this.backendBall.getSpeed();
 
-      console.log(this.backendBall.getVx(), " ", this.backendBall.getVy())
+      // console.log(this.backendBall.getVx(), " ", this.backendBall.getVy())
 
       
       

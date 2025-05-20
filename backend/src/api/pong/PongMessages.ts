@@ -29,7 +29,6 @@ export interface CreateGameData {
     playerAlias: string;
     gameMode: string;
     localOpponent: string;
-
 }
 
     export interface GameStateData {

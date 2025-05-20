@@ -29,27 +29,50 @@ public start(): void {
   window.addEventListener("keydown", this.handleKeyDown);
   window.addEventListener("keyup", this.handleKeyUp);
 
+  const response = {
+    target_endpoint: 'pong-api',
+    payload: {
+      type: 'input',
+      pong_data : {
+        userId: "string",
+        up: false
+      }
+    }
+  }
+
   setInterval(() => {
     if(this.keys.up.pressed) {
-      console.log("UP IS PRESSED")
+      // console.log("UP IS PRESSED")
+      response.payload.pong_data.up = true;
+      this.socket.send(JSON.stringify(response));
+
       // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: -SPEED})
       // frontendPlayers[socket.id].y -= SPEED;     // Moving via Frontend
       // socket.emit('keydown',{keycode: 'KeyW', sequenceNumber})          // Moving via Backend
     }
     if(this.keys.down.pressed) {
-      console.log("DOWN IS PRESSED")
+      // console.log("DOWN IS PRESSED")
+      response.payload.pong_data.up = false;
+      this.socket.send(JSON.stringify(response));
+
       // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: SPEED})
       // frontendPlayers[socket.id].y += SPEED;
       // socket.emit('keydown', {keycode: 'KeyS', sequenceNumber})
     }
     if(this.keys.w.pressed) {
-      console.log("W IS PRESSED")
+      // console.log("W IS PRESSED")
+      response.payload.pong_data.up = true;
+      this.socket.send(JSON.stringify(response));
+
       // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: -SPEED})
       // frontendPlayers[socket.id].y -= SPEED;     // Moving via Frontend
       // socket.emit('keydown',{keycode: 'KeyW', sequenceNumber})          // Moving via Backend
     }
     if(this.keys.s.pressed) {
-      console.log("S IS PRESSED")
+      // console.log("S IS PRESSED")
+      response.payload.pong_data.up = false;
+      this.socket.send(JSON.stringify(response));
+
       // playerInputs.push({sequenceNumber: sequenceNumber, dx: 0, dy: SPEED})
       // frontendPlayers[socket.id].y += SPEED;
       // socket.emit('keydown', {keycode: 'KeyS', sequenceNumber})

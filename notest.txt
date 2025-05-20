@@ -24,7 +24,7 @@ tournamentGame - > 4 player fix, wait for 4 other players
 
 displaying all - ball paddles scores
 moving paddles
-moving ball
+moving ball✅
 updating scores
 collision to wall✅
 collision to paddle

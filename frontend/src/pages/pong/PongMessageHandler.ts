@@ -106,11 +106,11 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
     // Left paddle
     const lp = game.leftPaddle;
+    // console.log(lp);
+    console.log(game.leftPaddle);
     ctx.fillRect(
-      lp.topPoint.x,
-      lp.topPoint.y,
-      // lp.topPoint.x * canvas.width,
-      // lp.topPoint.y * canvas.height,
+      lp.topPoint.x * canvas.width,
+      lp.topPoint.y * canvas.height,
       canvas.width * 0.01,
       canvas.height * lp.height
     );

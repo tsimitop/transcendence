@@ -47,8 +47,8 @@ export function endGameWithuser(user: string) {
 
 export function handlePongPayload(senderUsername: string, payload: any): void {
   try {
-    console.error("|\n| THIS IS AN INPUT\nV");
-    console.error("payload:", payload);
+    // console.error("|\n| THIS IS AN INPUT\nV");
+    // console.error("payload:", payload);
 
     // The payload is already parsed in MessageHandler.ts
     const message: PongMessage = {
@@ -120,10 +120,25 @@ function sendErrorMessage(senderUsername: string, errorMessage: string, errorCod
 function handleInput(senderUsername: string, pong_data: KeyboardInputData): void {
     
   
-  console.log(pong_data);
-
-
+  // console.log(pong_data);
+  if(pong_data.up === true){
+    for (const [username, game] of currentGames.entries()) {
+      if(username === senderUsername){
+        game.lPlayerPaddle.updatePos(false, true);
+        break;
+      }
+    }
+  }
+  if(pong_data.up === false){
+    for (const [username, game] of currentGames.entries()) {
+      if(username === senderUsername){
+        game.lPlayerPaddle.updatePos(true, false);
+        break;
+      }
+    }
+  }
 }
+
 
 function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
   const senderSocket = connectedUsers.get(senderUsername);
@@ -192,7 +207,6 @@ function startGameLoop(game: PongGame) {
   const fps = 30;
   const intervalMs = 1000 / fps;
 
-  console.log()
   const intervalId = setInterval(() => {
      
       if (game.getGameState() === 'finished') {
@@ -207,7 +221,7 @@ function startGameLoop(game: PongGame) {
     // Broadcast the updated game state to players
     const gameState = game.getGameStatePayload();
 
-    
+    // console.log(gameState.game.leftPaddle.topPoint.y)
     const response = {
           target_endpoint: 'pong-api',
           type: 'game_state',
@@ -221,14 +235,14 @@ function startGameLoop(game: PongGame) {
             leftPaddle: {
                 topPoint: {
                     x: 0,
-                    y: 0.5,
+                    y: gameState.game.leftPaddle.topPoint.y,
                 },
                 height: 0.2,  // percentage of window height (0-1)
               },
               rightPaddle: {
               topPoint: {
                   x: 0.9,
-                  y: 0.5,
+                  y: gameState.game.leftPaddle.topPoint.x,
               },
               height: 0.2,  // percentage of window height (0-1)
             },
@@ -285,7 +299,7 @@ function handleListGames(senderUsername: string): void {
     games: gameList,
   };
   
-  console.log("response:", response); 
+  // console.log("response:", response); 
   senderSocket.send(JSON.stringify(response));
 }
 
