@@ -45,5 +45,7 @@ constructor({x , y, radius}: BallParams) {
   setVy(y: number) { this.vy *= y; }
   setX(x: number) { this.x += x; }
   setY(y: number) { this.y += y; }
-  
+
+  reset(){ this.x = 0.5; this.y = 0.5; }
+
 }

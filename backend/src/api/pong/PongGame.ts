@@ -44,14 +44,14 @@ export class PongGame {
       leftPaddle: {
         topPoint: {
           x: 0.05,
-          y: 0.4,
+          y: 0.5,
         },
         height: 0.2
       },
       rightPaddle: {
         topPoint: {
           x: 0.95,
-          y: 0.4
+          y: 0.5
         },
         height: 0.2
       },
@@ -126,11 +126,11 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
 
       this.gameStateData.game.ball.x = this.ball.getX();
       this.gameStateData.game.ball.y = this.ball.getY();
+
     }
 
     checkCollisionWithPaddle(): boolean {
       // left Paddle
-
       if(this.lPaddle.collisionCheckIsActivated()){
         if (this.ball.getY() < this.lPaddle.getY() + this.lPaddle.getHeight() &&
         this.ball.getY() > this.lPaddle.getY() &&
@@ -140,6 +140,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
         this.rPaddle.collisionFlag = false;
         return true;
       }
+
     }
     // right Paddle
     if(this.rPaddle.collisionCheckIsActivated()){
@@ -147,15 +148,37 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       this.ball.getY() < this.rPaddle.getY() + this.rPaddle.getHeight() &&
       this.ball.getX() > this.rPaddle.getX()
     ){
-          this.lPaddle.collisionFlag = false;
-          this.rPaddle.collisionFlag = false;
-          return true;
-        }
-      }
+      this.lPaddle.collisionFlag = false;
+      this.rPaddle.collisionFlag = false;
+      return true;
+    }
+
+       }
       return false;
     }    
 
+    checkScore():boolean {
+    if (this.ball.getX() < 0 + this.lPaddle.getWidth() || this.ball.getX() > 1 - this.rPaddle.getWidth()) {
+        if (this.ball.getX() < 0 + this.lPaddle.getWidth()) {
+            this.rPlayerScore++;
+            return true;
+          }
+          if (this.ball.getX() > 1 - this.rPaddle.getWidth()) {
+            this.lPlayerScore++;
+            return true;
+          
+          }
+        }
+      return false;
+    }
 
+    setToRestart(){
+
+      this.lPaddle.reset();
+      this.rPaddle.reset();
+      this.ball.reset();
+      
+    }
     update(){
       if(this.gameState === "finished")
         return;
@@ -164,21 +187,31 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       this.ball.setX(this.ball.getVx() * this.ball.getSpeed());
       this.ball.setY(this.ball.getVy() * this.ball.getSpeed());
 
-        if(this.checkCollisionWithPaddle()) { 
-          this.ball.setVx(-1);
-          console.log("collisiondetected")
-        }
-        else {
-          
-          // console.log("no collisiondetected")
-        }
-    
-         
-      // Bounce off top and bottom
       if (this.ball.getY() - (this.ball.getRadius() * 2) < 0){ this.ball.setVy(-1); }
       else if(this.ball.getY() + (this.ball.getRadius() * 2) > 1) { this.ball.setVy(-1); }
+
+      if(this.checkCollisionWithPaddle()) { 
+        this.ball.setVx(-1);
+        // console.log("collisiondetected")
+      }
+      // restarte
+      if(this.ball.getVx() < 0 && this.ball.getX() < this.lPaddle.getWidth()){
+        console.log("restart"); 
+        this.setToRestart() ;
+      }   
+      if(this.ball.getVx() > 0 && this.ball.getX() > 1 - this.lPaddle.getWidth()){
+        console.log("restart");        
+        this.setToRestart() ;
+      }
+
+      // Bounce off top and bottom
       
+
       this.updateGameStatData();
+
+
+
+
     
     }
     getGameStatePayload(): GameStateData { return this.gameStateData; }
