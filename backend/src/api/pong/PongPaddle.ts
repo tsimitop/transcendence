@@ -13,7 +13,7 @@ export class PongGamePaddle {
 	private x: number;
 	private y: number; 
 	private height: number; 
-  	private speed: number = 0.02;
+  	private speed: number = 0.01;
 
 
 /*****************************************************/

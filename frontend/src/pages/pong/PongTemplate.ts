@@ -1,8 +1,14 @@
 export function getPongHTML(theme: string): string {
   return `
-    <main class="main-container layout-padding theme-primary-${theme}-full">
+  
+  <!-- ***************************************** -->
+  <!-- *************    STYLE  ***************** -->
+  <!-- ***************************************** -->
 <style>
-
+body, html {
+  overflow: hidden; /* prevents scrolling completely */
+  height: 100%;
+}
 canvas {
   border: 1px solid black;
   background: rgb(0, 0, 0);
@@ -14,6 +20,7 @@ canvas {
   max-height: 1200px;
   height: 100%;
 }
+
 
 @media only screen and (max-width: 600px) {
   canvas {
@@ -55,6 +62,27 @@ canvas {
 </style>
 
 
+
+<!-- ***************************************** -->
+<!-- *************  SCRIPT  ****************** -->
+<!-- ***************************************** -->
+
+<script>
+  // This works reliably in all modern browsers
+  window.addEventListener("keydown", function (e) {
+    if (["ArrowUp", "ArrowDown", " "].includes(e.key)) {
+      e.preventDefault();
+    }
+  }, false); // passive: false is the default here
+</script>
+
+
+<!-- ***************************************** -->
+<!-- *************  MAIN  ******************** -->
+<!-- ***************************************** -->
+
+
+    <main class="main-container layout-padding theme-primary-${theme}-full">
       <!-- Menu -->
       <div id="menuScreen" class="screen">
         <h2>Select Game Mode</h2>
@@ -113,3 +141,4 @@ canvas {
     </main>
   `;
 }
+

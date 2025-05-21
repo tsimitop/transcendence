@@ -106,7 +106,6 @@ export class Pong extends Component {
           const data = JSON.parse(event.data);
           if(data.target_endpoint == 'pong-api')
           {
-            // console.log("Parsed message:", data);
             handlePongMessage(data, this.socket);
           }
         } catch (e) {

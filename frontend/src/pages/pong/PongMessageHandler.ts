@@ -7,7 +7,6 @@ import { GameOverData } from "./PongGame";
 
 
 export function     handlePongMessage(data: any, socket: WebSocket | null ) {
-    // console.log("data.type", data.type)
     if (!data.type) {
       console.error("Received message without type");
       return;
@@ -35,7 +34,6 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   }
 
   export function handleGameOver(data: GameOverData) {
-    console.log(data);
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error("Canvas context not available");
@@ -69,14 +67,8 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
   
   export function   handleGameState(data: any) {
-    console.log("handleGameStateFunction");
-    // console.log("handleGameStateFunction", data);
-    // console.log("handleGameStateFunction", data.game.id);
-    
-    
     const gameStateData = data as GameStateData;
     const game = gameStateData.game;
-    // console.log(game);
 
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
@@ -98,7 +90,6 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     const ballX = game.ball.x * canvas.width;
     const ballY = game.ball.y * canvas.height;
     const ballRadius = canvas.width * 0.01;
-    // console.log(ballX, game.ball.y);  
     ctx.beginPath();
     ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
     ctx.fillStyle = "white";
@@ -106,8 +97,6 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
     // Left paddle
     const lp = game.leftPaddle;
-    // console.log(lp);
-    console.log(game.leftPaddle);
     ctx.fillRect(
       lp.topPoint.x * canvas.width,
       lp.topPoint.y * canvas.height,

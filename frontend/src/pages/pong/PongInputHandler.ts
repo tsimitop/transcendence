@@ -40,28 +40,23 @@ public start(): void {
       }
     }
   }
-
   setInterval(() => {
     if(this.keys.up.pressed) {
-      // console.log("UP IS PRESSED")
       response.payload.pong_data.userId = "left";
       response.payload.pong_data.up = true;
       this.socket.send(JSON.stringify(response));
     }
     if(this.keys.down.pressed) {
-      // console.log("DOWN IS PRESSED")
       response.payload.pong_data.userId = "left";
       response.payload.pong_data.up = false;
       this.socket.send(JSON.stringify(response));
     }
     if(this.keys.w.pressed) {
-      // console.log("W IS PRESSED")
       response.payload.pong_data.userId = "right";
       response.payload.pong_data.up = true;
       this.socket.send(JSON.stringify(response));
     }
     if(this.keys.s.pressed) {
-      // console.log("S IS PRESSED")
       response.payload.pong_data.userId = "right";
       response.payload.pong_data.up = false;
       this.socket.send(JSON.stringify(response));

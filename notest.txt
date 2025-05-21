@@ -20,52 +20,27 @@ spiel erstellen oder spiel beitreten ✅
 
 localGame - > second player alias✅
 remoteGame - > search for other player✅
+moving paddles✅
+moving ball✅
+collision to wall✅
+
+
+
+
+
+TO DO
 tournamentGame - > 4 player fix, wait for 4 other players
 
 displaying all - ball paddles scores
-moving paddles
-moving ball✅
-updating scores
-collision to wall✅
+
+local game paddle movement
+remote game paddle movement
+
 collision to paddle
+updating scores
 end of game
 reload via pong button on top doesnt work properly
 
+reconnect?????
 
-
-backend:
-
-receive all api calls from setup menu
-process all:
-    make local game
-    make waiting List
-    join game
-
-
- pong.socket?.send(JSON.stringify({
-      target_endpoint: 'pong-api',
-      payload: {
-        type: 'game_list'
-      }
-    }));
-
-    
-pong.socket?.send(JSON.stringify({
-      target_endpoint: 'pong-api',
-      payload: {
-        type: 'create_game',
-        mode: 'remote',
-        alias: alias1,
-        MultiplayerMaxPlayers: MultiplayerMaxPlayers, 
-        modeSelect: MultiplayerModeSelect.value
-      }
-    })
-
-pong.socket?.send(JSON.stringify({
-        target_endpoint: 'pong-api',
-        payload: {
-          type: 'create_game',
-          mode: 'local',
-          players: [alias1, alias2]
-        }
-      })
+chat doenst work anymore in pong but in main!?!?!
