@@ -12,10 +12,10 @@ export class PongGame {
 /**************     Variables    *********************/
 /*****************************************************/
   private uniqueID: string;
-  private backendBall: PongGameBall;
+  private ball: PongGameBall;
 
-  public lPlayerPaddle: PongGamePaddle;
-  public rPlayerPaddle: PongGamePaddle;
+  public lPaddle: PongGamePaddle;
+  public rPaddle: PongGamePaddle;
 
   
   private gameState: GameState = "waiting";
@@ -25,7 +25,10 @@ export class PongGame {
   private rPlayerName: string = "Player2";
   private lPlayerScore: number = 0;
   private rPlayerScore: number = 0;
-  
+
+
+
+
 
   private lPlayerSocket: any;
   private rPlayerSocket: any;
@@ -72,10 +75,10 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
   this.uniqueID = uniqueID;
   this.lPlayerName = lPlayerName;
   this.lPlayerAlias = lPlayerAlias;
-  this.backendBall = new PongGameBall({ x: 0.5, y: 0.5, radius: 0.01 });
+  this.ball = new PongGameBall({ x: 0.5, y: 0.5, radius: 0.01 });
 
-  this.lPlayerPaddle = new PongGamePaddle({x: 0.5, height: 0.2});
-  this.rPlayerPaddle = new PongGamePaddle({x: 0.5, height: 0.2});
+  this.lPaddle = new PongGamePaddle({x: 0.1, height: 0.2, width: 0.01});
+  this.rPaddle = new PongGamePaddle({x: 0.99, height: 0.2, width: 0.01});
   this.gameStateData.game.gameMode = gameMode;
 
   }
@@ -101,6 +104,8 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
     getrPlayerSocket(): any{ return this.rPlayerSocket; }
     getlPlayerName(): string{ return this.lPlayerName; }
     getrPlayerName(): string{ return this.rPlayerName; }
+    getlPlayerAlias(): string{ return this.lPlayerAlias; }
+    getrPlayerAlias(): string{ return this.rPlayerAlias; }
 
     setOpponentName(opponentName: string, opponentAlias: string){
       this.rPlayerName = opponentName;
@@ -108,60 +113,74 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       console.log( this.rPlayerName, "-> " ,this.rPlayerAlias);
       console.log( this.lPlayerName, "-> " ,this.lPlayerAlias);
     }
-
-
     setGameState(state : GameState) : void { 
       this.gameState = state;
       // console.log( this.getUniqeID(), "new GameState:", this.gameState);
     }
 
+
+    updateGameStatData(){
+
+      this.gameStateData.game.leftPaddle.topPoint.y = this.lPaddle.getY();
+      this.gameStateData.game.rightPaddle.topPoint.y = this.rPaddle.getY();
+
+      this.gameStateData.game.ball.x = this.ball.getX();
+      this.gameStateData.game.ball.y = this.ball.getY();
+    }
+
+    checkCollisionWithPaddle(): boolean {
+      // left Paddle
+
+      if(this.lPaddle.collisionCheckIsActivated()){
+        if (this.ball.getY() < this.lPaddle.getY() + this.lPaddle.getHeight() &&
+        this.ball.getY() > this.lPaddle.getY() &&
+        this.ball.getX() < this.lPaddle.getWidth()
+      ){
+        this.lPaddle.collisionFlag = false;
+        this.rPaddle.collisionFlag = false;
+        return true;
+      }
+    }
+    // right Paddle
+    if(this.rPaddle.collisionCheckIsActivated()){
+      if (this.ball.getY() > this.rPaddle.getY() &&
+      this.ball.getY() < this.rPaddle.getY() + this.rPaddle.getHeight() &&
+      this.ball.getX() > this.rPaddle.getX()
+    ){
+          this.lPaddle.collisionFlag = false;
+          this.rPaddle.collisionFlag = false;
+          return true;
+        }
+      }
+      return false;
+    }    
+
+
     update(){
       if(this.gameState === "finished")
         return;
 
-      this.gameStateData.game.leftPaddle.topPoint.y = this.lPlayerPaddle.getY();
-      this.gameStateData.game.rightPaddle.topPoint.y = this.rPlayerPaddle.getY();
+      // ball posistion
+      this.ball.setX(this.ball.getVx() * this.ball.getSpeed());
+      this.ball.setY(this.ball.getVy() * this.ball.getSpeed());
 
-      this.gameStateData.game.ball.x += this.backendBall.getVx() * this.backendBall.getSpeed();
-      this.gameStateData.game.ball.y += this.backendBall.getVy() * this.backendBall.getSpeed();
-
-      // console.log(this.backendBall.getVx(), " ", this.backendBall.getVy())
-
-      
-      
+        if(this.checkCollisionWithPaddle()) { 
+          this.ball.setVx(-1);
+          console.log("collisiondetected")
+        }
+        else {
+          
+          // console.log("no collisiondetected")
+        }
+    
+         
       // Bounce off top and bottom
-      if (this.gameStateData.game.ball.y - (this.backendBall.getRadius() * 2) < 0){
-        // console.log("y < 0");
-        // console.log(this.gameStateData.game.ball.y)
-        this.backendBall.setVy(-1);
-      }
+      if (this.ball.getY() - (this.ball.getRadius() * 2) < 0){ this.ball.setVy(-1); }
+      else if(this.ball.getY() + (this.ball.getRadius() * 2) > 1) { this.ball.setVy(-1); }
       
-      if(this.gameStateData.game.ball.y + (this.backendBall.getRadius() * 2) > 1) {
-        // console.log("y > 1");
-        // console.log(this.gameStateData.game.ball.y + this.backendBall.getRadius());
-        this.backendBall.setVy(-1);
-      }
-      
-      // Bounce off left and right (basic handling, later you can add scoring here)
-      if (this.gameStateData.game.ball.x - this.backendBall.getRadius() < 0)
-        {
-      // console.log("x < 0");
-      this.backendBall.setVx(-1);
-    } 
-    if(this.gameStateData.game.ball.x + this.backendBall.getRadius() > 1) {
-        // console.log("x > 1");
-      this.backendBall.setVx(-1);
-
+      this.updateGameStatData();
+    
     }
-    // console.log('vx:', this.backendBall.getVx(), 'vy:', this.backendBall.getVy());
-    // console.log('vx:', this.gameStateData.game.ball.x, 'vy:', this.gameStateData.game.ball.y);
-
-
-    }
-
-
     getGameStatePayload(): GameStateData { return this.gameStateData; }
-
-
 
 }

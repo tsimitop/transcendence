@@ -26,12 +26,16 @@ collision to wall✅
 
 
 
+21.05
+displaying scores✅
+
 
 
 TO DO
 tournamentGame - > 4 player fix, wait for 4 other players
 
-displaying all - ball paddles scores
+join game display amount player and status of game
+check countdown - number from backend has no effect
 
 local game paddle movement
 remote game paddle movement

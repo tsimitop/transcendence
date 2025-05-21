@@ -4,6 +4,7 @@
 interface PaddleParams {
 	x: number;
 	height: number
+	width: number
   }
 
 export class PongGamePaddle {
@@ -13,16 +14,20 @@ export class PongGamePaddle {
 	private x: number;
 	private y: number; 
 	private height: number; 
+	private width: number; 
   	private speed: number = 0.01;
 
+	  public collisionCount: number = 0;
+	  public collisionFlag: boolean = true;
 
 /*****************************************************/
 /**************     Constructor  *********************/
 /*****************************************************/
-	constructor({x, height}: PaddleParams) {
+	constructor({x, height, width}: PaddleParams) {
 		this.x = x;
 		this.y = 0.5;
 		this.height = height;
+		this.width = width;
 	}
 
 /*****************************************************/
@@ -31,25 +36,36 @@ export class PongGamePaddle {
 
 	getX():number{return this.x};
 	getY():number{return this.y};
+	getHeight():number{return this.height};
+	getWidth():number{return this.width};
 	// getPaddleWidth():number{return this.paddleWidth};
 	// getPaddleHeight():number{return this.paddleHeight};
 
 	updatePos(paddleDown: boolean, paddleUp: boolean) {
 		if (paddleDown) {
-			// Check that the bottom of the paddle doesn't exceed 1.0
 			if (this.y + this.height + this.speed <= 1) {
-				console.log("down", this.y, "+", this.speed);
 				this.y += this.speed;
 			}
 		}
 		if (paddleUp) {
-			// Check that the top stays above 0
 			if (this.y - this.speed >= 0) {
-				console.log("up", this.y,"-", this.speed);
 				this.y -= this.speed;
 			}
 		}
 	}
 	
+	collisionCheckIsActivated(): boolean {
+		if (!this.collisionFlag) {
+		  this.collisionCount++;
+		  if (this.collisionCount >= 20) {
+			this.collisionCount = 0;
+			this.collisionFlag = true;
+		  }
+		}
+		return this.collisionFlag;
+	  }
+	  
+
+
 	reset() { this.y = 0.5; }
 }

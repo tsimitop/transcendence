@@ -29,15 +29,15 @@ export function endGameWithuser(user: string) {
       const rsocket = game.getrPlayerSocket();
       currentGames.delete(username);
       if (lsocket || lsocket.readyState === WebSocket.OPEN){
-        console.log("message l player");
+        // console.log("message l player");
         lsocket.send(JSON.stringify(response));
       }
       if (rsocket || rsocket.readyState === WebSocket.OPEN){
-        console.log("message r player");
+        // console.log("message r player");
         rsocket.send(JSON.stringify(response));
       }
     }
-    console.log(`Game with key ${username} removed from currentGames`);
+    // console.log(`Game with key ${username} removed from currentGames`);
     break;
   }
 }
@@ -91,17 +91,17 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
 function handleInput(senderUsername: string, pong_data: KeyboardInputData): void {
     
   
-  console.log(senderUsername, " ", pong_data.userId);
+  // console.log(senderUsername, " ", pong_data.userId);
   for (const [username, game] of currentGames.entries()) {
     if(username === senderUsername) {
       if(pong_data.userId === "left"){
         if(pong_data.up === true){
-          game.lPlayerPaddle.updatePos(false, true);
+          game.lPaddle.updatePos(false, true);
           break;
         }
         else if(pong_data.up === false){
           
-          game.lPlayerPaddle.updatePos(true, false);
+          game.lPaddle.updatePos(true, false);
           break;
         }
         else {
@@ -111,12 +111,12 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
       else if(pong_data.userId === "right"){
         if(pong_data.up === true){
           
-          game.rPlayerPaddle.updatePos(false, true);
+          game.rPaddle.updatePos(false, true);
           break;
         }
         else if(pong_data.up === false){
           
-          game.rPlayerPaddle.updatePos(true, false);
+          game.rPaddle.updatePos(true, false);
           break;
         }
         else {
@@ -231,12 +231,14 @@ function startGameLoop(game: PongGame) {
             lastUpdateTime: 1,
             maxScore: 10,
             scores: {
-                ["playerId: string"]: 1,  // player IDs mapped to their scores
+                [game.getlPlayerAlias()]:game.getlPlayerScore() ,
+                [game.getrPlayerAlias()]:game.getrPlayerScore()
             },
-            countdown: 1,
+            countdown: 5,
             // gameMode: "missing" // not needed here?
       }
   };
+
 
     const lPlayerSocket = game.getlPlayerSocket();
     const rPlayerSocket = game.getrPlayerSocket();

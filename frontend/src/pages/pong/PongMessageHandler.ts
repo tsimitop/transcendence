@@ -91,16 +91,17 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     const ballY = game.ball.y * canvas.height;
     const ballRadius = canvas.width * 0.01;
     ctx.beginPath();
+    ctx.fillStyle = "green";
     ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "white";
     ctx.fill();
-
+    
     // Left paddle
+    ctx.fillStyle = "white";
     const lp = game.leftPaddle;
     ctx.fillRect(
       lp.topPoint.x * canvas.width,
       lp.topPoint.y * canvas.height,
-      canvas.width * 0.01,
+      canvas.width * 0.01,              // take from backend???? 
       canvas.height * lp.height
     );
 
@@ -112,10 +113,21 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       canvas.width * 0.01,
       canvas.height * rp.height
     );
-
+    // console.log(lp.topPoint.x, " " , lp.topPoint.y, "-", rp.topPoint.x, " " , rp.topPoint.y)
     // Optional: Draw scores or countdown
-    // ctx.font = "20px Arial";
-    // ctx.fillText(`Score: ${Object.values(game.scores).join(" : ")}`, 10, 30);
+    // console.log("game.scores ",game.scores);
+    ctx.font = "20px Arial";
+    ctx.textAlign = "center";
+
+    const scoreEntries = Object.entries(game.scores); // [ [playerName, score], ... ]
+    
+    const scoreText = scoreEntries
+      .map(([name, score]) => `${name}: ${score}`)
+      .join("   "); // e.g. "Alice: 3   Bob: 5"
+      // ctx.fillText(`${} ${lPlayerScore} : ${rPlayerScore} ${rPlayerName}`, canvas.width / 2,  50);
+
+      ctx.fillText(`${scoreText}`, canvas.width / 2, 30);
+    
 
     // console.log("Canvas size:", canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight);
 

@@ -16,10 +16,6 @@ export class PongGameBall {
 	private vy: number;
 	private speed: number = 2;
 	private size: number = 15;
-	private lcollisionCount: number = 0;
-	private rcollisionCount: number = 0;
-	private lcollisionFlag: boolean = true;
-	private rcollisionFlag: boolean = true;
 
 
 /*****************************************************/
@@ -40,10 +36,14 @@ constructor({x , y, radius}: BallParams) {
 
   getVx(): number { return this.vx; }
   getVy(): number { return this.vy; }
+  getX(): number { return this.x; }
+  getY(): number { return this.y; }
   getRadius(): number { return this.size; }
   getSpeed(): number { return this.speed; }
 
   setVx(x: number) { this.vx *= x; }
   setVy(y: number) { this.vy *= y; }
-
+  setX(x: number) { this.x += x; }
+  setY(y: number) { this.y += y; }
+  
 }
