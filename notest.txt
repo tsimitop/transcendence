@@ -28,6 +28,8 @@ collision to wall✅
 
 21.05
 displaying scores✅
+collision to paddle✅
+updating scores✅
 
 
 
@@ -40,9 +42,7 @@ check countdown - number from backend has no effect
 local game paddle movement
 remote game paddle movement
 
-collision to paddle
-updating scores
-end of game
+end of game 
 reload via pong button on top doesnt work properly
 
 reconnect?????

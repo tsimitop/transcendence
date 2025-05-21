@@ -26,6 +26,8 @@ export class PongGame {
   private lPlayerScore: number = 0;
   private rPlayerScore: number = 0;
 
+  private maxScore: number = 2;
+
 
 
 
@@ -157,18 +159,15 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       return false;
     }    
 
-    checkScore():boolean {
-    if (this.ball.getX() < 0 + this.lPaddle.getWidth() || this.ball.getX() > 1 - this.rPaddle.getWidth()) {
-        if (this.ball.getX() < 0 + this.lPaddle.getWidth()) {
-            this.rPlayerScore++;
-            return true;
-          }
-          if (this.ball.getX() > 1 - this.rPaddle.getWidth()) {
-            this.lPlayerScore++;
-            return true;
-          
-          }
-        }
+    outOfFieldCheck(): boolean{
+      if(this.ball.getVx() < 0 && this.ball.getX() < this.lPaddle.getWidth()){
+        this.rPlayerScore++;
+        return true; 
+      }   
+      if(this.ball.getVx() > 0 && this.ball.getX() > 1 - this.lPaddle.getWidth()){
+        this.lPlayerScore++;
+        return true;
+      }
       return false;
     }
 
@@ -177,42 +176,38 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       this.lPaddle.reset();
       this.rPaddle.reset();
       this.ball.reset();
-      
+
     }
+
+    checkEndOfGame(){
+      if(this.lPlayerScore >= this.maxScore){
+        this.gameState = "finished";
+      }
+      if(this.rPlayerScore >= this.maxScore){
+        this.gameState = "finished";
+      }
+      // set winner to display
+    }
+
     update(){
       if(this.gameState === "finished")
         return;
 
-      // ball posistion
+      //update ball posistion
       this.ball.setX(this.ball.getVx() * this.ball.getSpeed());
       this.ball.setY(this.ball.getVy() * this.ball.getSpeed());
 
+      // Bounce off top and bottom
       if (this.ball.getY() - (this.ball.getRadius() * 2) < 0){ this.ball.setVy(-1); }
       else if(this.ball.getY() + (this.ball.getRadius() * 2) > 1) { this.ball.setVy(-1); }
 
-      if(this.checkCollisionWithPaddle()) { 
-        this.ball.setVx(-1);
-        // console.log("collisiondetected")
-      }
-      // restarte
-      if(this.ball.getVx() < 0 && this.ball.getX() < this.lPaddle.getWidth()){
-        console.log("restart"); 
-        this.setToRestart() ;
-      }   
-      if(this.ball.getVx() > 0 && this.ball.getX() > 1 - this.lPaddle.getWidth()){
-        console.log("restart");        
-        this.setToRestart() ;
-      }
 
-      // Bounce off top and bottom
-      
+      if(this.checkCollisionWithPaddle()) { this.ball.setVx(-1); }
+      if(this.outOfFieldCheck()){ this.setToRestart(); }
+
+      this.checkEndOfGame();
 
       this.updateGameStatData();
-
-
-
-
-    
     }
     getGameStatePayload(): GameStateData { return this.gameStateData; }
 
