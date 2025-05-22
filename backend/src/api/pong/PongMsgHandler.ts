@@ -28,11 +28,11 @@ export function endGameWithuser(user: string) {
       const lsocket = game.getlPlayerSocket();
       const rsocket = game.getrPlayerSocket();
       currentGames.delete(username);
-      if (lsocket || lsocket.readyState === WebSocket.OPEN){
+      if (lsocket && lsocket.readyState === WebSocket.OPEN){
         // console.log("message l player");
         lsocket.send(JSON.stringify(response));
       }
-      if (rsocket || rsocket.readyState === WebSocket.OPEN){
+      if (rsocket && rsocket.readyState === WebSocket.OPEN){
         // console.log("message r player");
         rsocket.send(JSON.stringify(response));
       }
@@ -272,6 +272,7 @@ function handleListGames(senderUsername: string): void {
     gameList.push({
       id: game.getUniqeID(),
       owner: username,
+      alias: game.getlPlayerAlias(),
       state: game.getGameState(),
       // optionally include player names, number of players, etc. tournament?
     });
@@ -287,32 +288,32 @@ function handleListGames(senderUsername: string): void {
   senderSocket.send(JSON.stringify(response));
 }
 
-function sendWinnerResponse(game: PongGame, username: string, message: string){
-  const response = {
-    target_endpoint: 'pong-api',
-    type: 'game_over',
-    pong_data: {
-      gameId: game.getUniqeID(),
-      winnerId: "string",
-      message: message,
-      finalScore: {
-        left: game.getlPlayerScore(),
-        right: game.getrPlayerScore()
-    }
-    }
-  }
-  const lsocket = game.getlPlayerSocket();
-  const rsocket = game.getrPlayerSocket();
-  if (lsocket || lsocket.readyState === WebSocket.OPEN){
-    // console.log("message l player");
-    lsocket.send(JSON.stringify(response));
-  }
-  if (rsocket || rsocket.readyState === WebSocket.OPEN){
-    // console.log("message r player");
-    rsocket.send(JSON.stringify(response));
-  }
-  currentGames.delete(username);
-}
+// function sendWinnerResponse(game: PongGame, username: string, message: string){
+//   const response = {
+//     target_endpoint: 'pong-api',
+//     type: 'game_over',
+//     pong_data: {
+//       gameId: game.getUniqeID(),
+//       winnerId: "string",
+//       message: message,
+//       finalScore: {
+//         left: game.getlPlayerScore(),
+//         right: game.getrPlayerScore()
+//     }
+//     }
+//   }
+//   const lsocket = game.getlPlayerSocket();
+//   const rsocket = game.getrPlayerSocket();
+//   if (lsocket || lsocket.readyState === WebSocket.OPEN){
+//     // console.log("message l player");
+//     lsocket.send(JSON.stringify(response));
+//   }
+//   if (rsocket || rsocket.readyState === WebSocket.OPEN){
+//     // console.log("message r player");
+//     rsocket.send(JSON.stringify(response));
+//   }
+//   currentGames.delete(username);
+// }
 
 function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
 
@@ -332,8 +333,6 @@ function handleCreateGame(senderUsername: string, pong_data: CreateGameData): vo
       };
       senderSocket.send(JSON.stringify(response));
     }
-    // console.log(`Game created by ${senderUsername} with ID: ${uniqueGameID}`);
-    // return;     //<-- not neeeded due to local game?
   }
   else {
     // LOCAL GAME

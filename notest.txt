@@ -31,6 +31,12 @@ displaying scores✅
 collision to paddle✅
 updating scores✅
 
+22.05
+local game paddle movement✅
+remote game paddle movement✅
+
+
+
 
 
 TO DO
@@ -39,8 +45,6 @@ tournamentGame - > 4 player fix, wait for 4 other players
 join game display amount player and status of game
 check countdown - number from backend has no effect
 
-local game paddle movement
-remote game paddle movement
 
 end of game 
 reload via pong button on top doesnt work properly

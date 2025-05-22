@@ -193,7 +193,7 @@ export function handleWaitingForUser() {
    document.querySelectorAll(".screen").forEach((el) => {
     (el as HTMLElement).style.display = "none";
   });
-  
+
   // ✅ Make canvas visible
   canvas.style.display = "block";
 
@@ -247,10 +247,10 @@ export function handleWaitingForUser() {
   
     const ul = document.createElement('ul');
   
-    data.games.forEach((game: { id: string; owner: string; state: string }) => {
+    data.games.forEach((game: { id: string; owner: string; alias: string; state: string }) => {
       const li = document.createElement('li');
   
-      li.textContent = `Game ID: ${game.id}, Owner: ${game.owner}, State: ${game.state} `;
+      li.textContent = `Game ID: ${game.id}, Owner: ${game.owner}, Alias: ${game.alias}, State: ${game.state} `;
   
       const joinBtn = document.createElement('button');
       joinBtn.textContent = 'Join';

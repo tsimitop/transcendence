@@ -108,6 +108,7 @@ Which X is good? Depends on latency of the connection i guess?
   "pong_data": {
     "userId": "string",  // we implicitly know the user (connection), however the field can become usefull for multiple player on single client scenario. Game id also isn't really required as a user can only be in a single game.
     "up": boolean,    // true for up, false for down
+    "paddle": "left" // or right
     }
 }
 ```
