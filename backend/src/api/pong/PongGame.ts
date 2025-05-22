@@ -28,7 +28,7 @@ export class PongGame {
 
   private maxScore: number = 100;
 
-
+  public gameMode: string = "local";
 
 
 
@@ -59,7 +59,7 @@ export class PongGame {
         height: 0.2
       },
       lastUpdateTime: Date.now(),
-      gameMode: "remote or local",
+      gameMode: this.gameMode,
       maxScore: 5, // always 5 ???
       scores: {},
       countdown: 0 // not implemented
@@ -82,7 +82,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
 
   this.lPaddle = new PongGamePaddle({x: 0.1, height: 0.2, width: 0.01});
   this.rPaddle = new PongGamePaddle({x: 0.99, height: 0.2, width: 0.01});
-  this.gameStateData.game.gameMode = gameMode;
+  this.gameMode = gameMode;
 
   }
 
@@ -113,8 +113,6 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
     setOpponentName(opponentName: string, opponentAlias: string){
       this.rPlayerName = opponentName;
       this.rPlayerAlias = opponentAlias;
-      console.log( this.rPlayerName, "-> " ,this.rPlayerAlias);
-      console.log( this.lPlayerName, "-> " ,this.lPlayerAlias);
     }
     setGameState(state : GameState) : void { 
       this.gameState = state;

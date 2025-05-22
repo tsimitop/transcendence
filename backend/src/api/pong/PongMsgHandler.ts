@@ -92,9 +92,11 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
     
   
   // console.log(username, game.getUniqeID());
-  console.log(senderUsername, " ", pong_data.userId);
   for (const [username, game] of currentGames.entries()) {
-    if(username === senderUsername) {
+    // console.log(game.getlPlayerName(), "<->", game.getrPlayerName());
+    // console.log(username);
+    console.log(senderUsername, " ", pong_data.userId);
+    // if(username === senderUsername) {
       if(pong_data.userId === game.getlPlayerName()){
         if(pong_data.up === true){
           game.lPaddle.updatePos(false, true);
@@ -110,6 +112,7 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
         }
       }
       else if(pong_data.userId === game.getrPlayerName()){
+        console.log("joinedplayer");
         if(pong_data.up === true){
           
           game.rPaddle.updatePos(false, true);
@@ -124,7 +127,7 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
           break;
         }
       }
-    }
+    // }
   }
 }
 
@@ -139,6 +142,7 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
     if(pong_data.gameId === game.getUniqeID()){
       game.setGameState('countdown');
       game.setOpponentName(senderUsername, pong_data.OpponentAlias);
+      console.log("-->",game.getrPlayerName(), game.getrPlayerAlias());
       opponent = username;
       break;
     }
@@ -318,6 +322,7 @@ function handleCreateGame(senderUsername: string, pong_data: CreateGameData): vo
 
   const senderSocket = connectedUsers.get(senderUsername);
   if(pong_data.gameMode === "remote"){
+    // REMOTE GAME
     if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
       const response = {
         target_endpoint: 'pong-api',
