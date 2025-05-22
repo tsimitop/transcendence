@@ -91,10 +91,11 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
 function handleInput(senderUsername: string, pong_data: KeyboardInputData): void {
     
   
-  // console.log(senderUsername, " ", pong_data.userId);
+  // console.log(username, game.getUniqeID());
+  console.log(senderUsername, " ", pong_data.userId);
   for (const [username, game] of currentGames.entries()) {
     if(username === senderUsername) {
-      if(pong_data.userId === "left"){
+      if(pong_data.userId === game.getlPlayerName()){
         if(pong_data.up === true){
           game.lPaddle.updatePos(false, true);
           break;
@@ -108,7 +109,7 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
           break;
         }
       }
-      else if(pong_data.userId === "right"){
+      else if(pong_data.userId === game.getrPlayerName()){
         if(pong_data.up === true){
           
           game.rPaddle.updatePos(false, true);
@@ -330,13 +331,15 @@ function handleCreateGame(senderUsername: string, pong_data: CreateGameData): vo
   }
   else {
     // LOCAL GAME
-    newGame.setOpponentName(pong_data.localOpponent, pong_data.localOpponent);
+    newGame.setOpponentName(senderUsername, pong_data.localOpponent);
+    // or
+    // newGame.setOpponentName(pong_data.localOpponent, pong_data.localOpponent);
     newGame.setGameState("countdown");
     if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
 
     /********* */
-    // jsut for local game NEEEEEDED!!!!!?
+    // for local game needed to prevent errors
     newGame.setSockets(senderSocket, senderSocket);
     /********* */
 

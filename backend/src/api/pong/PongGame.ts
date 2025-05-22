@@ -26,7 +26,8 @@ export class PongGame {
   private lPlayerScore: number = 0;
   private rPlayerScore: number = 0;
 
-  private maxScore: number = 2;
+  private maxScore: number = 100;
+
 
 
 

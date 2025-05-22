@@ -47,4 +47,11 @@ reload via pong button on top doesnt work properly
 
 reconnect?????
 
-chat doenst work anymore in pong but in main!?!?!
+chat doenst work anymore in pong_front branch but in main branch
+
+two equal aliases shouldnt be possible
+
+speed variable doesnt work properly with value from backend
+
+start position of paddles are not properly in the middle
+change angle slightly of pongball when hitting paddle

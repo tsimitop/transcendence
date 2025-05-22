@@ -1,5 +1,5 @@
-// import { ThicknessPaddle } from "./constants.js";
-// import { WHeight } from "./constants.js";
+
+
 
 interface PaddleParams {
 	x: number;
@@ -17,8 +17,9 @@ export class PongGamePaddle {
 	private width: number; 
   	private speed: number = 0.01;
 
-	  public collisionCount: number = 0;
-	  public collisionFlag: boolean = true;
+	public collisionCount: number = 0;
+	public collisionFlag: boolean = true;
+
 
 /*****************************************************/
 /**************     Constructor  *********************/

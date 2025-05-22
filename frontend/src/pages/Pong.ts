@@ -10,6 +10,7 @@ import { getPongHTML } from './pong/PongTemplate';
 import { setupMenu } from './pong/PongMenu';
 import { handlePongMessage } from "./pong/PongMessageHandler";
 import { PongInputHandler } from "./pong/PongInputHandler";
+import { userContext } from "../context/UserContext";
 
 
 export class Pong extends Component {
@@ -91,10 +92,12 @@ export class Pong extends Component {
   
 	  // Connection established
 	  this.socket.onopen = () => {
+      const username = userContext.state.username;
+
       console.log("Connected to pong server.");
       this.reconnectAttempts = 0;
       this.showSystemMessage("[Connected to server]", "text-green-500");
-      this.inputHandler = new PongInputHandler(this.socket!, "emptYYY" );
+      this.inputHandler = new PongInputHandler(this.socket!,  username);
       this.inputHandler.start();
 
 

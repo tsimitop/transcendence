@@ -42,22 +42,22 @@ public start(): void {
   }
   setInterval(() => {
     if(this.keys.up.pressed) {
-      response.payload.pong_data.userId = "left";
+      response.payload.pong_data.userId = this.userId;
       response.payload.pong_data.up = true;
       this.socket.send(JSON.stringify(response));
     }
     if(this.keys.down.pressed) {
-      response.payload.pong_data.userId = "left";
+      response.payload.pong_data.userId = this.userId;
       response.payload.pong_data.up = false;
       this.socket.send(JSON.stringify(response));
     }
     if(this.keys.w.pressed) {
-      response.payload.pong_data.userId = "right";
+      response.payload.pong_data.userId = this.userId;
       response.payload.pong_data.up = true;
       this.socket.send(JSON.stringify(response));
     }
     if(this.keys.s.pressed) {
-      response.payload.pong_data.userId = "right";
+      response.payload.pong_data.userId = this.userId;
       response.payload.pong_data.up = false;
       this.socket.send(JSON.stringify(response));
     }

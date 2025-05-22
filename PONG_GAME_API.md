@@ -91,7 +91,8 @@ game_state response or error
   "pong_data": {
     "userId": "string",
     "gameMode": "classic", // "classic""
-    "maxScore": 10
+    "maxScore": 10,
+    "side": "left" //| "right";
     }
 }
 ```
