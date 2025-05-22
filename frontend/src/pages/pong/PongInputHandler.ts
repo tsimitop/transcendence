@@ -37,6 +37,7 @@ public start(): void {
       pong_data : {
         userId: this.userId,
         up: false,
+        paddle: "left"
       }
     }
   }
@@ -44,21 +45,26 @@ public start(): void {
     if(this.keys.up.pressed) {
       response.payload.pong_data.userId = this.userId;
       response.payload.pong_data.up = true;
+      response.payload.pong_data.paddle = "right";
       this.socket.send(JSON.stringify(response));
+      
     }
     if(this.keys.down.pressed) {
       response.payload.pong_data.userId = this.userId;
       response.payload.pong_data.up = false;
+      response.payload.pong_data.paddle = "right";
       this.socket.send(JSON.stringify(response));
     }
     if(this.keys.w.pressed) {
       response.payload.pong_data.userId = this.userId;
       response.payload.pong_data.up = true;
+      response.payload.pong_data.paddle = "left";
       this.socket.send(JSON.stringify(response));
     }
     if(this.keys.s.pressed) {
       response.payload.pong_data.userId = this.userId;
       response.payload.pong_data.up = false;
+      response.payload.pong_data.paddle = "left";
       this.socket.send(JSON.stringify(response));
     }
   }, this.TICKRATE); 

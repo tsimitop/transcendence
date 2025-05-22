@@ -93,11 +93,12 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
   
   // console.log(username, game.getUniqeID());
   for (const [username, game] of currentGames.entries()) {
-    // console.log(game.getlPlayerName(), "<->", game.getrPlayerName());
-    // console.log(username);
-    console.log(senderUsername, " ", pong_data.userId);
-    // if(username === senderUsername) {
-      if(pong_data.userId === game.getlPlayerName()){
+    
+    console.log(pong_data.paddle, game.gameMode)
+
+      if(pong_data.userId === game.getlPlayerName() && game.gameMode === "remote" ||
+        game.gameMode === "local" && pong_data.paddle === "left"
+    ){
         if(pong_data.up === true){
           game.lPaddle.updatePos(false, true);
           break;
@@ -111,8 +112,9 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
           break;
         }
       }
-      else if(pong_data.userId === game.getrPlayerName()){
-        console.log("joinedplayer");
+      else if(pong_data.userId === game.getrPlayerName() && game.gameMode === "remote" || 
+      game.gameMode === "local" && pong_data.paddle === "right"
+    ){
         if(pong_data.up === true){
           
           game.rPaddle.updatePos(false, true);
@@ -127,7 +129,6 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
           break;
         }
       }
-    // }
   }
 }
 

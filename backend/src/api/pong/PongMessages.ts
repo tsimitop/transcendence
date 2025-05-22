@@ -13,6 +13,7 @@ export interface PongMessage {
 export interface KeyboardInputData {
     userId: string;
     up: boolean;
+    paddle: string;
 }
 
 export interface GameByIdData {

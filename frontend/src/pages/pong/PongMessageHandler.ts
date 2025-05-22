@@ -193,14 +193,11 @@ export function handleWaitingForUser() {
    document.querySelectorAll(".screen").forEach((el) => {
     (el as HTMLElement).style.display = "none";
   });
+  
   // ✅ Make canvas visible
   canvas.style.display = "block";
 
-  // // ✅ Ensure it has dimensions
-  // if (!canvas.width || !canvas.height) {
-  //   canvas.width = canvas.clientWidth;
-  //   canvas.height = canvas.clientHeight;
-  // }
+
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
