@@ -33,4 +33,5 @@ export enum QueryUser {
   GET_2FA_STATUS = `SELECT has_2fa FROM ${table} WHERE id = ?`,
   GET_TOTP_SECRET = `SELECT totp_secret FROM ${table} WHERE id = ?`,
   SELECT_ALL_USERS = `SELECT id FROM ${table}`,
+  FIND_ID_USERNAME_EMAIL = `SELECT id, username, email FROM ${table} WHERE username = ?`,
 }

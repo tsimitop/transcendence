@@ -38,7 +38,7 @@ type ComponentType = {
     _childrenString: ChildrenStringType,
     _childElements: ChildElementType
   ): Component;
-  create: () => Component;
+  create: () => Component | Promise<Component>;
 };
 
 type RoutesType = Record<ValidUrlPathsType, ComponentType>;

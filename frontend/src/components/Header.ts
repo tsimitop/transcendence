@@ -5,7 +5,7 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 import { StateListener } from "../models/StateManager";
-import { NO_HIGHLIGHT_LINKS, PAGES, ROUTER_CLASS_NAME } from "../constants";
+import { NO_HIGHLIGHT_LINKS, PAGES, ROUTER_CLASS_NAME, ValidUrlPathsType } from "../constants";
 import { userContext } from "../context/UserContext";
 
 class Header extends Component {
@@ -90,6 +90,17 @@ class Header extends Component {
 				</div>
 			</nav>
 		`;
+
+	setTimeout(() => {
+      const input = document.getElementById("user-searched") as HTMLButtonElement;
+      const link = document.getElementById("search-link");
+      if (input && link) {
+        input.addEventListener("input", () => {
+          const query = encodeURIComponent(input.value.trim());
+          link.setAttribute("href", `/users?query=${query}`);
+        });
+      }
+    }, 0);
     const header = document.createElement("header");
     header.classList.add("grow");
     header.insertAdjacentHTML("beforeend", html);
@@ -98,10 +109,17 @@ class Header extends Component {
   }
 
   public static async handleSearch() {
-    // const searchInput = document.querySelector('#user-searched') as HTMLInputElement;
-    // const username = searchInput.value.trim();
-	urlContext.setState({ ...urlContext.state, path: "/users" });
-	// fetch("/api/update-path", { method: "POST", body: JSON.stringify({ path: "/users" }) });
+    const input = document.getElementById("user-searched") as HTMLInputElement;
+    const query = input?.value.trim();
+    if (!query)
+      return;
+ 
+    const searchUrl = `/users?query=${encodeURIComponent(query)}`;
+    const searchLink = document.getElementById("search-link") as HTMLAnchorElement;
+    if (searchLink) {
+      searchLink.href = searchUrl;
+    }
+    urlContext.setState({ ...urlContext.state, path: searchUrl as ValidUrlPathsType });
   }
 
   public static handleClick(event: MouseEvent) {
