@@ -34,7 +34,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   }
 
   export function handleGameOver(data: GameOverData) {
-    console.log(data);
+    // console.log(data);
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     if (!canvas) {
       console.error("Canvas element not found");
@@ -84,7 +84,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   export function   handleGameState(data: any) {
     const gameStateData = data as GameStateData;
     const game = gameStateData.game;
-    console.log(game.status)
+
     if(game.status === "finished") { return; }
 
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
@@ -152,6 +152,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
 
   export function handleCountdownGame(data: any) {
+    // console.log("countdown data",data);
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
       console.error("Canvas element not found");
@@ -168,7 +169,10 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas context not available");
   
-    let countdown = data.value ?? 3;
+    // let countdown = data.value ?? 3;
+    let countdown = data.value;
+
+    // console.log("countdown: ", countdown);
   
     const drawCountdown = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -288,7 +292,7 @@ export function handleWaitingForUser() {
           }
         };
         
-        console.log(joinRequest);
+        // console.log(joinRequest);
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify(joinRequest));
             // console.log(`Sent join request for game ${game.id}`);

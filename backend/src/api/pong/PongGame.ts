@@ -13,7 +13,7 @@ export class PongGame {
 /**************     Variables    *********************/
 /*****************************************************/
   private uniqueID: string;
-  private ball: PongGameBall;
+  public ball: PongGameBall;
 
   public lPaddle: PongGamePaddle;
   public rPaddle: PongGamePaddle;
@@ -155,7 +155,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       return true;
     }
 
-       }
+    }
       return false;
     }    
 
@@ -206,7 +206,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       // console.log(this.ball.getSpeed())
       if(this.checkCollisionWithPaddle()) { 
         this.ball.setVx(-1);
-        this.ball.setSpeed(0.1) }
+        this.ball.setSpeed(0.3) }
 
         if(this.outOfFieldCheck()){ this.setToRestart(); }
 

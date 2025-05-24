@@ -25,8 +25,8 @@ export function setupMenu(pong: Pong) {
   const createRemoteGameConfirmBtn = get('createRemoteGameConfirmBtn');
   const startLocalGameBtn = get('startLocalGameBtn');
 
-  // const MultiplayerModeSelect = get('MultiplayerModeSelect') as HTMLSelectElement;
-  // const MultiplayerMaxPlayersSelect = get('MultiplayerMaxPlayersSelect') as HTMLSelectElement;
+  const MultiplayerModeSelect = get('MultiplayerModeSelect') as HTMLSelectElement;
+  const MultiplayerMaxPlayersSelect = get('MultiplayerMaxPlayersSelect') as HTMLSelectElement;
   const alias1Input = get('player1Input') as HTMLInputElement;
   const alias2Input = get('player2Input') as HTMLInputElement;
   const remoteAliasInput = get('remoteAliasInput') as HTMLInputElement;
@@ -54,8 +54,15 @@ export function setupMenu(pong: Pong) {
 
   createRemoteGameConfirmBtn.onclick = () => {
     const alias1 = remoteAliasInput.value.trim();
-    // const MultiplayerMaxPlayers = parseInt(MultiplayerMaxPlayersSelect.value);
+    const MultiplayerMaxPlayers = parseInt(MultiplayerMaxPlayersSelect.value);
+    const MultiplayerMode = MultiplayerModeSelect.value;
 
+
+    console.log(MultiplayerMaxPlayers, MultiplayerMode);
+
+    let tournament: boolean = false;
+    if( MultiplayerMode === "tournament")
+      tournament = true;
     if (!alias1) {
       alert("Please enter your alias");
       return;
@@ -71,7 +78,9 @@ export function setupMenu(pong: Pong) {
         pong_data : {
           playerAlias: alias1,
           gameMode: 'remote',
-          localOpponent: "" 
+          localOpponent: "" ,
+          amountPlayers: MultiplayerMaxPlayers,
+          tournament: tournament,          
         }
       }
     }));
@@ -115,7 +124,9 @@ export function setupMenu(pong: Pong) {
           pong_data : {
             playerAlias: alias1,
             gameMode: 'local',
-            localOpponent: alias2
+            localOpponent: alias2,
+            amountPlayers: 2,
+            tournament: false,
           }
         }
       }));

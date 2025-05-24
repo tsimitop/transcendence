@@ -85,14 +85,26 @@ game_state response or error
 
 ##### Create Game
 
-```json
+// ```json
+// {
+//   "type": "create_game",
+//   "pong_data": {
+//     "userId": "string",
+//     "gameMode": "classic", // "classic""
+//     "maxScore": 10,
+//     "side": "left" //| "right";
+//     }
+// }
+// ```
+    ```json
 {
   "type": "create_game",
   "pong_data": {
-    "userId": "string",
+    "playerAlias": "string",
     "gameMode": "classic", // "classic""
-    "maxScore": 10,
-    "side": "left" //| "right";
+    "localOpponent": 10,
+    "amountPlayers": "left", //| "right";
+    "tournament": true
     }
 }
 ```

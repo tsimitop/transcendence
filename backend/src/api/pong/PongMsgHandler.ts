@@ -5,7 +5,7 @@ import { JoinGameData } from './PongMessages';
 
 
 const currentGames: Map<string, PongGame> = new Map(); // player -> game
-
+const globalCountdown = 2;
 
 export function endOfGame(user: string, message: string) {
   for (const [username, game] of currentGames.entries()) {
@@ -134,6 +134,9 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
 
 
 function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
+  let countdown = globalCountdown;
+
+
   const senderSocket = connectedUsers.get(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
@@ -152,9 +155,9 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   const opponentSocket = connectedUsers.get(opponent);
   if (!opponentSocket || opponentSocket.readyState !== WebSocket.OPEN) return;
   const response = {
-    target_endpoint: 'pong-api',
-    type: 'countdown',
-    value : '3'
+        target_endpoint: 'pong-api',
+        type: 'countdown',
+        value : countdown
   };
   
   console.log("response:", response); 
@@ -166,7 +169,6 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   
 
   
-    let countdown = 3; // not working is somewhere hardcoded in frontend?!?!?!
     const interval = setInterval(() => {
     countdown--;
     if (countdown <= 0) {
@@ -184,26 +186,27 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
 
       setTimeout(() => {
       }, 1000);
-    } else {
-      const response = {
-        target_endpoint: 'pong-api',
-        type: 'countdown',
-        value : countdown
-      };
-      senderSocket.send(JSON.stringify(response));
-      opponentSocket.send(JSON.stringify(response));
-    }
+    } 
+    // else {
+    //   console.log("countdown ", countdown);
+    //   const response = {
+    //     target_endpoint: 'pong-api',
+    //     type: 'countdown',
+    //     value : countdown
+    //   };
+    //   senderSocket.send(JSON.stringify(response));
+    //   opponentSocket.send(JSON.stringify(response));
+    // }
   }, 1000);
 }
 
 
 function startGameLoop(game: PongGame) {
-  
   const fps = 30;
   const intervalMs = 1000 / fps;
   
   const intervalId = setInterval(() => {
-    console.log("Running game loop");
+    console.log(game.ball.getSpeed());
     
   if (game.getGameState() === 'finished') {
     clearInterval(intervalId);
@@ -290,36 +293,12 @@ function handleListGames(senderUsername: string): void {
   senderSocket.send(JSON.stringify(response));
 }
 
-// function sendWinnerResponse(game: PongGame, username: string, message: string){
-//   const response = {
-//     target_endpoint: 'pong-api',
-//     type: 'game_over',
-//     pong_data: {
-//       gameId: game.getUniqeID(),
-//       winnerId: "string",
-//       message: message,
-//       finalScore: {
-//         left: game.getlPlayerScore(),
-//         right: game.getrPlayerScore()
-//     }
-//     }
-//   }
-//   const lsocket = game.getlPlayerSocket();
-//   const rsocket = game.getrPlayerSocket();
-//   if (lsocket || lsocket.readyState === WebSocket.OPEN){
-//     // console.log("message l player");
-//     lsocket.send(JSON.stringify(response));
-//   }
-//   if (rsocket || rsocket.readyState === WebSocket.OPEN){
-//     // console.log("message r player");
-//     rsocket.send(JSON.stringify(response));
-//   }
-//   currentGames.delete(username);
-// }
+
 
 function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
 
-  console.log("pong_data.gameMode ", pong_data.gameMode);
+  console.log("pong_data ", pong_data);
+  // console.log("pong_data.gameMode ", pong_data.gameMode);
   const uniqueGameID = `${senderUsername}-${Date.now()}`;
   const newGame = new PongGame(uniqueGameID, senderUsername, pong_data.playerAlias, pong_data.gameMode);
   currentGames.set(senderUsername, newGame);
@@ -349,18 +328,16 @@ function handleCreateGame(senderUsername: string, pong_data: CreateGameData): vo
     // for local game needed to prevent errors
     newGame.setSockets(senderSocket, senderSocket);
     /********* */
+    let countdown = globalCountdown;
 
     const response = {
       target_endpoint: 'pong-api',
       type: 'countdown',
-      value : '3'
+      value : countdown
     };
     console.log("response:", response); 
     senderSocket.send(JSON.stringify(response));
     
-
-
-    let countdown = 3;
     const interval = setInterval(() => {
       countdown--;
       if (countdown <= 0) {
