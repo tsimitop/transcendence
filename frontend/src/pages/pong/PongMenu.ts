@@ -9,27 +9,37 @@ export function setupMenu(pong: Pong) {
   
   const menu = get('menuScreen');
   const remoteOptions = get('remoteOptionScreen');
+  const remoteTournamentOption = get('remoteTournamentOptionScreen');
   const gameList = get('gameListScreen');
-  const createSettings = get('createSettingsScreen');
+  // const createSettings = get('createSettingsScreen');
   const LocalGameSettings = get('LocalGameSettings');
   const gameCanvas = get('gameCanvas');
 
   const LocalGameButton = get('LocalGameButton');
   const RemoteGameButton = get('RemoteGameButton');
+  const RemoteTournamentButton = get('RemoteTournamentButton');
+  const JoinButton = get('JoinButton');
+
   const createRemoteGameBtn = get('createRemoteGameBtn');
+  const createRemoteTournamentGameBtn = get('createRemoteTournamentGameBtn');
+
   const joinRemoteGamePageBtn = get('joinRemoteGamePageBtn');
+
   const backFromRemoteOptionsBtn = get('backFromRemoteOptionsBtn');
-  const backFromCreateSettingsBtn = get('backFromCreateSettingsBtn');
+  const backFromTournamentRemoteOptionsBtn = get('backFromRemoteTournamentOptionsBtn');
+  // const backFromCreateSettingsBtn = get('backFromCreateSettingsBtn');
   const backFromGameListBtn = get('backFromGameListBtn');
   const backLocalGameSettingsBtn = get('backLocalGameSettingsBtn');
-  const createRemoteGameConfirmBtn = get('createRemoteGameConfirmBtn');
+  // const createRemoteGameConfirmBtn = get('createRemoteGameConfirmBtn');
   const startLocalGameBtn = get('startLocalGameBtn');
 
-  const MultiplayerModeSelect = get('MultiplayerModeSelect') as HTMLSelectElement;
-  const MultiplayerMaxPlayersSelect = get('MultiplayerMaxPlayersSelect') as HTMLSelectElement;
+  // const MultiplayerModeSelect = get('MultiplayerModeSelect') as HTMLSelectElement;
+  // const MultiplayerMaxPlayersSelect = get('MultiplayerMaxPlayersSelect') as HTMLSelectElement;
   const alias1Input = get('player1Input') as HTMLInputElement;
   const alias2Input = get('player2Input') as HTMLInputElement;
   const remoteAliasInput = get('remoteAliasInput') as HTMLInputElement;
+  const remoteTournamentAliasInput = get('remoteTournamentAliasInput') as HTMLInputElement;
+  const JoinAliasInput = get('JoinAliasInput') as HTMLInputElement;
 
   let selectedMode: 'local' | 'remote' = 'local';
   let remoteSubmode: 'create' | 'join' | null = null;
@@ -47,22 +57,39 @@ export function setupMenu(pong: Pong) {
     showOnly(remoteOptions, 'remoteOptionScreen');
   };
 
-  createRemoteGameBtn.onclick = () => {
-    remoteSubmode = 'create';
-    showOnly(createSettings, 'createSettingsScreen');
+  RemoteTournamentButton.onclick = () => {
+    selectedMode = 'remote';
+    showOnly(remoteTournamentOption, 'remoteTournamentOptionScreen');
   };
 
-  createRemoteGameConfirmBtn.onclick = () => {
-    const alias1 = remoteAliasInput.value.trim();
-    const MultiplayerMaxPlayers = parseInt(MultiplayerMaxPlayersSelect.value);
-    const MultiplayerMode = MultiplayerModeSelect.value;
+                      JoinButton.onclick = () => {
+                        selectedMode = 'remote';
+                        showOnly(get('joinAliasScreen'), 'joinAliasScreen');
+                      };
+
+                      joinRemoteGamePageBtn.onclick = () => {
+                        remoteSubmode = 'join';
+                        const alias1 = JoinAliasInput.value.trim();
+                        if (!alias1) {
+                          alert("Please enter your alias");
+                          return;
+                        }
+                        (window as any)._joinAlias = alias1;
+
+                        showOnly(gameList, 'gameListScreen');
+                        pong.socket?.send(JSON.stringify({
+                          target_endpoint: 'pong-api',
+                          payload: {
+                            type: 'game_list'
+                          }
+                        }));
+                      };
 
 
-    console.log(MultiplayerMaxPlayers, MultiplayerMode);
-
-    let tournament: boolean = false;
-    if( MultiplayerMode === "tournament")
-      tournament = true;
+  createRemoteTournamentGameBtn.onclick = () => {
+    remoteSubmode = 'create';
+    // showOnly(createSettings, 'createSettingsScreen');
+    const alias1 = remoteTournamentAliasInput.value.trim();
     if (!alias1) {
       alert("Please enter your alias");
       return;
@@ -79,16 +106,47 @@ export function setupMenu(pong: Pong) {
           playerAlias: alias1,
           gameMode: 'remote',
           localOpponent: "" ,
-          amountPlayers: MultiplayerMaxPlayers,
-          tournament: tournament,          
+          amountPlayers: 4,
+          tournament: true,          
         }
       }
     }));
+    
   };
+
+  createRemoteGameBtn.onclick = () => {
+    remoteSubmode = 'create';
+    // showOnly(createSettings, 'createSettingsScreen');
+    const alias1 = remoteAliasInput.value.trim();
+    if (!alias1) {
+      alert("Please enter your alias");
+      return;
+    }
+
+    showOnly(gameCanvas, 'gameCanvas');
+    gameCanvas.style.display = 'block';
+
+    pong.socket?.send(JSON.stringify({
+      target_endpoint: 'pong-api',
+      payload: {
+        type: 'create_game',
+        pong_data : {
+          playerAlias: alias1,
+          gameMode: 'remote',
+          localOpponent: "" ,
+          amountPlayers: 2,
+          tournament: false,          
+        }
+      }
+    }));
+    
+  };
+
+
 
   joinRemoteGamePageBtn.onclick = () => {
     remoteSubmode = 'join';
-    const alias1 = remoteAliasInput.value.trim();
+    const alias1 = JoinAliasInput.value.trim();
     if (!alias1) {
       alert("Please enter your alias");
       return;
@@ -135,7 +193,8 @@ export function setupMenu(pong: Pong) {
 
   backFromGameListBtn.onclick = () => showOnly(remoteOptions);
   backFromRemoteOptionsBtn.onclick = () => showOnly(menu);
-  backFromCreateSettingsBtn.onclick = () => showOnly(remoteOptions);
+  backFromTournamentRemoteOptionsBtn.onclick = () => showOnly(menu);
+  // backFromCreateSettingsBtn.onclick = () => showOnly(remoteOptions);
   backLocalGameSettingsBtn.onclick = () => showOnly(menu);
 
   window.addEventListener('popstate', (event) => {

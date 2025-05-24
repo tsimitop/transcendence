@@ -86,8 +86,10 @@ canvas {
       <!-- Menu -->
       <div id="menuScreen" class="screen">
         <h2>Select Game Mode</h2>
-        <button id="LocalGameButton">Local</button>
-        <button id="RemoteGameButton">Remote</button>
+        <button id="LocalGameButton">Local 1 vs 1</button>
+        <button id="RemoteGameButton">Remote 1 vs 1</button>
+        <button id="RemoteTournamentButton">Remote Tournament</button>
+        <button id="JoinButton">Join Game</button>
       </div>
 
       <!-- Remote Option -->
@@ -95,37 +97,61 @@ canvas {
         <h2>Remote Game Options</h2>
         <input id="remoteAliasInput" placeholder="Your alias" />
         <button id="createRemoteGameBtn">Create New Game</button>
-        <button id="joinRemoteGamePageBtn">Join Existing Game</button>
         <button id="backFromRemoteOptionsBtn">Back</button>
       </div>
 
-      <!-- Game List Page -->
-      <div id="gameListScreen" class="screen">
-        <h2>Available Games</h2>
-        <div id="availableGamesList">Loading...</div>
-        <button id="backFromGameListBtn">Back</button>
+      
+      
+      <!-- Remote Tournament Option -->
+      <div id="remoteTournamentOptionScreen" class="screen">
+      <h2>Remote Game Options</h2>
+      <input id="remoteTournamentAliasInput" placeholder="Your alias" />
+      <button id="createRemoteTournamentGameBtn">Create New Game</button>
+      <button id="backFromRemoteTournamentOptionsBtn">Back</button>
       </div>
+      
 
+                    <!-- Join Game Alias Entry -->
+                    <div id="joinAliasScreen" class="screen">
+                      <h2>Join Remote Game</h2>
+                      <input id="JoinAliasInput" placeholder="Your alias" />
+                      <button id="joinRemoteGamePageBtn">Continue</button>
+                      <button id="backFromRemoteOptionsBtn">Back</button>
+                    </div>
+
+                    <!-- Game List Page -->
+                    <div id="gameListScreen" class="screen">
+                      <h2>Available Games</h2>
+                      <div id="availableGamesList">Loading...</div>
+                      <button id="backFromGameListBtn">Back</button>
+                    </div>
+
+
+      <!-- -------------------------------------------------------------------delete -->
       <!-- Create Game Settings -->
       <div id="createSettingsScreen" class="screen">
-        <h2>Game Settings</h2>
-        <label>
-          Mode:
-          <select id="MultiplayerModeSelect">
-            <option value="VS">VS</option>
-            <option value="Tournament">Tournament</option>
-          </select>
-        </label>
-        <label>
-          Max Players:
-          <select id="MultiplayerMaxPlayersSelect">
-            <option value="2">2</option>
-            <option value="4">4</option>
-          </select>
-        </label>
-        <button id="createRemoteGameConfirmBtn">Create Game</button>
-        <button id="backFromCreateSettingsBtn">Back</button>
+      <h2>Game Settings</h2>
+      <label>
+      Mode:
+      <select id="MultiplayerModeSelect">
+      <option value="VS">VS</option>
+      <option value="Tournament">Tournament</option>
+      </select>
+      </label>
+      <label>
+      Max Players:
+      <select id="MultiplayerMaxPlayersSelect">
+      <option value="2">2</option>
+      <option value="4">4</option>
+      </select>
+      </label>
+      <button id="createRemoteGameConfirmBtn">Create Game</button>
+      <button id="backFromCreateSettingsBtn">Back</button>
       </div>
+      <!-- -------------------------------------------------------------------delete -->
+
+
+
 
       <!-- LocalGameSettings -->
       <div id="LocalGameSettings" class="screen">
