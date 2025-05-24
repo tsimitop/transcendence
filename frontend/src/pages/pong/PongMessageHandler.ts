@@ -34,7 +34,20 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   }
 
   export function handleGameOver(data: GameOverData) {
+    console.log(data);
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
+    if (!canvas) {
+      console.error("Canvas element not found");
+      return;
+    }
+    // Hide all UI screens
+    document.querySelectorAll(".screen").forEach((el) => {
+      (el as HTMLElement).style.display = "none";
+    });
+    // Show canvas
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    canvas.style.display = "block";
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error("Canvas context not available");
   
@@ -149,10 +162,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     canvas.height = canvas.clientHeight;
     canvas.style.display = "block";
     const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      console.error("Failed to get 2D context");
-      return;
-    }
+    if (!ctx) throw new Error("Canvas context not available");
   
     let countdown = data.value ?? 3;
   

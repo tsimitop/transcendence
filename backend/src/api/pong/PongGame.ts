@@ -1,6 +1,7 @@
 import { PongGameBall } from "./PongBall";
 import { PongGamePaddle } from "./PongPaddle";
 import { GameStateData } from "./PongMessages";
+import { endOfGame } from "./PongMsgHandler";
 
 type GameState = 'waiting' | 'countdown' | 'playing' | 'paused' | 'finished';
 
@@ -26,7 +27,7 @@ export class PongGame {
   private lPlayerScore: number = 0;
   private rPlayerScore: number = 0;
 
-  private maxScore: number = 100;
+  private maxScore: number = 1;
 
   public gameMode: string = "local";
 
@@ -181,11 +182,12 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
     checkEndOfGame(){
       if(this.lPlayerScore >= this.maxScore){
         this.gameState = "finished";
+        endOfGame(this.lPlayerName, "Left Player WIN")
       }
       if(this.rPlayerScore >= this.maxScore){
         this.gameState = "finished";
+        endOfGame(this.rPlayerName, "Right Player WIN")
       }
-      // set winner to display
     }
 
     update(){
@@ -200,12 +202,13 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       if (this.ball.getY() - (this.ball.getRadius() * 2) < 0){ this.ball.setVy(-1); }
       else if(this.ball.getY() + (this.ball.getRadius() * 2) > 1) { this.ball.setVy(-1); }
 
-
-      if(this.checkCollisionWithPaddle()) { this.ball.setVx(-1); }
+  console.log(this.ball.getSpeed())
+      if(this.checkCollisionWithPaddle()) { 
+        this.ball.setVx(-1);
+        this.ball.setSpeed(0.1) }
       if(this.outOfFieldCheck()){ this.setToRestart(); }
 
       this.checkEndOfGame();
-
       this.updateGameStatData();
     }
     getGameStatePayload(): GameStateData { return this.gameStateData; }

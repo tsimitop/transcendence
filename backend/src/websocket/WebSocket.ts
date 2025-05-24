@@ -5,7 +5,7 @@ import { IncomingMessage } from 'http';
 import UserDb from "../user-database/UserDb";
 import { handleWebsocketPayload } from './MessageHandler';
 
-import { endGameWithuser } from '../api/pong/PongMsgHandler';
+import { endOfGame } from '../api/pong/PongMsgHandler';
 
 
 // Load environment variables from .env file
@@ -83,7 +83,7 @@ export function startWebSocketServer(server: any) {
       console.log(`[WS] User disconnected: ${username}`);
       unregisterUser(username);
 
-      endGameWithuser(username);
+      endOfGame(username, "WIN THROUGH DISSCONNETION");
 
       // end game if there is a current game running?
 

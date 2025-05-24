@@ -36,7 +36,8 @@ local game paddle movement✅
 remote game paddle movement✅
 
 
-
+24.05
+start position of paddles are not properly in the middle✅
 
 
 TO DO
@@ -57,5 +58,4 @@ two equal aliases shouldnt be possible
 
 speed variable doesnt work properly with value from backend
 
-start position of paddles are not properly in the middle
-change angle slightly of pongball when hitting paddle
+change angle slightly of pongball when hitting paddle❓

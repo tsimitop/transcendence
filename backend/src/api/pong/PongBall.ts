@@ -45,7 +45,14 @@ constructor({x , y, radius}: BallParams) {
   setVy(y: number) { this.vy *= y; }
   setX(x: number) { this.x += x; }
   setY(y: number) { this.y += y; }
+  setSpeed(s: number) { this.speed += s; }
 
-  reset(){ this.x = 0.5; this.y = 0.5; }
+  reset(){ 
+    this.x = 0.5;
+    this.y = 0.5;
+    this.vx = Math.random() > 0.5 ? (0.001 + Math.random() * (0.005 - 0.001)) : -(0.001 + Math.random() * (0.005 - 0.001));
+    this.vy = Math.random() > 0.5 ? (0.001 + Math.random() * (0.005 - 0.001)) : -(0.001 + Math.random() * (0.005 - 0.001));
+    this.speed = 2;
+   }
 
 }

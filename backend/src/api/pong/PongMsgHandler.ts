@@ -7,7 +7,7 @@ import { JoinGameData } from './PongMessages';
 const currentGames: Map<string, PongGame> = new Map(); // player -> game
 
 
-export function endGameWithuser(user: string) {
+export function endOfGame(user: string, message: string) {
   for (const [username, game] of currentGames.entries()) {
     if(user === game.getlPlayerName() || user === game.getrPlayerName()) {
       game.setGameState("finished");
@@ -17,8 +17,8 @@ export function endGameWithuser(user: string) {
         type: 'game_over',
         pong_data: {
           gameId: game.getUniqeID(),
-          winnerId: "string",
-          message: "WIN THROUGH DISSCONNETION",
+          winnerId: user,
+          message: message,
           finalScore: {
             left: game.getlPlayerScore(),
             right: game.getrPlayerScore()
@@ -29,11 +29,11 @@ export function endGameWithuser(user: string) {
       const rsocket = game.getrPlayerSocket();
       currentGames.delete(username);
       if (lsocket && lsocket.readyState === WebSocket.OPEN){
-        // console.log("message l player");
+        console.log("message l player");
         lsocket.send(JSON.stringify(response));
       }
       if (rsocket && rsocket.readyState === WebSocket.OPEN){
-        // console.log("message r player");
+        console.log("message r player");
         rsocket.send(JSON.stringify(response));
       }
     }
@@ -94,7 +94,7 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
   // console.log(username, game.getUniqeID());
   for (const [username, game] of currentGames.entries()) {
     
-    console.log(pong_data.paddle, game.gameMode)
+    // console.log(pong_data.paddle, game.gameMode)
 
       if(pong_data.userId === game.getlPlayerName() && game.gameMode === "remote" ||
         game.gameMode === "local" && pong_data.paddle === "left"
@@ -216,7 +216,7 @@ function startGameLoop(game: PongGame) {
           type: 'game_state',
           game: {
             id: game.getUniqeID(),
-            status: 'playing',
+            status: game.getGameState(),
             ball: {
                 x: gameState.game.ball.x,
                 y: gameState.game.ball.y,

@@ -25,10 +25,10 @@ export class PongGamePaddle {
 /**************     Constructor  *********************/
 /*****************************************************/
 	constructor({x, height, width}: PaddleParams) {
-		this.x = x;
-		this.y = 0.5;
 		this.height = height;
 		this.width = width;
+		this.x = x;
+		this.y = 0.5 - this.height / 2 ;
 	}
 
 /*****************************************************/
@@ -68,5 +68,5 @@ export class PongGamePaddle {
 	  
 
 
-	reset() { this.y = 0.5; }
+	reset() { this.y = 0.5 - this.height / 2; }
 }
