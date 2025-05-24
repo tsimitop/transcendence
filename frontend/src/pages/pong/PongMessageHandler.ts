@@ -45,9 +45,11 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       (el as HTMLElement).style.display = "none";
     });
     // Show canvas
+    canvas.style.display = "block";
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    canvas.style.display = "block";
+
+
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error("Canvas context not available");
   
@@ -82,6 +84,8 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   export function   handleGameState(data: any) {
     const gameStateData = data as GameStateData;
     const game = gameStateData.game;
+    console.log(game.status)
+    if(game.status === "finished") { return; }
 
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
@@ -158,9 +162,9 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       (el as HTMLElement).style.display = "none";
     });
     // Show canvas
+    canvas.style.display = "block";
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    canvas.style.display = "block";
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas context not available");
   

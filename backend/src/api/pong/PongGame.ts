@@ -172,7 +172,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
     }
 
     setToRestart(){
-
+      if(this.gameState === "finished") return;
       this.lPaddle.reset();
       this.rPaddle.reset();
       this.ball.reset();
@@ -182,34 +182,36 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
     checkEndOfGame(){
       if(this.lPlayerScore >= this.maxScore){
         this.gameState = "finished";
+        console.log("checkEndOfGame");
         endOfGame(this.lPlayerName, "Left Player WIN")
       }
-      if(this.rPlayerScore >= this.maxScore){
+      else if(this.rPlayerScore >= this.maxScore){
         this.gameState = "finished";
+        console.log("checkEndOfGame");
         endOfGame(this.rPlayerName, "Right Player WIN")
       }
     }
 
     update(){
-      if(this.gameState === "finished")
-        return;
-
+      if(this.gameState === "finished") return;
+      
       //update ball posistion
       this.ball.setX(this.ball.getVx() * this.ball.getSpeed());
       this.ball.setY(this.ball.getVy() * this.ball.getSpeed());
-
+      
       // Bounce off top and bottom
       if (this.ball.getY() - (this.ball.getRadius() * 2) < 0){ this.ball.setVy(-1); }
       else if(this.ball.getY() + (this.ball.getRadius() * 2) > 1) { this.ball.setVy(-1); }
-
-  console.log(this.ball.getSpeed())
+      
+      // console.log(this.ball.getSpeed())
       if(this.checkCollisionWithPaddle()) { 
         this.ball.setVx(-1);
         this.ball.setSpeed(0.1) }
-      if(this.outOfFieldCheck()){ this.setToRestart(); }
 
-      this.checkEndOfGame();
-      this.updateGameStatData();
+        if(this.outOfFieldCheck()){ this.setToRestart(); }
+
+        this.updateGameStatData();
+        this.checkEndOfGame();
     }
     getGameStatePayload(): GameStateData { return this.gameStateData; }
 

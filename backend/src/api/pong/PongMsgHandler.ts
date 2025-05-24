@@ -198,17 +198,19 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
 
 
 function startGameLoop(game: PongGame) {
+  
   const fps = 30;
   const intervalMs = 1000 / fps;
-
+  
   const intervalId = setInterval(() => {
-     
-      if (game.getGameState() === 'finished') {
-        clearInterval(intervalId);
-        console.log(`Game ${game.getUniqeID()} ended.`);
+    console.log("Running game loop");
+    
+  if (game.getGameState() === 'finished') {
+    clearInterval(intervalId);
+    console.log(`Game ${game.getUniqeID()} ended.`);
 
-        return;
-        }
+    return;
+    }
     game.update();
     const gameState = game.getGameStatePayload();
     const response = {

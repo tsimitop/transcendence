@@ -38,6 +38,7 @@ remote game paddle movement✅
 
 24.05
 start position of paddles are not properly in the middle✅
+end of game screen isnt shown properly✅
 
 
 TO DO
@@ -47,7 +48,6 @@ join game display amount player and status of game
 check countdown - number from backend has no effect
 
 
-end of game 
 reload via pong button on top doesnt work properly
 
 reconnect?????
