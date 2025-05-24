@@ -111,20 +111,20 @@ canvas {
       </div>
       
 
-                    <!-- Join Game Alias Entry -->
-                    <div id="joinAliasScreen" class="screen">
-                      <h2>Join Remote Game</h2>
-                      <input id="JoinAliasInput" placeholder="Your alias" />
-                      <button id="joinRemoteGamePageBtn">Continue</button>
-                      <button id="backFromRemoteOptionsBtn">Back</button>
-                    </div>
+      <!-- Join Game Alias Entry -->
+      <div id="joinAliasScreen" class="screen">
+        <h2>Join Remote Game</h2>
+        <input id="JoinAliasInput" placeholder="Your alias" />
+        <button id="joinRemoteGamePageBtn">Continue</button>
+        <button id="backFromJoinOptionsBtn">Back</button>
+      </div>
 
-                    <!-- Game List Page -->
-                    <div id="gameListScreen" class="screen">
-                      <h2>Available Games</h2>
-                      <div id="availableGamesList">Loading...</div>
-                      <button id="backFromGameListBtn">Back</button>
-                    </div>
+      <!-- Game List Page -->
+      <div id="gameListScreen" class="screen">
+        <h2>Available Games</h2>
+        <div id="availableGamesList">Loading...</div>
+        <button id="backFromGameListBtn">Back</button>
+      </div>
 
 
       <!-- -------------------------------------------------------------------delete -->
