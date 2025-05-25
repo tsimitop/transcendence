@@ -2,6 +2,7 @@
 	debug
 }
 
+# localhost:443 {
 localhost {
 	# TLS configuration for self-signed certificates
 	tls internal
