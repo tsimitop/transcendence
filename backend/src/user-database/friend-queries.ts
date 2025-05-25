@@ -12,4 +12,7 @@ export enum QueryFriend {
 	FOREIGN KEY (friend_id) REFERENCES test_users(id)
 	);`,
 	INSERT_NEW_FRIEND_USER = `INSERT INTO ${table} (user_id, friend_id, status) VALUES (?, ?, ?);`,
+	GET_FRIENDSHIP_STATUS = `SELECT status FROM ${table} WHERE user_id = ? AND friend_id = ?;`,
+	SET_BIDIRECTIONAL_STATUS = `UPDATE ${table} SET status = ? WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?);`,
+	SET_ONEDIRECTIONAL_STATUS = `UPDATE ${table} SET status = ? WHERE user_id = ? AND friend_id = ?;`,
 }

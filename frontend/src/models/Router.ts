@@ -51,6 +51,7 @@ abstract class Router {
     "/pong": Pong,
     "/profile": Profile,
     "/users": Users,
+    "/friends": Users,
     "/2fa": Auth2Fa,
 	"/dashboard": Dashboard,
   };

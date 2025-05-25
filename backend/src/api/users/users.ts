@@ -1,8 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { fastify } from "../../server";
 import { QueryUser } from "../../user-database/queries";
 import UserDb from "../../user-database/UserDb";
-import path from "path";
 
 type SearchRequestBody = {
   searchTerm: string;
@@ -10,7 +8,7 @@ type SearchRequestBody = {
 
 //--------------------CORRECT-------------------------
 export default async function usersRoutes(fastify: FastifyInstance) {
-fastify.post("/api/users", async (request: FastifyRequest<{ Body: SearchRequestBody }>, reply: FastifyReply) => {
+fastify.post("/api/users", async function (request: FastifyRequest<{ Body: SearchRequestBody }>, reply: FastifyReply) {
 
 //   let i = 0;// for debugging
   try {
@@ -38,6 +36,7 @@ fastify.post("/api/users", async (request: FastifyRequest<{ Body: SearchRequestB
     }
     return reply.status(200).send({
 		user: {
+			id: result.id,
 			username: result.username,
 			email: result.email
 		}

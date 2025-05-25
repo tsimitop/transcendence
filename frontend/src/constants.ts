@@ -8,7 +8,8 @@ export type ValidUrlPathsType =
   | "/profile"
   | "/users"
   | "/dashboard"
-  | "/2fa";
+  | "/2fa"
+  | "/friends";
 
 export const PAGES: ValidUrlPathsType[] = [
   "/",
@@ -19,6 +20,7 @@ export const PAGES: ValidUrlPathsType[] = [
   "/users",
   "/dashboard",
   "/2fa",
+  "/friends",
 ];
 
 export const NO_HIGHLIGHT_LINKS: ValidUrlPathsType[] = [];

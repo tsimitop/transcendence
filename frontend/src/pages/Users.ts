@@ -6,8 +6,10 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 import { CADDY_SERVER } from "../constants";
+import { userContext } from "../context/UserContext";
 
 interface UserProfile {
+  id: number;
   username: string;
   email: string;
   nickname?: string;
@@ -58,9 +60,12 @@ class Users extends Component {
           <p>Email: ${user.email}</p>
           <p>Nickname: ${user.nickname || "N/A"}</p>
           <img src="${user.avatar || "/default-profile.png"}" alt="User's avatar" class="rounded w-[100px] h-[100px]" />
-        </div>
-      `;
+		  <button id="friend-btn" class="friend-btn" style="cursor: pointer;" data-userid="${user.id}">Add friend</button> 
+		  </div>
+		  `;
     }
+    main.addEventListener("click", Users.handleClick);
+
     main.insertAdjacentHTML("beforeend", html);
     const usersInstance = new Users(
       { html: "", position: "beforeend" },
@@ -73,6 +78,12 @@ class Users extends Component {
     return usersInstance;
   }
 
+  public static handleClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (target.classList.contains("friend-btn")) {
+      Users.friendRequest(event);
+    }
+  }
 
   public static async search(searchLink: any): Promise<UserProfile | null | undefined> {
 	if (!searchLink) {
@@ -86,7 +97,7 @@ class Users extends Component {
    		return null;
 	}
 	console.log("Extracted searchTerm:", searchTerm);
-    try {
+    try {		
       const response = await fetch(`${CADDY_SERVER}/api/users`, {
         method: "POST",
 		headers: {
@@ -96,21 +107,53 @@ class Users extends Component {
         credentials: "include",
 		body: JSON.stringify({ searchTerm }),
       });
-	//   console.error("Response status:", response.status);
-	// 	console.error("Response URL:", response.url);
 		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-  			console.error("User search failed with status:", response.status);
-  			console.error("Error detail:", errorData);
+			// const errorData = await response.json().catch(() => ({}));
+  			// console.log("User search failed with status:", response.status);
+  			// console.log("Error detail:", errorData);
 			return null;
 		}
 		const data = await response.json();
 		return data.user;
     } catch (error) {
       console.error("Search failed: ", error);
+	  return null;
     }
   }
 
+  public static async friendRequest(event: MouseEvent){
+	const user = userContext.state;
+	const target = event.target as HTMLElement;
+	const userIdBtn = target?.getAttribute("data-userid");
+	if (!userIdBtn) {
+		console.error("User ID not found on friend button.: " + userIdBtn);
+		return;
+	}
+	try {
+		const response = await fetch(`${CADDY_SERVER}/api/friends`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"Accept": "application/json"
+			},
+			credentials: "include",
+			body: JSON.stringify({ user, userIdBtn: parseInt(userIdBtn)})
+		});
+		if (!response.ok) {
+			// const error = await response.json().catch(() => ({}));
+			// console.error("target: ", target)
+			// console.error("userIdBtn: ", userIdBtn)
+			// console.error("user: ", user)
+			// console.error("response: ", response)
+			// console.error("response.body: ", response.body)
+			// console.error("Failed to find friend", error)
+			return null;
+		}
+	} catch(error) {
+		console.error("Error sending friend request: ", error);
+		return null
+	}
+  }
 }
 
 export default Users;

@@ -7,6 +7,7 @@ import fs from "fs";
 import { startWebSocketServer } from "./websocket/WebSocket";
 import { SESSION_COOKIE_NAME } from "./constants";
 import usersRoutes from "./api/users/users";
+import friendsRoutes from "./api/friends/friends";
 
 export const fastify = Fastify({
   logger: true,
@@ -19,6 +20,7 @@ const start = async function () {
     await fastify.register(fastifyFormbody);
     await fastify.register(fastifyCookie);
     await fastify.register(usersRoutes);
+	await fastify.register(friendsRoutes);
     await fastify.register(fastifySession, {
       secret,
       cookie: {
