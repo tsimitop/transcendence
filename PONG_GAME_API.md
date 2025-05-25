@@ -165,9 +165,16 @@ Which X is good? Depends on latency of the connection i guess?
       "lastUpdateTime": 1234567890,  // creation date for waiting games
       "gameMode": "classic",  // used for local or remote
       "maxScore": 10,
-      "scores": {
-        "playerids...": int, //score
-      }
+      "scores": [
+        {
+          "alias": "Player1",
+          "score": 3
+        },
+        {
+          "alias": "Player2",
+          "score": 5
+        }
+      ],
       "countdown": 3, // Only relevant during countdown
     }
   }

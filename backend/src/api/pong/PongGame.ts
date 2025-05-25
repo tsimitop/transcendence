@@ -27,7 +27,7 @@ export class PongGame {
   private lPlayerScore: number = 0;
   private rPlayerScore: number = 0;
 
-  private maxScore: number = 1;
+  private maxScore: number = 5;
 
   public gameMode: string = "local";
 
@@ -61,7 +61,7 @@ export class PongGame {
       },
       lastUpdateTime: Date.now(),
       gameMode: this.gameMode,
-      maxScore: 5, // always 5 ???
+      maxScore: 5, // always 5 ??? not in use 
       scores: {},
       countdown: 0 // not implemented
     }
@@ -182,12 +182,12 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
     checkEndOfGame(){
       if(this.lPlayerScore >= this.maxScore){
         this.gameState = "finished";
-        console.log("checkEndOfGame");
+        console.log("checkEndOfGame left player");
         endOfGame(this.lPlayerName, "Left Player WIN")
       }
       else if(this.rPlayerScore >= this.maxScore){
         this.gameState = "finished";
-        console.log("checkEndOfGame");
+        console.log("checkEndOfGame right player");
         endOfGame(this.rPlayerName, "Right Player WIN")
       }
     }

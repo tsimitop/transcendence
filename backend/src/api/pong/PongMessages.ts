@@ -57,9 +57,10 @@ export interface CreateGameData {
             lastUpdateTime: number;
             gameMode: string;
         maxScore: number;
-            scores: {
-                [playerId: string]: number;  // player IDs mapped to their scores
-            };
+        scores: Array<{
+        alias: string;
+        score: number;
+        }>;
             countdown: number; // Only relevant during countdown
         }
     }

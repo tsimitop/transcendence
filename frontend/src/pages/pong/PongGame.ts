@@ -24,9 +24,10 @@ export interface GameStateData {
       };
       lastUpdateTime: number;
       maxScore: number;
-      scores: {
-          [playerId: string]: number;  // player IDs mapped to their scores
-      };
+    scores: Array<{
+      alias: string;
+      score: number;
+    }>;
       countdown: number; // Only relevant during countdown
   }
 }

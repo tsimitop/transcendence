@@ -1,34 +1,39 @@
 import { Pong } from "../Pong";
 
 export function setupMenu(pong: Pong) {
-  const get = (id: string) => {
+  // Helper to get element by id or throw
+  const get = (id: string): HTMLElement => {
     const el = document.getElementById(id);
     if (!el) throw new Error(`Element with id "${id}" not found`);
     return el;
   };
-  
+
+  // Elements
   const menu = get('menuScreen');
   const remoteOptions = get('remoteOptionScreen');
   const remoteTournamentOption = get('remoteTournamentOptionScreen');
   const gameList = get('gameListScreen');
-  const LocalGameSettings = get('LocalGameSettings');
+  const localGameSettings = get('LocalGameSettings');
   const gameCanvas = get('gameCanvas');
 
   const LocalGameButton = get('LocalGameButton');
   const RemoteGameButton = get('RemoteGameButton');
   const RemoteTournamentButton = get('RemoteTournamentButton');
   const JoinButton = get('JoinButton');
+  const JoinTournamentButton = get('JoinTournamentButton');
 
   const createRemoteGameBtn = get('createRemoteGameBtn');
   const createRemoteTournamentGameBtn = get('createRemoteTournamentGameBtn');
 
   const joinRemoteGamePageBtn = get('joinRemoteGamePageBtn');
+  const joinRemoteTournamentGamePageBtn = get('joinRemoteTournamentGamePageBtn');
 
   const backFromRemoteOptionsBtn = get('backFromRemoteOptionsBtn');
   const backFromTournamentRemoteOptionsBtn = get('backFromRemoteTournamentOptionsBtn');
   const backFromGameListBtn = get('backFromGameListBtn');
   const backLocalGameSettingsBtn = get('backLocalGameSettingsBtn');
   const backFromJoinOptionsBtn = get('backFromJoinOptionsBtn');
+  const backFromJoinTournamentOptionsBtn = get('backFromJoinTournamentOptionsBtn');
   const startLocalGameBtn = get('startLocalGameBtn');
 
   const alias1Input = get('player1Input') as HTMLInputElement;
@@ -36,196 +41,179 @@ export function setupMenu(pong: Pong) {
   const remoteAliasInput = get('remoteAliasInput') as HTMLInputElement;
   const remoteTournamentAliasInput = get('remoteTournamentAliasInput') as HTMLInputElement;
   const JoinAliasInput = get('JoinAliasInput') as HTMLInputElement;
+  const JoinAliasInput2 = get('JoinAliasInput2') as HTMLInputElement;
 
-  let selectedMode: 'local' | 'remote' = 'local';
-  let remoteSubmode: 'create' | 'join' | null = null;
+  // Track game list polling interval for clearing later
+  let gameListInterval: number | undefined;
 
-  showOnly(menu, 'menuScreen');
+  // Function to show only one screen at a time
+  function showOnly(elem: HTMLElement, stateName: string = elem.id, pushToHistory: boolean = true) {
+    // Hide all screens by class 'screen' or all relevant containers
+    document.querySelectorAll('main > div, canvas').forEach(el => {
+      (el as HTMLElement).style.display = 'none';
+    });
+    // Show the chosen element
+    elem.style.display = elem.tagName === 'CANVAS' ? 'block' : 'flex';
 
+    if (pushToHistory && location.hash !== `#${stateName}`) {
+      history.pushState({ screen: stateName }, "", `#${stateName}`);
+    }
+  }
+
+  // Initial screen
+  showOnly(menu);
+
+  // Menu button handlers
   LocalGameButton.onclick = () => {
-    selectedMode = 'local';
-    showOnly(LocalGameSettings, 'LocalGameSettings');
     alias2Input.style.display = 'block';
+    showOnly(localGameSettings);
   };
 
   RemoteGameButton.onclick = () => {
-    selectedMode = 'remote';
-    showOnly(remoteOptions, 'remoteOptionScreen');
+    showOnly(remoteOptions);
   };
 
   RemoteTournamentButton.onclick = () => {
-    selectedMode = 'remote';
-    showOnly(remoteTournamentOption, 'remoteTournamentOptionScreen');
+    showOnly(remoteTournamentOption);
   };
 
   JoinButton.onclick = () => {
-    selectedMode = 'remote';
-    showOnly(get('joinAliasScreen'), 'joinAliasScreen');
+    showOnly(get('joinAliasScreen'));
   };
 
-  joinRemoteGamePageBtn.onclick = () => {
-    remoteSubmode = 'join';
-    const alias1 = JoinAliasInput.value.trim();
-    if (!alias1) {
-      alert("Please enter your alias");
-      return;
-    }
-    (window as any)._joinAlias = alias1;
+  JoinTournamentButton.onclick = () => {
+    showOnly(get('joinTournamentAliasScreen'));
+  };
 
-    showOnly(gameList, 'gameListScreen');
+  // Create remote game buttons
+  createRemoteGameBtn.onclick = () => {
+    const alias = remoteAliasInput.value.trim();
+    if (!alias) return alert("Please enter your alias");
+
+    showOnly(gameCanvas);
     pong.socket?.send(JSON.stringify({
       target_endpoint: 'pong-api',
       payload: {
-        type: 'game_list'
+        type: 'create_game',
+        pong_data: {
+          playerAlias: alias,
+          gameMode: 'remote',
+          localOpponent: "",
+          amountPlayers: 2,
+          tournament: false,
+        }
       }
     }));
   };
-
 
   createRemoteTournamentGameBtn.onclick = () => {
-    remoteSubmode = 'create';
-    // showOnly(createSettings, 'createSettingsScreen');
-    const alias1 = remoteTournamentAliasInput.value.trim();
-    if (!alias1) {
-      alert("Please enter your alias");
-      return;
-    }
+    const alias = remoteTournamentAliasInput.value.trim();
+    if (!alias) return alert("Please enter your alias");
 
-    showOnly(gameCanvas, 'gameCanvas');
-    gameCanvas.style.display = 'block';
-
+    showOnly(gameCanvas);
     pong.socket?.send(JSON.stringify({
       target_endpoint: 'pong-api',
       payload: {
-        type: 'create_game',
-        pong_data : {
-          playerAlias: alias1,
+        type: 'create_tournament',
+        pong_data: {
+          playerAlias: alias,
           gameMode: 'remote',
-          localOpponent: "" ,
+          localOpponent: "",
           amountPlayers: 4,
-          tournament: true,          
+          tournament: true,
         }
       }
     }));
-    
   };
 
-  createRemoteGameBtn.onclick = () => {
-    remoteSubmode = 'create';
-    // showOnly(createSettings, 'createSettingsScreen');
-    const alias1 = remoteAliasInput.value.trim();
-    if (!alias1) {
-      alert("Please enter your alias");
-      return;
-    }
-
-    showOnly(gameCanvas, 'gameCanvas');
-    gameCanvas.style.display = 'block';
-
-    pong.socket?.send(JSON.stringify({
-      target_endpoint: 'pong-api',
-      payload: {
-        type: 'create_game',
-        pong_data : {
-          playerAlias: alias1,
-          gameMode: 'remote',
-          localOpponent: "" ,
-          amountPlayers: 2,
-          tournament: false,          
-        }
-      }
-    }));
-    
-  };
-
-
-let gameListInterval: number | undefined;
-
+  // Join remote game buttons
   joinRemoteGamePageBtn.onclick = () => {
-    remoteSubmode = 'join';
-    const alias1 = JoinAliasInput.value.trim();
-    if (!alias1) {
-      alert("Please enter your alias");
-      return;
-    }
-    (window as any)._joinAlias = alias1;
+    const alias = JoinAliasInput.value.trim();
+    if (!alias) return alert("Please enter your alias");
+    (window as any)._joinAlias = alias;
+
     showOnly(gameList);
-    pong.socket?.send(JSON.stringify({
-      target_endpoint: 'pong-api',
-      payload: {
-        type: 'game_list'
-      }
-    }));
-  // Start polling every 5 seconds
-  gameListInterval = window.setInterval(() => {
-    pong.socket?.send(JSON.stringify({
-      target_endpoint: 'pong-api',
-      payload: {
-        type: 'game_list'
-      }
-    }));
-  }, 5000); // every 5 seconds
+    pong.socket?.send(JSON.stringify({ target_endpoint: 'pong-api', payload: { type: 'game_list' } }));
+
+    // Polling for game list every 5 seconds
+    if (gameListInterval) clearInterval(gameListInterval);
+    gameListInterval = window.setInterval(() => {
+      pong.socket?.send(JSON.stringify({ target_endpoint: 'pong-api', payload: { type: 'game_list' } }));
+    }, 5000);
   };
 
+  joinRemoteTournamentGamePageBtn.onclick = () => {
+    const alias = JoinAliasInput2.value.trim();
+    if (!alias) return alert("Please enter your alias");
+    (window as any)._joinAlias = alias;
+
+    showOnly(gameList);
+    pong.socket?.send(JSON.stringify({ target_endpoint: 'pong-api', payload: { type: 'tournament_list' } }));
+
+    if (gameListInterval) clearInterval(gameListInterval);
+    gameListInterval = window.setInterval(() => {
+      pong.socket?.send(JSON.stringify({ target_endpoint: 'pong-api', payload: { type: 'game_list' } }));
+    }, 5000);
+  };
+
+  // Start local game button
   startLocalGameBtn.onclick = () => {
     const alias1 = alias1Input.value.trim();
     const alias2 = alias2Input.value.trim();
 
-    if (!alias1 || (selectedMode === 'local' && !alias2)) {
-      alert("Please enter required aliases");
-      return;
+    if (!alias1 || !alias2) {
+      return alert("Please enter both player aliases");
     }
 
-    if (selectedMode === 'local') {
-      showOnly(gameCanvas, 'gameCanvas');
-      gameCanvas.style.display = 'block';
+    showOnly(gameCanvas);
 
-      pong.socket?.send(JSON.stringify({
-        target_endpoint: 'pong-api',
-        payload: {
-          type: 'create_game',
-          pong_data : {
-            playerAlias: alias1,
-            gameMode: 'local',
-            localOpponent: alias2,
-            amountPlayers: 2,
-            tournament: false,
-          }
+    pong.socket?.send(JSON.stringify({
+      target_endpoint: 'pong-api',
+      payload: {
+        type: 'create_game',
+        pong_data: {
+          playerAlias: alias1,
+          gameMode: 'local',
+          localOpponent: alias2,
+          amountPlayers: 2,
+          tournament: false,
         }
-      }));
-    }
+      }
+    }));
   };
 
-  backFromGameListBtn.onclick = () => showOnly(remoteOptions);
-  backFromRemoteOptionsBtn.onclick = () => showOnly(menu);
-  backFromJoinOptionsBtn.onclick = () => showOnly(menu);
-  backFromTournamentRemoteOptionsBtn.onclick = () => showOnly(menu);
-  backLocalGameSettingsBtn.onclick = () => showOnly(menu);
+  // Back buttons
+  backFromRemoteOptionsBtn.onclick = () => {
+    showOnly(menu);
+  };
 
+  backFromTournamentRemoteOptionsBtn.onclick = () => {
+    showOnly(menu);
+  };
+
+  backFromGameListBtn.onclick = () => {
+    showOnly(remoteOptions);
+    if (gameListInterval) clearInterval(gameListInterval);
+  };
+
+  backLocalGameSettingsBtn.onclick = () => {
+    showOnly(menu);
+  };
+
+  backFromJoinOptionsBtn.onclick = () => {
+    showOnly(menu);
+  };
+
+  backFromJoinTournamentOptionsBtn.onclick = () => {
+    showOnly(menu);
+  };
+
+  // Handle browser back/forward navigation
   window.addEventListener('popstate', (event) => {
-    const state = event.state;
-    const screenId = state?.screen || 'menuScreen';
+    const screenId = event.state?.screen || 'menuScreen';
     const elem = document.getElementById(screenId);
-    if (!elem) {
-      console.error("showOnly: element with id 'some-id' not found");
-      return;
-    }
     if (elem) {
-      showOnly(elem, screenId, false); // false = do NOT push to history again
+      showOnly(elem, screenId, false);
     }
   });
-}
-
-
-export function showOnly(elem: HTMLElement, stateName: string = elem.id, pushToHistory: boolean = true) {
-  document.querySelectorAll('.screen').forEach(div => {
-    (div as HTMLElement).style.display = 'none';
-  });
-    elem.style.display = elem.tagName === 'CANVAS' ? 'block' : 'flex';
-  // elem.style.display = 'flex';
-
-  // Only push to history if this isn't triggered by a popstate event
-  if (pushToHistory && location.hash !== `#${stateName}`) {
-    history.pushState({ screen: stateName }, "", `#${stateName}`);
-  }
 }

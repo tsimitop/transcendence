@@ -80,9 +80,11 @@ public stop(): void {
 private handleKeyDown = (event: KeyboardEvent): void => {
   switch (event.code) {
     case "ArrowDown":
+      event.preventDefault();
       this.keys.down.pressed = true;
       break;
-    case "ArrowUp":
+      case "ArrowUp":
+      event.preventDefault();
       this.keys.up.pressed = true;
       break;
     case "KeyW":

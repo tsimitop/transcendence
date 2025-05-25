@@ -1,170 +1,100 @@
 export function getPongHTML(theme: string): string {
   return `
-  
   <!-- ***************************************** -->
-  <!-- *************    STYLE  ***************** -->
+  <!-- *************  SCRIPT  ****************** -->
   <!-- ***************************************** -->
-<style>
-body, html {
-  overflow: hidden; /* prevents scrolling completely */
-  height: 100%;
-}
-canvas {
-  border: 1px solid black;
-  background: rgb(0, 0, 0);
-  display: none;
-  width: 80%;
-  min-width: 200px;
-  margin: auto;
-  min-height: 400px;
-  max-height: 1200px;
-  height: 100%;
-}
 
+  <script>
+    // Prevent scrolling with arrow keys and space
+    window.addEventListener("keydown", function (e) {
+      if (["ArrowUp", "ArrowDown", " "].includes(e.key)) {
+        e.preventDefault();
+      }
+    }, false);
+  </script>
 
-@media only screen and (max-width: 600px) {
-  canvas {
-    width: 98%;
-  }
-}
-  .screen {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 3rem;
-  }
+  <!-- ***************************************** -->
+  <!-- *************  MAIN  ******************** -->
+  <!-- ***************************************** -->
 
-  .screen input, .screen select {
-    padding: 0.5rem;
-    font-size: 1rem;
-  }
+<main class="relative w-full h-screen bg-black text-white select-none theme-primary-${theme}-full flex flex-col items-center justify-start p-6">
 
-  .screen button {
-    font-size: 1.1rem;
-    padding: 0.6rem 1.5rem;
-  }
+    <!-- Menu -->
+    <div id="menuScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
+      <h2 class="text-3xl font-semibold">Select Game Mode</h2>
+      <button id="LocalGameButton" class="btn-primary">Local 1 vs 1</button>
+      <button id="RemoteGameButton" class="btn-primary">Remote 1 vs 1</button>
+      <button id="JoinButton" class="btn-primary">Join 1 vs 1 Game</button>
+      <button id="RemoteTournamentButton" class="btn-primary">Remote Tournament</button>
+      <button id="JoinTournamentButton" class="btn-primary">Join Tournament Game</button>
+    </div>
 
-  /* ✅ Ensure body fills the whole viewport */
-  body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-  }
+    <!-- Remote Option -->
+    <div id="remoteOptionScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
+      <h2 class="text-2xl font-semibold">Remote Game Options</h2>
+      <input id="remoteAliasInput" placeholder="Your alias" class="input-primary" />
+      <button id="createRemoteGameBtn" class="btn-green">Create New Game</button>
+      <button id="backFromRemoteOptionsBtn" class="btn-secondary">Back</button>
+    </div>
 
-  main.main-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-</style>
+    <!-- Remote Tournament Option -->
+    <div id="remoteTournamentOptionScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
+      <h2 class="text-2xl font-semibold">Remote Game Options</h2>
+      <input id="remoteTournamentAliasInput" placeholder="Your alias" class="input-primary" />
+      <button id="createRemoteTournamentGameBtn" class="btn-green">Create New Game</button>
+      <button id="backFromRemoteTournamentOptionsBtn" class="btn-secondary">Back</button>
+    </div>
 
+    <!-- Join Game Alias Entry -->
+    <div id="joinAliasScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
+      <h2 class="text-2xl font-semibold">Join Remote Game</h2>
+      <input id="JoinAliasInput" placeholder="Your alias" class="input-primary" />
+      <button id="joinRemoteGamePageBtn" class="btn-primary">Continue</button>
+      <button id="backFromJoinOptionsBtn" class="btn-secondary">Back</button>
+    </div>
 
+    <!-- Join Game Tournament Alias Entry -->
+    <div id="joinTournamentAliasScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
+      <h2 class="text-2xl font-semibold">Join Remote Game</h2>
+      <input id="JoinAliasInput2" placeholder="Your alias" class="input-primary" />
+      <button id="joinRemoteTournamentGamePageBtn" class="btn-primary">Continue</button>
+      <button id="backFromJoinTournamentOptionsBtn" class="btn-secondary">Back</button>
+    </div>
 
-<!-- ***************************************** -->
-<!-- *************  SCRIPT  ****************** -->
-<!-- ***************************************** -->
+    <!-- Game List Page -->
+    <div id="gameListScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12 w-full max-w-xl px-4">
+      <h2 class="text-2xl font-semibold">Available Games</h2>
+      <div id="availableGamesList" class="text-center text-gray-300 mb-4">Loading...</div>
+      <button id="backFromGameListBtn" class="btn-secondary self-center">Back</button>
+    </div>
 
-<script>
-  // This works reliably in all modern browsers
-  window.addEventListener("keydown", function (e) {
-    if (["ArrowUp", "ArrowDown", " "].includes(e.key)) {
-      e.preventDefault();
+    <!-- LocalGameSettings -->
+    <div id="LocalGameSettings" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
+      <h2 class="text-2xl font-semibold">Enter Player Name</h2>
+      <input id="player1Input" placeholder="Player 1 alias" class="input-primary" />
+      <input id="player2Input" placeholder="Player 2 alias" class="input-primary hidden" />
+      <button id="startLocalGameBtn" class="btn-green">Start Game</button>
+      <button id="backLocalGameSettingsBtn" class="btn-secondary">Back</button>
+    </div>
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" class="screen hidden border border-black bg-black w-full max-w-3xl max-h-[700px] min-w-[200px] min-h-[400px] mx-auto h-auto"></canvas>
+
+  </main>
+
+  <style>
+    .btn-primary {
+      @apply px-6 py-3 rounded bg-blue-600 hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-400;
     }
-  }, false); // passive: false is the default here
-</script>
-
-
-<!-- ***************************************** -->
-<!-- *************  MAIN  ******************** -->
-<!-- ***************************************** -->
-
-
-    <main class="main-container layout-padding theme-primary-${theme}-full">
-      <!-- Menu -->
-      <div id="menuScreen" class="screen">
-        <h2>Select Game Mode</h2>
-        <button id="LocalGameButton">Local 1 vs 1</button>
-        <button id="RemoteGameButton">Remote 1 vs 1</button>
-        <button id="RemoteTournamentButton">Remote Tournament</button>
-        <button id="JoinButton">Join Game</button>
-      </div>
-
-      <!-- Remote Option -->
-      <div id="remoteOptionScreen" class="screen">
-        <h2>Remote Game Options</h2>
-        <input id="remoteAliasInput" placeholder="Your alias" />
-        <button id="createRemoteGameBtn">Create New Game</button>
-        <button id="backFromRemoteOptionsBtn">Back</button>
-      </div>
-
-      
-      
-      <!-- Remote Tournament Option -->
-      <div id="remoteTournamentOptionScreen" class="screen">
-      <h2>Remote Game Options</h2>
-      <input id="remoteTournamentAliasInput" placeholder="Your alias" />
-      <button id="createRemoteTournamentGameBtn">Create New Game</button>
-      <button id="backFromRemoteTournamentOptionsBtn">Back</button>
-      </div>
-      
-
-      <!-- Join Game Alias Entry -->
-      <div id="joinAliasScreen" class="screen">
-        <h2>Join Remote Game</h2>
-        <input id="JoinAliasInput" placeholder="Your alias" />
-        <button id="joinRemoteGamePageBtn">Continue</button>
-        <button id="backFromJoinOptionsBtn">Back</button>
-      </div>
-
-      <!-- Game List Page -->
-      <div id="gameListScreen" class="screen">
-        <h2>Available Games</h2>
-        <div id="availableGamesList">Loading...</div>
-        <button id="backFromGameListBtn">Back</button>
-      </div>
-
-
-      <!-- -------------------------------------------------------------------delete -->
-      <!-- Create Game Settings -->
-      <div id="createSettingsScreen" class="screen">
-      <h2>Game Settings</h2>
-      <label>
-      Mode:
-      <select id="MultiplayerModeSelect">
-      <option value="VS">VS</option>
-      <option value="Tournament">Tournament</option>
-      </select>
-      </label>
-      <label>
-      Max Players:
-      <select id="MultiplayerMaxPlayersSelect">
-      <option value="2">2</option>
-      <option value="4">4</option>
-      </select>
-      </label>
-      <button id="createRemoteGameConfirmBtn">Create Game</button>
-      <button id="backFromCreateSettingsBtn">Back</button>
-      </div>
-      <!-- -------------------------------------------------------------------delete -->
-
-
-
-
-      <!-- LocalGameSettings -->
-      <div id="LocalGameSettings" class="screen">
-        <h2>Enter Player Name</h2>
-        <input id="player1Input" placeholder="Player 1 alias" />
-        <input id="player2Input" placeholder="Player 2 alias" style="display: none;" />
-        <button id="startLocalGameBtn">Start Game</button>
-        <button id="backLocalGameSettingsBtn">Back</button>
-      </div>
-
-      <!-- Game Canvas -->
-      <canvas id="gameCanvas"></canvas>
-    </main>
+    .btn-green {
+      @apply px-6 py-3 rounded bg-green-600 hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-400;
+    }
+    .btn-secondary {
+      @apply px-6 py-3 rounded bg-gray-600 hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-gray-400;
+    }
+    .input-primary {
+      @apply px-4 py-2 rounded border border-gray-400 text-black w-64 focus:outline-none focus:ring-2 focus:ring-blue-400;
+    }
+  </style>
   `;
 }
-

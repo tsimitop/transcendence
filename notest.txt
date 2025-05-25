@@ -42,20 +42,26 @@ end of game screen isnt shown properly✅
 check countdown - number from backend has no effect✅
 
 
+25.05
+two equal aliases shouldnt be possible✅
+speed variable doesnt work properly with value from backend✅
+check max scores✅
+
+
+
+
 TO DO
-tournamentGame - > 4 player fix, wait for 4 other players
+tournamentGame - > 4 player fix, wait for 4 other players‼️
 
 join game display amount player and status of game doenst look beautifull
 
 
 reload via pong button on top doesnt work properly
 
+tailwind css in pongtemplate.ts check
+
 reconnect?????
 
 chat doenst work anymore in pong_front branch but in main branch
-
-two equal aliases shouldnt be possible
-
-speed variable doesnt work properly with value from backend
 
 change angle slightly of pongball when hitting paddle❓
