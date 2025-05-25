@@ -62,7 +62,10 @@ export class PongGame {
       lastUpdateTime: Date.now(),
       gameMode: this.gameMode,
       maxScore: 5, // always 5 ??? not in use 
-      scores: {},
+      scores:[
+                { alias: "PlayerOneAlias", score: 0 },
+                { alias: "PlayerTwoAlias", score: 0 }
+            ],
       countdown: 0 // not implemented
     }
   };
@@ -192,6 +195,24 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       }
     }
 
+
+//  adjustBallAngleAfterPaddleBounce() {
+//   const paddle = this.ball.getVx() < 0 ? this.lPaddle : this.rPaddle;
+//   const paddleCenter = paddle.getY() + paddle.getHeight() / 2;
+//   const impactPoint = this.ball.getY();
+
+//   const relativeIntersectY = paddleCenter - impactPoint;
+//   const normalizedRelativeIntersectionY = relativeIntersectY / (paddle.getHeight() / 2);
+
+//   const maxBounceAngle = (75 * Math.PI) / 180;
+//   const bounceAngle = normalizedRelativeIntersectionY * maxBounceAngle;
+
+//   const direction = this.ball.getVx() < 0 ? 1 : -1;
+
+//   this.ball.setVx(direction * Math.cos(bounceAngle));
+//   this.ball.setVy(-Math.sin(bounceAngle));
+// }
+
     update(){
       if(this.gameState === "finished") return;
       
@@ -206,6 +227,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       // console.log(this.ball.getSpeed())
       if(this.checkCollisionWithPaddle()) { 
         this.ball.setVx(-1);
+        // this.adjustBallAngleAfterPaddleBounce();
         this.ball.setSpeed(0.3) }
 
         if(this.outOfFieldCheck()){ this.setToRestart(); }

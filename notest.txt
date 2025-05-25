@@ -46,6 +46,8 @@ check countdown - number from backend has no effect✅
 two equal aliases shouldnt be possible✅
 speed variable doesnt work properly with value from backend✅
 check max scores✅
+tailwind css in pongtemplate.ts check✅
+join game display amount player and status of game doenst look beautifull✅
 
 
 
@@ -53,12 +55,10 @@ check max scores✅
 TO DO
 tournamentGame - > 4 player fix, wait for 4 other players‼️
 
-join game display amount player and status of game doenst look beautifull
 
 
 reload via pong button on top doesnt work properly
 
-tailwind css in pongtemplate.ts check
 
 reconnect?????
 
