@@ -107,15 +107,14 @@ function handleListTournament(senderUsername: string): void {
   const senderSocket = connectedUsers.get(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
-  const gameList = [];
+  const tournamentList = [];
 
-  for (const [username, game] of currentTournaments.entries()) {
-    gameList.push({
-      id: 564,
-      // id: game.getUniqeID(),
-      // owner: username,
-      // alias: game.getlPlayerAlias(),
-      // state: game.getGameState(),
+  for (const [username, tournament] of currentTournaments.entries()) {
+    tournamentList.push({
+      id: tournament.getUniqeID(),
+      owner: username,
+      alias: tournament.getlPlayerAlias(),
+      state: tournament.getTournamentState(),
       // optionally include player names, number of players, etc. tournament?
     });
   }
@@ -123,7 +122,7 @@ function handleListTournament(senderUsername: string): void {
   const response = {
     target_endpoint: 'pong-api',
     type: 'tournament_list',
-    games: gameList,
+    games: tournamentList,
   };
   
   console.log("response:", response); 
@@ -434,11 +433,9 @@ export function endOfGame(user: string, message: string) {
       const rsocket = game.getrPlayerSocket();
       currentGames.delete(username);
       if (lsocket && lsocket.readyState === WebSocket.OPEN){
-        console.log("message l player");
         lsocket.send(JSON.stringify(response));
       }
       if (rsocket && rsocket.readyState === WebSocket.OPEN){
-        console.log("message r player");
         rsocket.send(JSON.stringify(response));
       }
     }

@@ -121,7 +121,7 @@ export function setupMenu(pong: Pong) {
   createRemoteTournamentBtn.onclick = () => {
     const alias = remoteTournamentAliasInput.value.trim();
     if (!alias) return alert("Please enter your alias");
-
+    console.log("Player alias for tournament create", alias)
     showOnly(gameCanvas);
     pong.socket?.send(JSON.stringify({
       target_endpoint: 'pong-api',

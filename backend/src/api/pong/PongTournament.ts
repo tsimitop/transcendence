@@ -1,4 +1,5 @@
 
+type TournamentState = 'waiting' | 'countdown' | 'playing' | 'paused' | 'finished';
 
 
 export class Tournament {
@@ -11,6 +12,7 @@ export class Tournament {
 	private PlayerOneAlias: string = "PlayerOneAlias";
 	private PlayerOneName: string = "PlayerOneName";
 	private currentPlayers: number = 1; 
+	private gameState: TournamentState = "waiting";
 
 
 
@@ -18,7 +20,7 @@ export class Tournament {
 /**************     Constructor  *********************/
 /*****************************************************/
 
-constructor(uniqueID: string, PlayerOneAlias: string, PlayerOneName: string ) {
+constructor(uniqueID: string, PlayerOneName: string, PlayerOneAlias: string ) {
 	this.uniqueID = uniqueID;
 	this.PlayerOneAlias = PlayerOneAlias;
 	this.PlayerOneName = PlayerOneName;
@@ -28,6 +30,9 @@ constructor(uniqueID: string, PlayerOneAlias: string, PlayerOneName: string ) {
 /*****************************************************/
 /**************        Methods   *********************/
 /*****************************************************/
+	getUniqeID() : string { return this.uniqueID; }
+    getlPlayerAlias(): string{ return this.PlayerOneAlias; }
+    getTournamentState() : TournamentState { return this.gameState; }
 
 	playerJoined() {
 		this.currentPlayers++;

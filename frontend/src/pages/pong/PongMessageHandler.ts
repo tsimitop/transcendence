@@ -325,46 +325,116 @@ export function handleWaitingForUser() {
     const aliasInput = document.getElementById('JoinAliasInput2') as HTMLInputElement;
     const alias = aliasInput.value.trim();
     localStorage.setItem('pong_alias', alias);
-    // console.log("Received game list:", data);
+
     const container = document.getElementById('availableTournamentList');
     if (!container) {
       console.error("No container element found for availableTournamentList");
       return;
     }
     container.innerHTML = '';
+
     if (!data.games || data.games.length === 0) {
       container.textContent = 'No available tournaments right now.';
       return;
     }
   
     const ul = document.createElement('ul');
+
     data.games.forEach((game: { id: string; owner: string; alias: string; state: string }) => {
-    const li = document.createElement('li');
-    li.textContent = `Game ID: ${game.id}, Owner: ${game.owner}, Alias: ${game.alias}, State: ${game.state} `;
+      const li = document.createElement('li');
+      li.className = 'flex justify-between items-center mb-2';
   
-    const joinBtn = document.createElement('button');
-    joinBtn.textContent = 'Join';
-    joinBtn.disabled = game.state !== 'waiting';
-    const alias = localStorage.getItem('pong_alias');
-    joinBtn.addEventListener('click', () => {
+      // Container for game info text
+      const infoDiv = document.createElement('div');
+      // Add flex container for info spans
+      infoDiv.className = 'flex space-x-4';
+  
+      // Create spans for each game property
+      const idSpan = document.createElement('span');
+      idSpan.textContent = `Game ID: ${game.id}`;
+  
+      const ownerSpan = document.createElement('span');
+      ownerSpan.textContent = `Owner: ${game.owner}`;
+  
+      const aliasSpan = document.createElement('span');
+      aliasSpan.textContent = `Alias: ${game.alias}`;
+  
+      const stateSpan = document.createElement('span');
+      stateSpan.textContent = `State: ${game.state}`;
+  
+      // Append spans to infoDiv
+      infoDiv.appendChild(idSpan);
+      infoDiv.appendChild(ownerSpan);
+      infoDiv.appendChild(aliasSpan);
+      infoDiv.appendChild(stateSpan);
+  
+      // Create Join button
+      const joinBtn = document.createElement('button');
+      joinBtn.textContent = 'Join';
+      joinBtn.disabled = game.state !== 'waiting';
+  
+      // Tailwind CSS classes for the button
+      joinBtn.className = `
+        border-2 border-blue-500
+        bg-white text-blue-500
+        px-3 py-1.5
+        rounded
+        cursor-pointer
+        ml-4          /* <-- Add this */
+        disabled:border-gray-300 disabled:text-gray-300 disabled:cursor-not-allowed
+        hover:bg-blue-500 hover:text-white disabled:hover:bg-white disabled:hover:text-gray-300
+      `.replace(/\s+/g, ' ').trim();
+  
+  
+      const storedAlias = localStorage.getItem('pong_alias');
+      joinBtn.addEventListener('click', () => {
         const joinRequest = {
           target_endpoint: 'pong-api',
           payload: {
-            type: 'join_tournament',
+            type: 'join_game',
             pong_data: {
-              OpponentAlias: alias,
+              OpponentAlias: storedAlias,
               gameId: game.id
             }
           }
-        }; 
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify(joinRequest));
-      } else {
-        console.error("Socket is not open");
-      }
-  });
+        };
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify(joinRequest));
+        } else {
+          console.error("Socket is not open");
+        }
+      });
+  //   data.games.forEach((game: { id: string; owner: string; alias: string; state: string }) => {
+  //     const li = document.createElement('li');
+  //     li.textContent = `Game ID: ${game.id}, Owner: ${game.owner}, Alias: ${game.alias}, State: ${game.state} `;
+    
+  //   const joinBtn = document.createElement('button');
+  //   joinBtn.textContent = 'Join';
+  //   joinBtn.disabled = game.state !== 'waiting';
+  //   const alias = localStorage.getItem('pong_alias');
+  //   joinBtn.addEventListener('click', () => {
+  //       const joinRequest = {
+  //         target_endpoint: 'pong-api',
+  //         payload: {
+  //           type: 'join_tournament',
+  //           pong_data: {
+  //             OpponentAlias: alias,
+  //             gameId: game.id
+  //           }
+  //         }
+  //       }; 
+  //   if (socket && socket.readyState === WebSocket.OPEN) {
+  //       socket.send(JSON.stringify(joinRequest));
+  //     } else {
+  //       console.error("Socket is not open");
+  //     }
+  // });
+
+
+
+    li.appendChild(infoDiv);
     li.appendChild(joinBtn);
-    ul.appendChild(li);
+    ul.appendChild(li); 
     });
     container.appendChild(ul);
   }
