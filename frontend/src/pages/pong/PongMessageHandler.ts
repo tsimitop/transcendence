@@ -321,18 +321,19 @@ export function handleWaitingForUser() {
 
   
   export function handleListTournaments(data: any, socket: WebSocket | null) {
+    console.log("handleListTournaments frontend");
     const aliasInput = document.getElementById('JoinAliasInput2') as HTMLInputElement;
     const alias = aliasInput.value.trim();
     localStorage.setItem('pong_alias', alias);
     // console.log("Received game list:", data);
-    const container = document.getElementById('availableGamesList');
+    const container = document.getElementById('availableTournamentList');
     if (!container) {
-      console.error("No container element found for availableGamesList");
+      console.error("No container element found for availableTournamentList");
       return;
     }
     container.innerHTML = '';
     if (!data.games || data.games.length === 0) {
-      container.textContent = 'No available games right now.';
+      container.textContent = 'No available tournaments right now.';
       return;
     }
   

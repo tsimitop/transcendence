@@ -29,7 +29,7 @@ constructor(uniqueID: string, PlayerOneAlias: string, PlayerOneName: string ) {
 /**************        Methods   *********************/
 /*****************************************************/
 
-	increaseCurrentPlayers() {
+	playerJoined() {
 		this.currentPlayers++;
 	}
 

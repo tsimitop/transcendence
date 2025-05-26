@@ -19,7 +19,7 @@ export function setupMenu(pong: Pong) {
   const remoteOptions = get('remoteOptionScreen');
   const remoteTournamentOption = get('remoteTournamentOptionScreen');
   const gameList = get('gameListScreen');
-  // const tournamentListScreen = get('tournamentListScreen');
+  const tournamentListScreen = get('tournamentListScreen');
   const gameCanvas = get('gameCanvas');
 
   const LocalGameButton = get('LocalGameButton');
@@ -159,7 +159,7 @@ export function setupMenu(pong: Pong) {
     if (!alias) return alert("Please enter your alias");
     (window as any)._joinAlias = alias;
 
-    showOnly(gameList);
+    showOnly(tournamentListScreen);
     pong.socket?.send(JSON.stringify({ target_endpoint: 'pong-api', payload: { type: 'tournament_list' } }));
 
     if (gameListInterval) clearInterval(gameListInterval);

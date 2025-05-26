@@ -102,9 +102,51 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
   }
 }
 
+function handleListTournament(senderUsername: string): void {
+  console.log("handleListTournament");
+  const senderSocket = connectedUsers.get(senderUsername);
+  if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
+
+  const gameList = [];
+
+  for (const [username, game] of currentTournaments.entries()) {
+    gameList.push({
+      id: 564,
+      // id: game.getUniqeID(),
+      // owner: username,
+      // alias: game.getlPlayerAlias(),
+      // state: game.getGameState(),
+      // optionally include player names, number of players, etc. tournament?
+    });
+  }
+  
+  const response = {
+    target_endpoint: 'pong-api',
+    type: 'tournament_list',
+    games: gameList,
+  };
+  
+  console.log("response:", response); 
+  senderSocket.send(JSON.stringify(response));
+}
+
+function handleCreateTournament(senderUsername: string, pong_data: CreateGameData): void {
+
+  // console.log("Tournament");
+  // console.log(pong_data);
+
+  // create tournament
+  const uniqueGameID = `${senderUsername}-${Date.now()}`;
+  const newTournament = new Tournament(uniqueGameID, senderUsername, pong_data.playerAlias);
+
+  // add tournament to list
+  currentTournaments.set(senderUsername, newTournament);
+
+}
 
 function handlerJoinTournament(senderUsername: string, pong_data: JoinGameData): void {
 
+  console.log("handlerJoinTournament")
   console.log(senderUsername, pong_data)
   // let countdown = globalCountdown;
 
@@ -311,45 +353,6 @@ function handleListGames(senderUsername: string): void {
   senderSocket.send(JSON.stringify(response));
 }
 
-function handleListTournament(senderUsername: string): void {
-  const senderSocket = connectedUsers.get(senderUsername);
-  if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
-
-  const gameList = [];
-
-  for (const [username, game] of currentTournaments.entries()) {
-    gameList.push({
-    //   id: game.getUniqeID(),
-    //   owner: username,
-    //   alias: game.getlPlayerAlias(),
-    //   state: game.getGameState(),
-      // optionally include player names, number of players, etc. tournament?
-    });
-  }
-  
-  const response = {
-    target_endpoint: 'pong-api',
-    type: 'tournament_list',
-    games: gameList,
-  };
-  
-  // console.log("response:", response); 
-  senderSocket.send(JSON.stringify(response));
-}
-
-function handleCreateTournament(senderUsername: string, pong_data: CreateGameData): void {
-
-  console.log("Tournament");
-  console.log(pong_data);
-
-  // create tournament
-  const uniqueGameID = `${senderUsername}-${Date.now()}`;
-  const newTournament = new Tournament(uniqueGameID, senderUsername, pong_data.playerAlias);
-
-  // add tournament to list
-  currentTournaments.set(senderUsername, newTournament);
-
-}
 
 
 
