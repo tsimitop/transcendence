@@ -84,6 +84,8 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
   
   export function   handleGameState(data: any) {
+
+    console.log(data);
     const gameStateData = data as GameStateData;
     const game = gameStateData.game;
 
@@ -132,7 +134,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       canvas.width * 0.01,
       canvas.height * rp.height
     );
-   
+    
     const scoreText = game.scores
     .map(({ alias, score }) => `${alias}: ${score}`)
     .join("   ");
@@ -224,7 +226,7 @@ export function handleWaitingForUser() {
   }
 
   export function handleListGames(data: any, socket: WebSocket | null) {
-  const aliasInput = document.getElementById('remoteAliasInput') as HTMLInputElement;
+  const aliasInput = document.getElementById('JoinAliasInput') as HTMLInputElement;
   const alias = aliasInput.value.trim();
   localStorage.setItem('pong_alias', alias);
 

@@ -19,7 +19,7 @@ export class PongInputHandler {
 /**************     Constructor  *********************/
 /*****************************************************/
 constructor(private socket: WebSocket, private userId: string) {
-  console.log("InputHandler is generated");
+  // console.log("InputHandler is generated");
 }
 
 /*****************************************************/
