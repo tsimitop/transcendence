@@ -9,6 +9,7 @@ const currentTournaments: Map<string, Tournament> = new Map()
 const globalCountdown = 2;
 
 export function handlePongPayload(senderUsername: string, payload: any): void {
+  console.log(payload);
   try {
     // The payload is already parsed in MessageHandler.ts
     const message: PongMessage = {
@@ -29,15 +30,15 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
       case 'create_game':
         handleCreateGame(senderUsername, message.pong_data);
         break;
-          // case 'tournament_list':
-      //   handleListTournament(senderUsername);
-      //   break;
-      // case 'join_tournament':
-      //   handlerJoinTournament(senderUsername, message.pong_data);
-      //   break;
-      // case 'create_tournament':
-      //   handleCreateTournament(senderUsername, message.pong_data);
-      //   break;
+      case 'tournament_list':
+        handleListTournament(senderUsername);
+        break;
+      case 'join_tournament':
+        handlerJoinTournament(senderUsername, message.pong_data);
+        break;
+      case 'create_tournament':
+        handleCreateTournament(senderUsername, message.pong_data);
+        break;
       case 'getGames':
         handleGetGames(senderUsername);
         break;
@@ -102,61 +103,63 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
 }
 
 
-// function handlerJoinTournament(senderUsername: string, pong_data: JoinGameData): void {
-//   let countdown = globalCountdown;
+function handlerJoinTournament(senderUsername: string, pong_data: JoinGameData): void {
 
-//   const senderSocket = connectedUsers.get(senderUsername);
-//   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
+  console.log(senderUsername, pong_data)
+  // let countdown = globalCountdown;
 
-//   let opponent: string = "";
-//   console.log("game id", pong_data);
-//   for (const [username, game] of currentGames.entries()) {
-//     if(pong_data.gameId === game.getUniqeID()){
-//       game.setGameState('countdown');
-//       game.setOpponentName(senderUsername, pong_data.OpponentAlias);
-//       console.log("-->",game.getrPlayerName(), game.getrPlayerAlias());
-//       opponent = username;
-//       break;
-//     }
-//   }
-//   console.log("opponent ", opponent);
-//   const opponentSocket = connectedUsers.get(opponent);
-//   if (!opponentSocket || opponentSocket.readyState !== WebSocket.OPEN) return;
-//   const response = {
-//         target_endpoint: 'pong-api',
-//         type: 'countdown',
-//         value : countdown
-//   };
+  // const senderSocket = connectedUsers.get(senderUsername);
+  // if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
+
+  // let opponent: string = "";
+  // console.log("game id", pong_data);
+  // for (const [username, game] of currentGames.entries()) {
+  //   if(pong_data.gameId === game.getUniqeID()){
+  //     game.setGameState('countdown');
+  //     game.setOpponentName(senderUsername, pong_data.OpponentAlias);
+  //     console.log("-->",game.getrPlayerName(), game.getrPlayerAlias());
+  //     opponent = username;
+  //     break;
+  //   }
+  // }
+  // console.log("opponent ", opponent);
+  // const opponentSocket = connectedUsers.get(opponent);
+  // if (!opponentSocket || opponentSocket.readyState !== WebSocket.OPEN) return;
+  // const response = {
+  //       target_endpoint: 'pong-api',
+  //       type: 'countdown',
+  //       value : countdown
+  // };
   
-//   console.log("response:", response); 
-//   senderSocket.send(JSON.stringify(response));
-//   opponentSocket.send(JSON.stringify(response));
+  // console.log("response:", response); 
+  // senderSocket.send(JSON.stringify(response));
+  // opponentSocket.send(JSON.stringify(response));
 
-//   // set sockets to current instance
-//   currentGames.get(opponent)?.setSockets(senderSocket, opponentSocket);
+  // // set sockets to current instance
+  // currentGames.get(opponent)?.setSockets(senderSocket, opponentSocket);
   
 
   
-//     const interval = setInterval(() => {
-//     countdown--;
-//     if (countdown <= 0) {
-//       clearInterval(interval);
-//       for (const [username, game] of currentGames.entries()) {
-//         if(pong_data.gameId === game.getUniqeID()){
-//           game.setGameState('playing');
-//           opponent = username;
-//           break; 
-//         }
-//       }
-//       startGameLoop(currentGames.get(opponent)!);
+  //   const interval = setInterval(() => {
+  //   countdown--;
+  //   if (countdown <= 0) {
+  //     clearInterval(interval);
+  //     for (const [username, game] of currentGames.entries()) {
+  //       if(pong_data.gameId === game.getUniqeID()){
+  //         game.setGameState('playing');
+  //         opponent = username;
+  //         break; 
+  //       }
+  //     }
+  //     startGameLoop(currentGames.get(opponent)!);
 
 
 
-//       setTimeout(() => {
-//       }, 1000);
-//     } 
-//   }, 1000);
-// }
+  //     setTimeout(() => {
+  //     }, 1000);
+  //   } 
+  // }, 1000);
+}
 
 
 function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
@@ -308,40 +311,45 @@ function handleListGames(senderUsername: string): void {
   senderSocket.send(JSON.stringify(response));
 }
 
-// function handleListTournament(senderUsername: string): void {
-//   const senderSocket = connectedUsers.get(senderUsername);
-//   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
+function handleListTournament(senderUsername: string): void {
+  const senderSocket = connectedUsers.get(senderUsername);
+  if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
-//   const gameList = [];
+  const gameList = [];
 
-//   for (const [username, game] of currentTournaments.entries()) {
-//     gameList.push({
-//     //   id: game.getUniqeID(),
-//     //   owner: username,
-//     //   alias: game.getlPlayerAlias(),
-//     //   state: game.getGameState(),
-//       // optionally include player names, number of players, etc. tournament?
-//     });
-//   }
+  for (const [username, game] of currentTournaments.entries()) {
+    gameList.push({
+    //   id: game.getUniqeID(),
+    //   owner: username,
+    //   alias: game.getlPlayerAlias(),
+    //   state: game.getGameState(),
+      // optionally include player names, number of players, etc. tournament?
+    });
+  }
   
-//   const response = {
-//     target_endpoint: 'pong-api',
-//     type: 'tournament_list',
-//     games: gameList,
-//   };
+  const response = {
+    target_endpoint: 'pong-api',
+    type: 'tournament_list',
+    games: gameList,
+  };
   
-//   // console.log("response:", response); 
-//   senderSocket.send(JSON.stringify(response));
-// }
+  // console.log("response:", response); 
+  senderSocket.send(JSON.stringify(response));
+}
 
-// function handleCreateTournament(senderUsername: string, pong_data: CreateGameData): void {
+function handleCreateTournament(senderUsername: string, pong_data: CreateGameData): void {
 
-//   console.log("Tournament");
-//   console.log(pong_data);
-//   const uniqueGameID = `${senderUsername}-${Date.now()}`;
-//   const newTournament = new Tournament(uniqueGameID, senderUsername, pong_data.playerAlias);
-//   currentTournaments.set(senderUsername, newTournament);
-// }
+  console.log("Tournament");
+  console.log(pong_data);
+
+  // create tournament
+  const uniqueGameID = `${senderUsername}-${Date.now()}`;
+  const newTournament = new Tournament(uniqueGameID, senderUsername, pong_data.playerAlias);
+
+  // add tournament to list
+  currentTournaments.set(senderUsername, newTournament);
+
+}
 
 
 

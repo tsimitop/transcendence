@@ -17,6 +17,7 @@ export class Tournament {
 /*****************************************************/
 /**************     Constructor  *********************/
 /*****************************************************/
+
 constructor(uniqueID: string, PlayerOneAlias: string, PlayerOneName: string ) {
 	this.uniqueID = uniqueID;
 	this.PlayerOneAlias = PlayerOneAlias;
@@ -32,7 +33,7 @@ constructor(uniqueID: string, PlayerOneAlias: string, PlayerOneName: string ) {
 		this.currentPlayers++;
 	}
 
-	readyCheck(): boolean{
+	readyToStart(): boolean{
 		if(this.currentPlayers === 4)
 			return true;
 		else

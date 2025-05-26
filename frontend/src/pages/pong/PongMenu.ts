@@ -15,10 +15,11 @@ export function setupMenu(pong: Pong) {
 
   // Elements
   const menu = get('menuScreen');
+  const localGameSettings = get('LocalGameSettings');
   const remoteOptions = get('remoteOptionScreen');
   const remoteTournamentOption = get('remoteTournamentOptionScreen');
   const gameList = get('gameListScreen');
-  const localGameSettings = get('LocalGameSettings');
+  // const tournamentListScreen = get('tournamentListScreen');
   const gameCanvas = get('gameCanvas');
 
   const LocalGameButton = get('LocalGameButton');
@@ -28,7 +29,7 @@ export function setupMenu(pong: Pong) {
   const JoinTournamentButton = get('JoinTournamentButton');
 
   const createRemoteGameBtn = get('createRemoteGameBtn');
-  const createRemoteTournamentGameBtn = get('createRemoteTournamentGameBtn');
+  const createRemoteTournamentBtn = get('createRemoteTournamentBtn');
 
   const joinRemoteGamePageBtn = get('joinRemoteGamePageBtn');
   const joinRemoteTournamentGamePageBtn = get('joinRemoteTournamentGamePageBtn');
@@ -36,6 +37,7 @@ export function setupMenu(pong: Pong) {
   const backFromRemoteOptionsBtn = get('backFromRemoteOptionsBtn');
   const backFromTournamentRemoteOptionsBtn = get('backFromRemoteTournamentOptionsBtn');
   const backFromGameListBtn = get('backFromGameListBtn');
+  const backFromTournamentListBtn = get('backFromGameListBtn');
   const backLocalGameSettingsBtn = get('backLocalGameSettingsBtn');
   const backFromJoinOptionsBtn = get('backFromJoinOptionsBtn');
   const backFromJoinTournamentOptionsBtn = get('backFromJoinTournamentOptionsBtn');
@@ -116,7 +118,7 @@ export function setupMenu(pong: Pong) {
     }));
   };
 
-  createRemoteTournamentGameBtn.onclick = () => {
+  createRemoteTournamentBtn.onclick = () => {
     const alias = remoteTournamentAliasInput.value.trim();
     if (!alias) return alert("Please enter your alias");
 
@@ -203,6 +205,11 @@ export function setupMenu(pong: Pong) {
 
   backFromGameListBtn.onclick = () => {
     showOnly(remoteOptions);
+    if (gameListInterval) clearInterval(gameListInterval);
+  };
+
+  backFromTournamentListBtn.onclick = () => {
+    showOnly(remoteTournamentOption);
     if (gameListInterval) clearInterval(gameListInterval);
   };
 

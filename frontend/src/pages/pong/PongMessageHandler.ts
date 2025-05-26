@@ -25,9 +25,9 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       case 'game_list':
         handleListGames(data, socket);
         break;  
-      // case 'tournament_list':
-      //   handleListTournaments(data, socket);
-      //   break;  
+      case 'tournament_list':
+        handleListTournaments(data, socket);
+        break;  
       default:
         console.warn("Unknown message type:", data.type);
         break;
@@ -85,7 +85,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   
   export function   handleGameState(data: any) {
 
-    console.log(data);
+    // console.log(data);
     const gameStateData = data as GameStateData;
     const game = gameStateData.game;
 
@@ -320,51 +320,51 @@ export function handleWaitingForUser() {
 }
 
   
-  // export function handleListTournaments(data: any, socket: WebSocket | null) {
-  //   const aliasInput = document.getElementById('remoteAliasInput') as HTMLInputElement;
-  //   const alias = aliasInput.value.trim();
-  //   localStorage.setItem('pong_alias', alias);
-  //   // console.log("Received game list:", data);
-  //   const container = document.getElementById('availableGamesList');
-  //   if (!container) {
-  //     console.error("No container element found for availableGamesList");
-  //     return;
-  //   }
-  //   container.innerHTML = '';
-  //   if (!data.games || data.games.length === 0) {
-  //     container.textContent = 'No available games right now.';
-  //     return;
-  //   }
+  export function handleListTournaments(data: any, socket: WebSocket | null) {
+    const aliasInput = document.getElementById('JoinAliasInput2') as HTMLInputElement;
+    const alias = aliasInput.value.trim();
+    localStorage.setItem('pong_alias', alias);
+    // console.log("Received game list:", data);
+    const container = document.getElementById('availableGamesList');
+    if (!container) {
+      console.error("No container element found for availableGamesList");
+      return;
+    }
+    container.innerHTML = '';
+    if (!data.games || data.games.length === 0) {
+      container.textContent = 'No available games right now.';
+      return;
+    }
   
-  //   const ul = document.createElement('ul');
-  //   data.games.forEach((game: { id: string; owner: string; alias: string; state: string }) => {
-  //   const li = document.createElement('li');
-  //   li.textContent = `Game ID: ${game.id}, Owner: ${game.owner}, Alias: ${game.alias}, State: ${game.state} `;
+    const ul = document.createElement('ul');
+    data.games.forEach((game: { id: string; owner: string; alias: string; state: string }) => {
+    const li = document.createElement('li');
+    li.textContent = `Game ID: ${game.id}, Owner: ${game.owner}, Alias: ${game.alias}, State: ${game.state} `;
   
-  //   const joinBtn = document.createElement('button');
-  //   joinBtn.textContent = 'Join';
-  //   joinBtn.disabled = game.state !== 'waiting';
-  //   const alias = localStorage.getItem('pong_alias');
-  //   joinBtn.addEventListener('click', () => {
-  //       const joinRequest = {
-  //         target_endpoint: 'pong-api',
-  //         payload: {
-  //           type: 'join_tournament',
-  //           pong_data: {
-  //             OpponentAlias: alias,
-  //             gameId: game.id
-  //           }
-  //         }
-  //       }; 
-  //   if (socket && socket.readyState === WebSocket.OPEN) {
-  //       socket.send(JSON.stringify(joinRequest));
-  //     } else {
-  //       console.error("Socket is not open");
-  //     }
-  // });
-  //   li.appendChild(joinBtn);
-  //   ul.appendChild(li);
-  //   });
-  //   container.appendChild(ul);
-  // }
+    const joinBtn = document.createElement('button');
+    joinBtn.textContent = 'Join';
+    joinBtn.disabled = game.state !== 'waiting';
+    const alias = localStorage.getItem('pong_alias');
+    joinBtn.addEventListener('click', () => {
+        const joinRequest = {
+          target_endpoint: 'pong-api',
+          payload: {
+            type: 'join_tournament',
+            pong_data: {
+              OpponentAlias: alias,
+              gameId: game.id
+            }
+          }
+        }; 
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(joinRequest));
+      } else {
+        console.error("Socket is not open");
+      }
+  });
+    li.appendChild(joinBtn);
+    ul.appendChild(li);
+    });
+    container.appendChild(ul);
+  }
   
