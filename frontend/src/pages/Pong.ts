@@ -61,7 +61,7 @@ export class Pong extends Component {
   // ✅ Wait until DOM is ready before setting up menu
   setTimeout(() => {
     const menu = document.getElementById('menuScreen');
-    if (menu) menu.style.display = 'flex'; // show the menu
+    if (menu) menu.style.display = 'flex';
     else console.warn("menuScreen not found!");
 
     setupMenu(PongInstance);

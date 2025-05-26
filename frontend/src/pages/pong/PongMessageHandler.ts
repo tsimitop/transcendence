@@ -1,4 +1,5 @@
 
+import { setGameRunning } from "./PongMenu";
 import { GameStateData } from "./PongGame";
 import { GameOverData } from "./PongGame";
   
@@ -34,6 +35,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   }
 
   export function handleGameOver(data: GameOverData) {
+    setGameRunning(true);
     // console.log(data);
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     if (!canvas) {
@@ -141,6 +143,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
 
   export function handleCountdownGame(data: any) {
+    setGameRunning(true);
     // console.log("countdown data",data);
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
