@@ -16,8 +16,10 @@ export function setupMenu(pong: Pong) {
   // Elements
   const menu = get('menuScreen');
   const localGameSettings = get('LocalGameSettings');
+
   const remoteOptions = get('remoteOptionScreen');
   const remoteTournamentOption = get('remoteTournamentOptionScreen');
+
   const gameList = get('gameListScreen');
   const tournamentListScreen = get('tournamentListScreen');
   const gameCanvas = get('gameCanvas');
@@ -34,13 +36,16 @@ export function setupMenu(pong: Pong) {
   const joinRemoteGamePageBtn = get('joinRemoteGamePageBtn');
   const joinRemoteTournamentGamePageBtn = get('joinRemoteTournamentGamePageBtn');
 
-  const backFromRemoteOptionsBtn = get('backFromRemoteOptionsBtn');
-  const backFromTournamentRemoteOptionsBtn = get('backFromRemoteTournamentOptionsBtn');
-  const backFromGameListBtn = get('backFromGameListBtn');
-  const backFromTournamentListBtn = get('backFromGameListBtn');
   const backLocalGameSettingsBtn = get('backLocalGameSettingsBtn');
+  
+  const backFromRemoteOptionsBtn = get('backFromRemoteOptionsBtn');
   const backFromJoinOptionsBtn = get('backFromJoinOptionsBtn');
+  const backFromGameListBtn = get('backFromGameListBtn');
+  
+  const backFromTournamentRemoteOptionsBtn = get('backFromTournamentRemoteOptionsBtn');
   const backFromJoinTournamentOptionsBtn = get('backFromJoinTournamentOptionsBtn');
+  const backFromTournamentListBtn = get('backFromTournamentListBtn');
+
   const startLocalGameBtn = get('startLocalGameBtn');
 
   const alias1Input = get('player1Input') as HTMLInputElement;
@@ -198,8 +203,8 @@ export function setupMenu(pong: Pong) {
   backFromRemoteOptionsBtn.onclick = () => {
     showOnly(menu);
   };
-
-  backFromTournamentRemoteOptionsBtn.onclick = () => {
+  
+  backFromJoinOptionsBtn.onclick = () => {
     showOnly(menu);
   };
 
@@ -208,20 +213,20 @@ export function setupMenu(pong: Pong) {
     if (gameListInterval) clearInterval(gameListInterval);
   };
 
-  backFromTournamentListBtn.onclick = () => {
-    showOnly(remoteTournamentOption);
-    if (gameListInterval) clearInterval(gameListInterval);
-  };
-
-  backLocalGameSettingsBtn.onclick = () => {
-    showOnly(menu);
-  };
-
-  backFromJoinOptionsBtn.onclick = () => {
+  backFromTournamentRemoteOptionsBtn.onclick = () => {
     showOnly(menu);
   };
 
   backFromJoinTournamentOptionsBtn.onclick = () => {
+    showOnly(menu);
+  };
+
+  backFromTournamentListBtn.onclick = () => {
+    showOnly(get('joinTournamentAliasScreen'));
+    if (gameListInterval) clearInterval(gameListInterval);
+  };
+
+  backLocalGameSettingsBtn.onclick = () => {
     showOnly(menu);
   };
 

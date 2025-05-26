@@ -67,10 +67,8 @@ export function getPongHTML(theme: string): string {
       <h2 class="text-2xl font-semibold">Remote Tournament Options</h2>
       <input id="remoteTournamentAliasInput" placeholder="Your alias" class="input-primary" />
       <button id="createRemoteTournamentBtn" class="btn-green">Create New Tournament</button>
-      <button id="backFromRemoteTournamentOptionsBtn" class="btn-secondary">Back</button>
+      <button id="backFromTournamentRemoteOptionsBtn" class="btn-secondary">Back</button>
     </div>
-
-
 
     <!-- Join Game Tournament Alias Entry -->
     <div id="joinTournamentAliasScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
