@@ -49,19 +49,21 @@ check max scores✅
 tailwind css in pongtemplate.ts check✅
 join game display amount player and status of game doenst look beautifull✅
 
+26.05
+reload via pong button on top doesnt work properly✅
+
+27.05
+delete user in tournament when user disconnect -> user in map
+join tournament
+waiting screen tournament with current players
+matches for tournament
+
 
 
 
 TO DO
 tournamentGame - > 4 player fix, wait for 4 other players‼️
-
-
-
-reload via pong button on top doesnt work properly
-
-
 reconnect?????
-
-chat doenst work anymore in pong_front branch but in main branch
-
+chat doenst work anymore in pong_front branch but in main branch -> waldi 
 change angle slightly of pongball when hitting paddle❓
+

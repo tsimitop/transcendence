@@ -258,7 +258,7 @@ export function handleWaitingForUser() {
     idSpan.textContent = `Game ID: ${game.id}`;
 
     const ownerSpan = document.createElement('span');
-    ownerSpan.textContent = `Owner: ${game.owner}`;
+    ownerSpan.textContent = `Creator: ${game.owner}`;
 
     const aliasSpan = document.createElement('span');
     aliasSpan.textContent = `Alias: ${game.alias}`;
@@ -354,7 +354,7 @@ export function handleWaitingForUser() {
       idSpan.textContent = `Game ID: ${game.id}`;
   
       const ownerSpan = document.createElement('span');
-      ownerSpan.textContent = `Owner: ${game.owner}`;
+      ownerSpan.textContent = `Creator: ${game.owner}`;
   
       const aliasSpan = document.createElement('span');
       aliasSpan.textContent = `Alias: ${game.alias}`;
@@ -391,7 +391,7 @@ export function handleWaitingForUser() {
         const joinRequest = {
           target_endpoint: 'pong-api',
           payload: {
-            type: 'join_game',
+            type: 'join_tournament',
             pong_data: {
               OpponentAlias: storedAlias,
               gameId: game.id
@@ -404,33 +404,6 @@ export function handleWaitingForUser() {
           console.error("Socket is not open");
         }
       });
-  //   data.games.forEach((game: { id: string; owner: string; alias: string; state: string }) => {
-  //     const li = document.createElement('li');
-  //     li.textContent = `Game ID: ${game.id}, Owner: ${game.owner}, Alias: ${game.alias}, State: ${game.state} `;
-    
-  //   const joinBtn = document.createElement('button');
-  //   joinBtn.textContent = 'Join';
-  //   joinBtn.disabled = game.state !== 'waiting';
-  //   const alias = localStorage.getItem('pong_alias');
-  //   joinBtn.addEventListener('click', () => {
-  //       const joinRequest = {
-  //         target_endpoint: 'pong-api',
-  //         payload: {
-  //           type: 'join_tournament',
-  //           pong_data: {
-  //             OpponentAlias: alias,
-  //             gameId: game.id
-  //           }
-  //         }
-  //       }; 
-  //   if (socket && socket.readyState === WebSocket.OPEN) {
-  //       socket.send(JSON.stringify(joinRequest));
-  //     } else {
-  //       console.error("Socket is not open");
-  //     }
-  // });
-
-
 
     li.appendChild(infoDiv);
     li.appendChild(joinBtn);
