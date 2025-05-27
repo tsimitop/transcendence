@@ -8,8 +8,47 @@ const currentGames: Map<string, PongGame> = new Map();
 const currentTournaments: Map<string, Tournament> = new Map()
 const globalCountdown = 2;
 
+
+const test = setInterval(() => {
+    console.log("List");
+    for (const [username, tournament] of currentTournaments.entries()) {
+      console.log(tournament.getUniqeID());
+    }
+
+    for (const [username, games] of currentGames.entries()) {
+      console.log(games.getUniqeID());
+    }
+
+}, 1000);
+
+export function deleteGameBecauseUserReconnected(user: string, message: string): void {
+  
+  for (const [username, game] of currentGames.entries()) {
+    console.log(game.getUniqeID(), "<---->", username);
+    
+    if(user === game.getlPlayerName() || user === game.getrPlayerName()) {
+      game.setGameState("finished");
+      currentGames.delete(user);
+    }
+    break;
+  }
+  
+  for (const [username, tournament] of currentTournaments.entries()) {
+    console.log(tournament.getUniqeID(), "<---->", username);
+    if(tournament.getCurrentPlayers() === 1)
+        currentTournaments.delete(user);
+    else{
+      // if more than one player is connected to the game
+      console.log("more than one player is waiting only delete the one that left")
+
+    }
+    
+  }
+}
+
+
 export function handlePongPayload(senderUsername: string, payload: any): void {
-  console.log(payload);
+  // console.log(payload);
   try {
     // The payload is already parsed in MessageHandler.ts
     const message: PongMessage = {
@@ -103,7 +142,7 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
 }
 
 function handleListTournament(senderUsername: string): void {
-  console.log("handleListTournament");
+  // console.log("handleListTournament");
   const senderSocket = connectedUsers.get(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
@@ -125,7 +164,7 @@ function handleListTournament(senderUsername: string): void {
     games: tournamentList,
   };
   
-  console.log("response:", response); 
+  // console.log("response:", response); 
   senderSocket.send(JSON.stringify(response));
 }
 
@@ -135,7 +174,7 @@ function handleCreateTournament(senderUsername: string, pong_data: CreateGameDat
   // console.log(pong_data);
 
   // create tournament
-  const uniqueGameID = `${senderUsername}-${Date.now()}`;
+  const uniqueGameID = `${senderUsername}-Tournament-${Date.now()}`;
   const newTournament = new Tournament(uniqueGameID, senderUsername, pong_data.playerAlias);
 
   // add tournament to list
@@ -145,8 +184,8 @@ function handleCreateTournament(senderUsername: string, pong_data: CreateGameDat
 
 function handlerJoinTournament(senderUsername: string, pong_data: JoinGameData): void {
 
-  console.log("handlerJoinTournament")
-  console.log(senderUsername, pong_data)
+  // console.log("handlerJoinTournament")
+  // console.log(senderUsername, pong_data)
   // let countdown = globalCountdown;
 
   // const senderSocket = connectedUsers.get(senderUsername);
@@ -211,17 +250,17 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
   let opponent: string = "";
-  console.log("game id", pong_data);
+  // console.log("game id", pong_data);
   for (const [username, game] of currentGames.entries()) {
     if(pong_data.gameId === game.getUniqeID()){
       game.setGameState('countdown');
       game.setOpponentName(senderUsername, pong_data.OpponentAlias);
-      console.log("-->",game.getrPlayerName(), game.getrPlayerAlias());
+      // console.log("-->",game.getrPlayerName(), game.getrPlayerAlias());
       opponent = username;
       break;
     }
   }
-  console.log("opponent ", opponent);
+  // console.log("opponent ", opponent);
   const opponentSocket = connectedUsers.get(opponent);
   if (!opponentSocket || opponentSocket.readyState !== WebSocket.OPEN) return;
   const response = {
@@ -230,7 +269,7 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
         value : countdown
   };
   
-  console.log("response:", response); 
+  // console.log("response:", response); 
   senderSocket.send(JSON.stringify(response));
   opponentSocket.send(JSON.stringify(response));
 
@@ -268,7 +307,7 @@ function startGameLoop(game: PongGame) {
   const intervalId = setInterval(() => {    
   if (game.getGameState() === 'finished') {
     clearInterval(intervalId);
-    console.log(`Game ${game.getUniqeID()} ended.`);
+    // console.log(`Game ${game.getUniqeID()} ended.`);
 
     return;
     }
@@ -358,7 +397,7 @@ function handleListGames(senderUsername: string): void {
 function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
 
   // console.log("pong_data.gameMode ", pong_data.gameMode);
-  const uniqueGameID = `${senderUsername}-${Date.now()}`;
+  const uniqueGameID = `${senderUsername}-Game-${Date.now()}`;
   const newGame = new PongGame(uniqueGameID, senderUsername, pong_data.playerAlias, pong_data.gameMode);
   currentGames.set(senderUsername, newGame);
 
@@ -394,7 +433,7 @@ function handleCreateGame(senderUsername: string, pong_data: CreateGameData): vo
       type: 'countdown',
       value : countdown
     };
-    console.log("response:", response); 
+    // console.log("response:", response); 
     senderSocket.send(JSON.stringify(response));
     
     const interval = setInterval(() => {
@@ -411,7 +450,7 @@ function handleCreateGame(senderUsername: string, pong_data: CreateGameData): vo
 }
 
 export function endOfGame(user: string, message: string) {
-  console.log("user dissssssssconected");
+  // console.log("user dissssssssconected");
   for (const [username, game] of currentGames.entries()) {
     if(user === game.getlPlayerName() || user === game.getrPlayerName()) {
       game.setGameState("finished");

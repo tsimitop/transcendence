@@ -30,9 +30,10 @@ constructor(uniqueID: string, PlayerOneName: string, PlayerOneAlias: string ) {
 /*****************************************************/
 /**************        Methods   *********************/
 /*****************************************************/
-	getUniqeID() : string { return this.uniqueID; }
+	getUniqeID(): string { return this.uniqueID; }
     getlPlayerAlias(): string{ return this.PlayerOneAlias; }
-    getTournamentState() : TournamentState { return this.gameState; }
+    getTournamentState(): TournamentState { return this.gameState; }
+	getCurrentPlayers(): number { return this.currentPlayers; }
 
 	playerJoined() {
 		this.currentPlayers++;
