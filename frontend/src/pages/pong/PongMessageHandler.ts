@@ -35,7 +35,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   }
 
   export function handleGameOver(data: GameOverData) {
-    setGameRunning(true);
+    setGameRunning(false);
     // console.log(data);
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     if (!canvas) {

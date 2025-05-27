@@ -22,18 +22,18 @@ export const globalCountdown = 2;
 /******************************/
 /**             DEBUG         */
 /******************************/
-// const test = setInterval(() => {
-//   console.log("List");
-//   for (const [username, tournament] of currentTournaments.entries()) {
-//     console.log(tournament.getUniqeID());
-//     console.log(tournament.getAllPlayers());
-//   }
+const test = setInterval(() => {
+  console.log("List");
+  for (const [username, tournament] of currentTournaments.entries()) {
+    console.log(tournament.getUniqeID());
+    console.log(tournament.getAllPlayers());
+  }
   
-//   for (const [username, games] of currentGames.entries()) {
-//     console.log(games.getUniqeID());
-//   }
+  for (const [username, games] of currentGames.entries()) {
+    console.log(games.getUniqeID());
+  }
   
-// }, 1000);
+}, 1000);
 /******************************/
 /**        DEBUG END          */
 /******************************/
@@ -167,7 +167,7 @@ export function deleteGameBecauseUserReconnected(user: string): void {
     
     if(user === game.getlPlayerName() || user === game.getrPlayerName()) {
       console.log("setgametofinish")
-      game.setGameState("finished");
+      // game.setGameState("finished");
       // currentGames.delete(user);
       break;
     }
