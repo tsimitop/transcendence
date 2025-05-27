@@ -73,12 +73,14 @@ export function setupMenu(pong: Pong) {
   }
 
   // Initial screen
-  // showOnly(menu);
+  showOnly(menu);
   if (!gameIsRunning) {
     showOnly(menu);
   } else {
     showOnly(gameCanvas); // or whichever screen should be visible during the game
   }
+
+  
 
   // Menu button handlers
   LocalGameButton.onclick = () => {

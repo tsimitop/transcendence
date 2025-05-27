@@ -71,7 +71,7 @@ export function startWebSocketServer(server: any) {
     console.log(`[WS] User connected: ${username}`);
     
     // delete running game or tournament user made
-    deleteGameBecauseUserReconnected(username, "")
+    deleteGameBecauseUserReconnected(username)
 
     // Register the user to the active sockets map
     registerUser(username, socket);

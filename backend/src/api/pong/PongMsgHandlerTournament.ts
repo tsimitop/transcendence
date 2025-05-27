@@ -58,7 +58,7 @@ export function handlerJoinTournament(senderUsername: string, pong_data: JoinGam
   senderSocket.send(JSON.stringify(response));
   // check if tournament has 4 players and start 2 pong instances and make the game running
   for (const [username, tournament] of currentTournaments.entries()) {
-    if(4 === tournament.getCurrentPlayers()){
+    if(tournament.readyToStart()){
       tournament.start();
       break;
     }

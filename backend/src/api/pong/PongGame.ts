@@ -183,6 +183,11 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
     }
 
     checkEndOfGame(){
+      if(this.gameState === "finished"){
+        endOfGame(this.lPlayerName, "Opponent left game")
+        endOfGame(this.rPlayerName, "Opponent left game")
+      }
+        
       if(this.lPlayerScore >= this.maxScore){
         this.gameState = "finished";
         console.log("checkEndOfGame left player");

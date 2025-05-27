@@ -22,49 +22,22 @@ export const globalCountdown = 2;
 /******************************/
 /**             DEBUG         */
 /******************************/
-const test = setInterval(() => {
-  console.log("List");
-  for (const [username, tournament] of currentTournaments.entries()) {
-    console.log(tournament.getUniqeID());
-    console.log(tournament.getAllPlayers());
-  }
+// const test = setInterval(() => {
+//   console.log("List");
+//   for (const [username, tournament] of currentTournaments.entries()) {
+//     console.log(tournament.getUniqeID());
+//     console.log(tournament.getAllPlayers());
+//   }
   
-  for (const [username, games] of currentGames.entries()) {
-    console.log(games.getUniqeID());
-  }
+//   for (const [username, games] of currentGames.entries()) {
+//     console.log(games.getUniqeID());
+//   }
   
-}, 1000);
+// }, 1000);
 /******************************/
 /**        DEBUG END          */
 /******************************/
 
-export function deleteGameBecauseUserReconnected(user: string, message: string): void {
-  
-  for (const [username, game] of currentGames.entries()) {
-    console.log(game.getUniqeID(), "<---->", username);
-    
-    if(user === game.getlPlayerName() || user === game.getrPlayerName()) {
-      game.setGameState("finished");
-      currentGames.delete(user);
-    }
-    break;
-  }
-  
-  for (const [username, tournament] of currentTournaments.entries()) {
-    console.log(tournament.getUniqeID(), "<---->", username);
-    if(tournament.getCurrentPlayers() === 1)
-        currentTournaments.delete(user);
-    else{
-      // if more than one player is connected to the game
-      console.log("more than one player is waiting only delete the one that left")
-      console.log(tournament.getAllPlayers())
-      console.log(user, "----", username)
-      tournament.removePlayer(user);
-
-    }
-    
-  }
-}
 
 
 export function handlePongPayload(senderUsername: string, payload: any): void {
@@ -98,12 +71,6 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
       case 'create_tournament':
         handleCreateTournament(senderUsername, message.pong_data);
         break;
-      case 'getGames':
-        handleGetGames(senderUsername);
-        break;
-      // case 'create_game':  // mhhh mixed case types
-      //   handleCreateGame(senderUsername, message.pong_data);
-      //   break;
       default:
         sendErrorMessage(senderUsername, `Unknown message type: ${message.type}`, 4001);
         console.warn(`[PONG WS] Unknown message: ${message}`);
@@ -114,9 +81,6 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
 }
 
 
-/*****************************************************/
-/************** ajehles Methods  *********************/
-/*****************************************************/
 function handleInput(senderUsername: string, pong_data: KeyboardInputData): void {
     
   
@@ -195,59 +159,36 @@ export function endOfGame(user: string, message: string) {
   }
 }
   
-   /*****************************************************/
-  /************** ajehles Methods end *********************/
-  /*****************************************************/
 
-function handleGetGames(senderUsername: string): void {
-  console.debug(`[PONG] user ${senderUsername} requested games`);
+export function deleteGameBecauseUserReconnected(user: string): void {
   
-  // dummy waiting game for testing the 'lobby'
-  // TODO: Implement return of actual waiting games list
-  // const dummy_game: GameStateData = {
-  //   game: {
-  //     id: "game-123456",
-  //     status: "waiting",
-  //     ball: {
-  //       x: "0.0",
-  //       y: "0.0"
-  //     },
-  //     leftPaddle: {
-  //       topPoint: {
-  //         x: 0.05,
-  //         y: 0.35
-  //       },
-  //       height: 0.2
-  //     },
-  //     rightPaddle: {
-  //       topPoint: {
-  //         x: 0.95,
-  //         y: 0.40
-  //       },
-  //       height: 0.2
-  //     },
-  //     lastUpdateTime: Date.now(),
-  //     maxScore: 10,
-  //     scores: {
-  //       "player1": 3,
-  //       "player2": 5
-  //     },
-  //     countdown: 0
-  //   }
-  // };
+  for (const [username, game] of currentGames.entries()) {
+    console.log(game.getUniqeID(), "<---->", username);
+    
+    if(user === game.getlPlayerName() || user === game.getrPlayerName()) {
+      console.log("setgametofinish")
+      game.setGameState("finished");
+      // currentGames.delete(user);
+      break;
+    }
+  }
   
-  // TODO add all games into this list, then pass the list to sendMessages
-  // const waiting_games: GameStateData[] = [dummy_game];
- 
-  // sendMessage(senderUsername, 'game_states', waiting_games);
-  // console.debug(`returning ${waiting_games.length} games`)
+  for (const [username, tournament] of currentTournaments.entries()) {
+    console.log(tournament.getUniqeID(), "<---->", username);
+    if(tournament.getCurrentPlayers() === 1)
+        currentTournaments.delete(user);
+    else{
+      // if more than one player is connected to the game
+      console.log("more than one player is waiting only delete the one that left")
+      console.log(tournament.getAllPlayers())
+      console.log(user, "----", username)
+      tournament.removePlayer(user);
+    } 
+  }
 }
 
-// function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
-//   console.log(`got create game ${pong_data}`)
-// }
 
-
+/**********************************************************************************/
 
 function sendMessage(senderUsername: string, type: string, pong_data: any): void {
   // used to send messages to the client

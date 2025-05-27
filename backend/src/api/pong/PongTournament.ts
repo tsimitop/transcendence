@@ -69,6 +69,6 @@ getAllPlayers(): Player[] {
 	}
 
 	start() {
-
+		console.log("Tournament is starting")
 	}
 }
