@@ -1,3 +1,4 @@
+import { userContext } from "../context/UserContext";
 import Component, {
 	ChildElementType,
 	ChildrenStringType,
@@ -11,15 +12,43 @@ import Component, {
 	private socket: WebSocket | null = null;
 	private reconnectAttempts = 0;
 	private readonly maxReconnectAttempts = 5;
-  
+	static isInitialized = false;
+
 	constructor(
 	  childrenString: ChildrenStringType,
 	  ...childElements: ChildElementType[]
 	) {
 	  super(childrenString, ...childElements);
 	}
+
+  	/**
+	 * @brief Lifecycle method triggered when the element is added to the DOM.
+	 * Sets up event listeners for sending messages.
+	 */
+	connectedCallback(): void {
+		const sendBtn = this.querySelector("#send-btn") as HTMLButtonElement;
+		const input = this.querySelector("#chat-input") as HTMLInputElement;
+		const toggleBtn = this.querySelector("#chat-toggle") as HTMLButtonElement;
+		const chatContent = this.querySelector("#chat-content") as HTMLDivElement;
+	  
+		if (sendBtn && input) {
+		  // Send message when button clicked
+		  sendBtn.addEventListener("click", () => this.sendMessage(input));
+	
+		  // Send message on Enter key
+		  input.addEventListener("keypress", (e: KeyboardEvent) => {
+			if (e.key === "Enter") sendBtn.click();
+		  });
+		}
+		// Toggle chat visibility
+		if (toggleBtn && chatContent) {
+		  toggleBtn.addEventListener("click", () => {
+			const isHidden = chatContent.classList.toggle("hidden");
+			toggleBtn.textContent = isHidden ? "Expand" : "Minimize";
+		  });
+		}
+	  }
   
-	static isInitialized = false;
 	/**
 	 * @brief Factory method to create and attach a Chat component to the DOM.
 	 * @return the Chat instance.
@@ -41,16 +70,22 @@ import Component, {
   
 	  // HTML structure of the chat box
 	  const html = `
-		<div class="fixed bottom-4 right-4 w-80 z-50 shadow-lg">
-		  <div class="w-full bg-white rounded shadow p-4 flex flex-col space-y-2">
+	  <div id="chat-wrapper" class="fixed bottom-4 right-4 w-80 z-50 shadow-lg">
+		<div class="bg-white rounded shadow p-2 flex flex-col space-y-2">
+		  <div class="flex justify-between items-center">
+			<span class="font-bold">Chat</span>
+			<button id="chat-toggle" class="text-xs text-blue-500 underline">Minimize</button>
+		  </div>
+		  <div id="chat-content">
 			<div id="chat-messages" class="flex-1 overflow-y-auto h-64 border p-2 rounded bg-gray-100 text-sm space-y-1"></div>
-			<div class="flex">
+			<div class="flex mt-2">
 			  <input type="text" id="chat-input" class="flex-1 p-2 border rounded-l" placeholder="Type a message..." />
 			  <button id="send-btn" class="p-2 bg-blue-500 text-white rounded-r">Send</button>
 			</div>
 		  </div>
 		</div>
-	  `;
+	  </div>
+	`;
   
 	  // Create and insert the chat component
 	  const chatInstance = new Chat({ html, position: "beforeend" });
@@ -59,44 +94,26 @@ import Component, {
 	}
   
 	/**
-	 * @brief Lifecycle method triggered when the element is added to the DOM.
-	 * Sets up event listeners for sending messages.
-	 */
-	connectedCallback(): void {
-	  const sendBtn = this.querySelector("#send-btn") as HTMLButtonElement;
-	  const input = this.querySelector("#chat-input") as HTMLInputElement;
-  
-	  if (sendBtn && input) {
-		// Send message when button clicked
-		sendBtn.addEventListener("click", () => this.sendMessage(input));
-  
-		// Send message on Enter key
-		input.addEventListener("keypress", (e: KeyboardEvent) => {
-		  if (e.key === "Enter") sendBtn.click();
-		});
-	  }
-	}
-  
-	/**
 	 * @brief Sends the current input value to the WebSocket server.
 	 */
 	private sendMessage(input: HTMLInputElement): void {
-	  const trimmedMessage = input.value.trim();
-	  if (trimmedMessage && this.socket?.readyState === WebSocket.OPEN) {
-		this.socket.send(
-		  JSON.stringify(
-		{
-			target_endpoint: "chat-api",  // specify the target endpoint so we can use the ws for pong too
-			payload: {
-				type: "CHAT",
-				message: trimmedMessage,
-		  }
+		const trimmedMessage = input.value.trim();
+		const username = userContext.state.username;
+	  
+		if (trimmedMessage && this.socket?.readyState === WebSocket.OPEN && username) {
+			// console.log("Sending message as:", username); // debug Chat print 
+			const messagePayload = {
+				target_endpoint: "chat-api",
+				payload: {
+				  type: "CHAT",
+				  from: username,
+				  message: trimmedMessage,
+				}
+			  };
+			  this.socket.send(JSON.stringify(messagePayload));
+		  input.value = ""; // Clear input field
 		}
-		)
-		);
-		input.value = ""; // Clear input field
 	  }
-	}
   
 	/**
 	 * @brief Initializes a WebSocket connection with retry logic if the token is missing.

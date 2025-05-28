@@ -2,7 +2,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { verify } from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { IncomingMessage } from 'http';
-
+import UserDb from "../user-database/UserDb";
 import { handleWebsocketPayload } from './MessageHandler';
 
 // Load environment variables from .env file
@@ -40,18 +40,29 @@ export function startWebSocketServer(server: any) {
     // Reject connection if no token
     if (!token) {
       socket.close(4001, 'Missing Token');
+      console.error("unauthenticated ws request")
       return;
     }
 
 	// Verify the token and extract the username
-    let username: string;
+    let userId: string;
     try {
-      const decoded = verify(token, JWT_SECRET) as { userId: string, username: string };
-      username = decoded.username;
-    } catch (err) {
-      socket.close(4002, 'Invalid Token');
-      return;
-    }
+		const decoded = verify(token, JWT_SECRET) as { userId: string };
+		userId = decoded.userId;
+	  } catch (err) {
+		socket.close(4002, 'Invalid Token');
+		return;
+	  }
+	
+	  const userDbInstance = new UserDb("database/test.db");
+	  const userDb = userDbInstance.openDb();
+	
+	  const username = userDbInstance.findUsernameByUserId(userDb, userId);
+	  if (!username) {
+		socket.close(4003, 'User Not Found');
+		return;
+	  }
+	
 
 	// Check if the user is already connected
     console.log(`[WS] User connected: ${username}`);
@@ -61,7 +72,8 @@ export function startWebSocketServer(server: any) {
 
     // Handle incoming messages
     socket.on('message', (data) => {
-      handleWebsocketPayload(username, data);
+    //   handleMessage(username, data); // debug Chat delete later
+	handleWebsocketPayload(username, data);
     });
 
     // Handle socket close event
@@ -94,13 +106,13 @@ function getTokenFromRequest(req: IncomingMessage): string | null {
  * @param socket - The WebSocket associated with this user
  */
 export function registerUser(username: string, socket: WebSocket): void {
-  connectedUsers.set(username, socket);
-}
-
-/**
- * @brief Removes a user from the list of connected users
- * @param username - The username of the disconnecting user
- */
-export function unregisterUser(username: string): void {
-  connectedUsers.delete(username);
-}
+	connectedUsers.set(username, socket);
+  }
+  
+  /**
+   * @brief Removes a user from the list of connected users
+   * @param username - The username of the disconnecting user
+   */
+  export function unregisterUser(username: string): void {
+	connectedUsers.delete(username);
+  }

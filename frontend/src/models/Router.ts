@@ -266,7 +266,7 @@ abstract class Router {
           id: userInBackendSession.id,
           email: userInBackendSession.email,
           username: userInBackendSession.username,
-          isSignedIn: userInBackendSession.isSignedIn, // it is true!
+          isSignedIn: userInBackendSession.isSignedIn,
         });
       }
       viewToRender = Router.getViewForGuestUser(routeToGo);
