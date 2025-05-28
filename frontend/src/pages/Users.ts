@@ -79,8 +79,8 @@ class Users extends Component {
           <p>user.is_friend: ${user.is_friend}</p>
           <p>Email: ${user.email}</p>
           <img src="${user.avatar || "/default-profile.png"}" alt="User's avatar" class="rounded w-[100px] h-[100px]" /><br>
-		  <button id="friend-btn" class="theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" data-userid="${user.id}">Add friend</button> <br><br>
-		  <button id="block-btn" class="theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" data-userid="${user.id}">Block user</button> <br>
+		  <button id="friend-btn" class="friend-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" data-userid="${user.id}">Add friend</button> <br><br>
+		  <button id="block-btn" class="block-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" data-userid="${user.id}">Block user</button> <br>
 		  </div>
 		  `;
     }

@@ -237,8 +237,6 @@ class Profile extends Component {
 
 	//PLACEHOLDER
 	let friendRequestsHtml = `<div class="ml-auto text-right" id="pending-friend-requests">
-	  <h2 class="text-3xl font-bold mb-6">Pending Friend Requests</h2>
-	  <p>Loading...</p> <!-- or empty <ul> here -->
 	</div>`;
 
 	//MAIN HTML
