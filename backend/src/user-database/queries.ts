@@ -34,4 +34,5 @@ export enum QueryUser {
   GET_TOTP_SECRET = `SELECT totp_secret FROM ${table} WHERE id = ?`,
   SELECT_ALL_USERS = `SELECT id FROM ${table}`,
   FIND_ID_USERNAME_EMAIL = `SELECT id, username, email FROM ${table} WHERE username = ?`,
+  MATCH_EACH_ID_TO_USERNAME = `SELECT username FROM ${table} WHERE id = ?`,
 }

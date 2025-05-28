@@ -15,6 +15,11 @@ type Activate2FaResponseType = {
   dataUrl: string;
 };
 
+interface FriendRequest {
+  id: string;
+  username: string;
+}
+
 class Profile extends Component {
   static message2FaclassName = "message-2fa";
   constructor(
@@ -38,6 +43,10 @@ class Profile extends Component {
       Profile.deactivate2Fa();
     } else if (target.classList.contains("submit-2fa-deactivation-btn")) {
       Profile.submit2FaCodeDeactivation(event);
+    } else if (target.classList.contains("accept-btn")) {
+      Profile.handlePendingAction(event, 'accept');
+    } else if (target.classList.contains("block-btn")) {
+      Profile.handlePendingAction(event, 'block');
     }
   }
 
@@ -226,30 +235,46 @@ class Profile extends Component {
 
     main.addEventListener("click", Profile.handleClick);
 
-    const html = `
-				<div class="flex items-center justify-between mt-12 mb-6">
-					<h1 class="text-5xl font-bold">Profile</h1>
-					<button class="sign-out-btn theme-btn-secondary-${themeState.state} px-4 py-2 cursor-pointer">
-						Sign out
-					</button>
-				</div>
-				<div class="flex flex-col gap-1 mb-20">
-					<p>id: ${userContext.state.id}</p>
-					<p>email: ${userContext.state.email}</p>
-					<p>username: ${userContext.state.username}</p>
-				</div>
-				<h2 class="text-3xl font-bold mb-6">Settings</h2>
-				<div class="flex flex-col gap-2 w-[120px]">
-					<button class="activate-2fa-btn theme-btn-${themeState.state} py-2 cursor-pointer">
-					Activate 2FA
-					</button>
-					<button class="deactivate-2fa-btn theme-btn-${themeState.state} py-2 cursor-pointer">
-					Deactivate 2FA
-					</button>
-				</di>
-			`;
+	//PLACEHOLDER
+	let friendRequestsHtml = `<div class="ml-auto text-right" id="pending-friend-requests">
+	  <h2 class="text-3xl font-bold mb-6">Pending Friend Requests</h2>
+	  <p>Loading...</p> <!-- or empty <ul> here -->
+	</div>`;
+
+	//MAIN HTML
+	const html = `
+	<div class="flex items-center justify-between mt-12 mb-6">
+	  <h1 class="text-5xl font-bold">Profile</h1>
+	  <button class="sign-out-btn theme-btn-secondary-${themeState.state} px-4 py-2 cursor-pointer">
+	    Sign out
+	  </button>
+	</div>
+
+	<div class="flex flex-col gap-1 mb-20">
+	  <p>id: ${userContext.state.id}</p>
+	  <p>email: ${userContext.state.email}</p>
+	  <p>username: ${userContext.state.username}</p>
+	</div>
+
+	<div class="flex justify-between items-start mb-12">
+	  <div>
+	    <h2 class="text-3xl font-bold mb-6">Settings</h2>
+	    <div class="flex flex-col gap-2 w-[120px]">
+	      <button class="activate-2fa-btn theme-btn-${themeState.state} py-2 cursor-pointer">
+	        Activate 2FA
+	      </button>
+	      <button class="deactivate-2fa-btn theme-btn-${themeState.state} py-2 cursor-pointer">
+	        Deactivate 2FA
+	      </button>
+	    </div>
+	  </div>
+	  ${friendRequestsHtml}
+	</div>
+`;
 
     main.insertAdjacentHTML("beforeend", html);
+
+	Profile.fetchAndRenderFriendRequests();
 
     const SignOutInstance = new Profile(
       { html: "", position: "beforeend" },
@@ -261,6 +286,85 @@ class Profile extends Component {
     SignOutInstance.classList.add("page");
 
     return SignOutInstance;
+  }
+
+static fetchAndRenderFriendRequests() {
+  const user = userContext.state;
+  fetch(`${CADDY_SERVER}/api/friends/pending`, {
+	method: "POST",
+	headers: {
+		'Content-Type': 'application/json'
+	},
+	body: JSON.stringify({ userState: user })
+  })
+    .then(res => res.json())
+    .then((data: { success: boolean; pendingUsers: FriendRequest[] }) => {
+      const container = document.getElementById('pending-friend-requests');
+      if (!container) 
+		return;
+
+      if (!data.pendingUsers || data.pendingUsers.length === 0) {
+        container.innerHTML = '<p>No pending friend requests</p>';
+        return;
+      }
+	  //DYNAMIC HTML per pending user
+      let requestsHtml = `<h2>Pending Friend Requests</h2><ul>`;
+	  data.pendingUsers.forEach(request => {
+        requestsHtml += `
+          <li class="mb-4 flex items-center justify-between">
+            <span>${request.username}</span>
+            <div class="flex gap-2">
+              <button 
+                class="accept-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" 
+                data-userid="${request.id}">
+                Accept
+              </button>
+              <button 
+                class="block-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" 
+                data-userid="${request.id}">
+                Block
+              </button>
+            </div>
+          </li>
+        `;
+      });
+      requestsHtml += `</ul>`;
+      container.innerHTML = requestsHtml;
+    })
+    .catch(console.error);
+  }
+
+  public static async handlePendingAction(event: MouseEvent, action: 'accept' | 'block') {
+    const userState = userContext.state;
+    const target = event.target as HTMLElement;
+    const userIdBtn = target?.getAttribute("data-userid");
+  
+    if (!userIdBtn) {
+      console.error(`User ID [${userIdBtn}] not found on ${action} button.`);
+      return;
+    }
+  
+    try {
+      const response = await fetch(`${CADDY_SERVER}/api/friends/${action}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({ userState, userIdBtn: parseInt(userIdBtn) })
+      });
+  
+      if (!response.ok) {
+        console.error(`Failed to ${action} user ID [${userIdBtn}]`);
+        console.error("response", response);
+        return;
+      }
+
+      Profile.fetchAndRenderFriendRequests();
+    } catch (error) {
+      console.error(`Error performing ${action}:`, error);
+    }
   }
 
   public static async deactivate2Fa() {

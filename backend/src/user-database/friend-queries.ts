@@ -15,4 +15,5 @@ export enum QueryFriend {
 	GET_FRIENDSHIP_STATUS = `SELECT status FROM ${table} WHERE user_id = ? AND friend_id = ?;`,
 	SET_BIDIRECTIONAL_STATUS = `UPDATE ${table} SET status = ? WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?);`,
 	SET_ONEDIRECTIONAL_STATUS = `UPDATE ${table} SET status = ? WHERE user_id = ? AND friend_id = ?;`,
+	LIST_OF_PENDING = `SELECT user_id FROM friends_users WHERE friend_id = ? AND status = 'pending'`,
 }

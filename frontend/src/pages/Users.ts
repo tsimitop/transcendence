@@ -12,12 +12,11 @@ interface UserProfile {
   id: number;
   username: string;
   email: string;
-  nickname?: string;
+  is_friend: boolean;
+  isSignedIn: boolean;
+  onlineStatus: string;
   avatar?: string;
 }
-
-// structure the user object to include only public-facing fields (avoid passwords, 
-// tokens, etc., include stats, names, email?, online status if friend, friend list of others?).
 
 class Users extends Component {
   constructor(
@@ -42,25 +41,46 @@ class Users extends Component {
           : "theme-primary-dark-full"
       }`
     );
-
+	const connectedUsersArray = await Users.getConnectedUsers();
     const userSearchInput = document.getElementById('user-searched') as HTMLInputElement;
     const searchTerm = userSearchInput?.value.trim();
     const searchLink = document.getElementById('search-link');
-	const user = await Users.search(searchLink);
+	const isUserConnected = connectedUsersArray?.includes(searchTerm);
+	const user = await Users.search(searchLink, isUserConnected);
     let html: string;
-
     if (!user) {
       html = `
         <h1>User ${searchTerm} not found</h1>
       `;
-    } else {
+    } else if (user.id == Number(userContext.state.id)) { // view yourslef
+      html = `
+        <div class="user-profile">
+          <h2>Your public profile</h2>
+          <p>Email: ${user.email}</p>
+          <img src="${user.avatar || "/default-profile.png"}" alt="User's avatar" class="rounded w-[100px] h-[100px]" />
+		  </div>
+		  `;
+    } else if (user.is_friend)  { // be able to see online status / BLOCK
       html = `
         <div class="user-profile">
           <h2>${user.username}'s public profile</h2>
+          <p>isUserConnected: ${isUserConnected}</p>
+          <p>user.is_friend: ${user.is_friend}</p>
+          <p>user.onlineStatus: ${user.onlineStatus}</p>
           <p>Email: ${user.email}</p>
-          <p>Nickname: ${user.nickname || "N/A"}</p>
           <img src="${user.avatar || "/default-profile.png"}" alt="User's avatar" class="rounded w-[100px] h-[100px]" />
-		  <button id="friend-btn" class="friend-btn" style="cursor: pointer;" data-userid="${user.id}">Add friend</button> 
+		  <button id="block-btn" class="block-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" data-userid="${user.id}">Block user</button> 
+		  </div>
+		  `;
+    } else {// be able to add friend / BLOCK
+      html = `
+        <div class="user-profile">
+          <h2>${user.username}'s public profile</h2>
+          <p>user.is_friend: ${user.is_friend}</p>
+          <p>Email: ${user.email}</p>
+          <img src="${user.avatar || "/default-profile.png"}" alt="User's avatar" class="rounded w-[100px] h-[100px]" /><br>
+		  <button id="friend-btn" class="theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" data-userid="${user.id}">Add friend</button> <br><br>
+		  <button id="block-btn" class="theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" data-userid="${user.id}">Block user</button> <br>
 		  </div>
 		  `;
     }
@@ -82,10 +102,25 @@ class Users extends Component {
     const target = event.target as HTMLElement;
     if (target.classList.contains("friend-btn")) {
       Users.friendRequest(event);
+    } else if (target.classList.contains("block-btn")) {
+      Users.blockingUser(event);
     }
   }
 
-  public static async search(searchLink: any): Promise<UserProfile | null | undefined> {
+  public static async getConnectedUsers(): Promise<string[] | null>{
+    const response = await fetch(`${CADDY_SERVER}/api/users`, {
+      method: "GET",
+      credentials: "include",
+    });
+    if (!response.ok){
+  	  return null;
+    }
+    const data = await response.json();
+    return data.connectedUsersArray as string[];
+  }
+
+  public static async search(searchLink: any, isUserConnected: boolean | undefined): Promise<UserProfile | null | undefined> {
+	const userState = userContext.state;
 	if (!searchLink) {
 	  console.error("searchLink not found.");
 	  return null;
@@ -93,8 +128,8 @@ class Users extends Component {
 	const url = new URL(searchLink.href);
 	const searchTerm = url.searchParams.get("query");
 	if (!searchTerm) {
-		console.error("No search term found on button.");
-   		return null;
+	  console.error("No search term found on button.");
+   	  return null;
 	}
 	console.log("Extracted searchTerm:", searchTerm);
     try {		
@@ -105,13 +140,13 @@ class Users extends Component {
 		"Accept": "application/json"
       },
         credentials: "include",
-		body: JSON.stringify({ searchTerm }),
+		body: JSON.stringify({ userState, searchTerm, isUserConnected }),
       });
 		if (!response.ok) {
-			// const errorData = await response.json().catch(() => ({}));
-  			// console.log("User search failed with status:", response.status);
-  			// console.log("Error detail:", errorData);
-			return null;
+		  const errorData = await response.json().catch(() => ({}));
+  		  console.log("User search failed with status:", response.status);
+  		  console.log("Error detail:", errorData);
+		  return null;
 		}
 		const data = await response.json();
 		return data.user;
@@ -122,36 +157,56 @@ class Users extends Component {
   }
 
   public static async friendRequest(event: MouseEvent){
-	const user = userContext.state;
+	const userState = userContext.state;
 	const target = event.target as HTMLElement;
 	const userIdBtn = target?.getAttribute("data-userid");
 	if (!userIdBtn) {
-		console.error("User ID not found on friend button.: " + userIdBtn);
-		return;
+	  console.error("User ID not found on friend button.: " + userIdBtn);
+	  return;
 	}
 	try {
-		const response = await fetch(`${CADDY_SERVER}/api/friends`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				"Accept": "application/json"
-			},
-			credentials: "include",
-			body: JSON.stringify({ user, userIdBtn: parseInt(userIdBtn)})
-		});
-		if (!response.ok) {
-			// const error = await response.json().catch(() => ({}));
-			// console.error("target: ", target)
-			// console.error("userIdBtn: ", userIdBtn)
-			// console.error("user: ", user)
-			// console.error("response: ", response)
-			// console.error("response.body: ", response.body)
-			// console.error("Failed to find friend", error)
-			return null;
-		}
+	  const response = await fetch(`${CADDY_SERVER}/api/friends`, {
+	    method: "POST",
+	    headers: {
+	      "Content-Type": "application/json",
+	      "Accept": "application/json"
+	    },
+	    credentials: "include",
+	    body: JSON.stringify({ userState, userIdBtn: parseInt(userIdBtn)})
+	  });
+	  if (!response.ok){
+		  const error = await response.json().catch(() => ({}));
+		  console.error("Failed to find friend", error)
+	  	return null;
+	  }
 	} catch(error) {
 		console.error("Error sending friend request: ", error);
 		return null
+	}
+  }
+  public static async blockingUser(event: MouseEvent){
+	const userState = userContext.state;
+	const target = event.target as HTMLElement;
+	const userIdBtn = target?.getAttribute("data-userid");
+	if (!userIdBtn) {
+	  console.error("User ID not found on friend button.: " + userIdBtn);
+	  return;
+	}
+	try {
+	  const response = await fetch(`${CADDY_SERVER}/api/friends/block`, {
+	    method: "POST",
+	    headers: {
+	      "Content-Type": "application/json",
+	      "Accept": "application/json"
+	    },
+	    credentials: "include",
+	    body: JSON.stringify({ userState, userIdBtn: parseInt(userIdBtn)})
+	  });
+	  if (!response.ok)
+	  	return null;
+	} catch(error) {
+	  console.error("Error sending friend request: ", error);
+	  return null
 	}
   }
 }

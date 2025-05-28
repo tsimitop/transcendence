@@ -1,5 +1,6 @@
 import {  FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { QueryFriend } from "../../user-database/friend-queries";
+import { QueryUser } from "../../user-database/queries"; 
 import UserDb from "../../user-database/UserDb";
 import { UserStateType } from "../sign-in/sign-in";
 
@@ -12,7 +13,7 @@ const STATUS = {
 };
 
 interface FriendRequestBody {
-  user: UserStateType;
+  userState: UserStateType;
   userIdBtn: number;
 }
 
@@ -20,12 +21,18 @@ interface FriendshipStatus {
   status: string;
 }
 
+interface PendingInfo {
+	id: number;
+	username: string;
+}
+
+// created frienships
 export default async function friendsRoutes(fastify: FastifyInstance) {
 fastify.post('/api/friends', async function (
 	request: FastifyRequest<{Body: FriendRequestBody}>,
 	 reply: FastifyReply) {
 
-	const user = request.body.user;
+	const user = request.body.userState;
 	const targetUser = request.body.userIdBtn;
   	const currentUserId = user.id;
 	const currentUserIdNum = Number(currentUserId);
@@ -47,12 +54,12 @@ fastify.post('/api/friends', async function (
 	if (!current_to_taget_result){
 		throw Error ("Not ok current_to_taget_result.");
 	}
-	if (current_to_taget_result.status !== "blocked") {
+	if (taget_to_current_result?.status !== "blocked") {
 		if (taget_to_current_result?.status === "pending"){
 			const bidirectional_friendship = userDb.prepare(QueryFriend.SET_BIDIRECTIONAL_STATUS);
 			bidirectional_friendship.run(STATUS.ACCEPTED, currentUserId, targetUser, targetUser, currentUserId);
 		}
-		else if (["default", "rejected"].includes(current_to_taget_result.status)) { //same as checking stat1 === def || stat.2 === rej
+		else {
 			const pending_friendship = userDb.prepare(QueryFriend.SET_ONEDIRECTIONAL_STATUS);
 			pending_friendship.run(STATUS.PENDING, currentUserId, targetUser);
 		}
@@ -64,14 +71,91 @@ fastify.post('/api/friends', async function (
     return reply.status(500).send({ success: false, message: "Server error"});
   }
 });
+
+// block user
+fastify.post('/api/friends/block', async function (
+  request: FastifyRequest<{Body: FriendRequestBody}>,
+  reply: FastifyReply) {
+
+  const user = request.body.userState;
+  const targetUser = request.body.userIdBtn;
+  const currentUserId = user.id;
+  const currentUserIdNum = Number(currentUserId);
+  if (!currentUserId || !targetUser || targetUser === currentUserIdNum) {
+    return reply.status(401).send({ success: false, message: "Error with users id" });
+  }
+
+  try {
+	const userDbInstance = new UserDb("/app/database/test.db");
+	let userDb;
+	userDb = userDbInstance.openDb();
+	const blocking_target = userDb.prepare(QueryFriend.SET_ONEDIRECTIONAL_STATUS); // block your target
+	blocking_target.run(STATUS.BLOCKED, currentUserId, targetUser);
+	const rejecting_friendship = userDb.prepare(QueryFriend.SET_ONEDIRECTIONAL_STATUS); // reject target's friendship
+	rejecting_friendship.run(STATUS.REJECTED, targetUser, currentUserId);
+	userDb.close();
+    return reply.status(200).send({ success: true });
+  } catch (error) {
+    console.error("Friend request error:", error);
+    return reply.status(500).send({ success: false, message: "Server error"});
+  }
+});
+
+// return string array of all users pending requests towards current user to form list of pending in profile
+fastify.post('/api/friends/pending', async function (
+  request: FastifyRequest<{Body: FriendRequestBody}>,
+	 reply: FastifyReply) {
+
+	const user = request.body.userState;
+  	const currentUserId = Number(user.id);
+    if (!currentUserId) {
+      return reply.status(401).send({ success: false, message: "Not authenticated" });
+    }
+
+  try {
+	const userDbInstance = new UserDb("/app/database/test.db");
+	let userDb;
+	userDb = userDbInstance.openDb();
+	const pendingStmt = userDb.prepare(QueryFriend.LIST_OF_PENDING);
+	const pendingRequests = pendingStmt.all(currentUserId) as { user_id: number }[];
+	const pendingUserIds = pendingRequests.map((row: { user_id: number }) => row.user_id);
+	const usernameStmt = userDb.prepare(QueryUser.MATCH_EACH_ID_TO_USERNAME);
+	const pendingUserInfo: PendingInfo[] = pendingUserIds.map((id: number) => {
+      const userRow = usernameStmt.get(id) as { username: string } | undefined;
+      const username = userRow?.username || "Unknown";
+      return { id, username };
+    });
+	userDb.close();
+    return reply.status(200).send({ success: true, pendingUsers: pendingUserInfo });
+  } catch (error) {
+    console.error("Friend request error:", error);
+    return reply.status(500).send({ success: false, message: "Server error"});
+  }
+});
+
+//accept pending request
+fastify.post('/api/friends/accept', async function (
+  request: FastifyRequest<{Body: FriendRequestBody}>,
+   reply: FastifyReply) {
+
+  const user = request.body.userState;
+  const targetUser = request.body.userIdBtn;
+  const currentUserId = user.id;
+  const currentUserIdNum = Number(currentUserId);
+  if (!currentUserId || !targetUser || targetUser === currentUserIdNum) {
+    return reply.status(401).send({ success: false, message: "Error with users id" });
+  }
+
+  try {
+	const userDbInstance = new UserDb("/app/database/test.db");
+	let userDb;
+	userDb = userDbInstance.openDb();
+	const bidirectional_friendship = userDb.prepare(QueryFriend.SET_BIDIRECTIONAL_STATUS);
+	bidirectional_friendship.run(STATUS.ACCEPTED, currentUserId, targetUser, targetUser, currentUserId);userDb.close();
+    return reply.status(200).send({ success: true });
+  } catch (error) {
+    console.error("Friend request error:", error);
+    return reply.status(500).send({ success: false, message: "Server error"});
+  }
+});
 }
-
-//_________________________TEST_____________________
-
-	 //---------------------------------------------
-	//  return reply.status(505).send({
-	// 	message: "targetUser: " + targetUser +
-	// 	" | currentUserId: " + currentUserId +
-	// 	" | USER: " + user,
-	// 	success: true });
-	 //---------------------------------------------

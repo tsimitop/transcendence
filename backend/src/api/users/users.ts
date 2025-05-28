@@ -1,16 +1,19 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { QueryUser } from "../../user-database/queries";
+import { QueryFriend } from "../../user-database/friend-queries";
 import UserDb from "../../user-database/UserDb";
+import { connectedUsers } from '../../websocket/WebSocket';
+import { UserStateType } from "../sign-in/sign-in";
 
 type SearchRequestBody = {
+  userState: UserStateType;
   searchTerm: string;
+  isUserConnected: boolean | undefined;
 };
 
-//--------------------CORRECT-------------------------
 export default async function usersRoutes(fastify: FastifyInstance) {
 fastify.post("/api/users", async function (request: FastifyRequest<{ Body: SearchRequestBody }>, reply: FastifyReply) {
 
-//   let i = 0;// for debugging
   try {
    const { searchTerm } = request.body;
    const username = searchTerm?.trim();
@@ -19,50 +22,52 @@ fastify.post("/api/users", async function (request: FastifyRequest<{ Body: Searc
   }
     const userDbInstance = new UserDb("/app/database/test.db");
 	let userDb;
-	// try{
 	userDb = userDbInstance.openDb();
-	// }
-	// catch (dbOpenErr: any){
-	//   console.error("Failed to open DB:", dbOpenErr);
-	//   return reply.status(500).send({ error: "DB open failed", detail: dbOpenErr.message });
-	// }
 	const getUserIdStatement = userDb.prepare(QueryUser.FIND_ID_USERNAME_EMAIL);
 	const result = getUserIdStatement.get(username) as { id: number, username: string, email: string } | undefined;
-	userDb.close();
+	const currentUserId = request.body.userState.id;
+	const getFriendStatus = userDb.prepare(QueryFriend.GET_FRIENDSHIP_STATUS);
+
     if (!result) {
+	  userDb.close();
       return reply.status(404).send({
 		error: "User " + username + " not found in database."
 	});
     }
+	const current_to_taget_result = getFriendStatus.get(currentUserId, result.id) as { status: string } | undefined;
+	const extractedStatus = current_to_taget_result?.status;
+	userDb.close();
+	let connectionStatus;
+	if (request.body.isUserConnected) {
+	  connectionStatus = "Online 🟢";
+	}
+	else {
+	  connectionStatus = "Offline ⚫";
+	}
     return reply.status(200).send({
-		user: {
-			id: result.id,
-			username: result.username,
-			email: result.email
-		}
+	  user: {
+	    id: result.id,
+	    email: result.email,
+	    username: result.username,
+	    is_friend: extractedStatus === "accepted",
+	    onlineStatus: connectionStatus,
+	  }
 	});
   } catch 
   (err: any) {
-    // return reply.status(500).send({ error: "Server error: " + i }); // for debugging
-    return reply.status(500).send({ error: "Server error" + err });
+    return reply.status(500).send({ error: "Server error: " + err });
   }  
 });
+
+  fastify.get("/api/users", async function (
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    try {
+      const connectedUsernames = Array.from(connectedUsers.keys());
+      return reply.status(200).send({ connectedUsersArray: connectedUsernames });
+    } catch (err: any) {
+      return reply.status(500).send({ error: "Failed to retrieve connected users", detail: err.message });
+    }
+  });
 }
-
-//-----------------MOCK TEST-------------------------
-
-// export default async function usersRoutes(fastify: FastifyInstance) {
-//   fastify.post(
-//     "/api/users",
-//     async (
-//       request: FastifyRequest<{ Body: SearchRequestBody }>,
-//       reply: FastifyReply
-//     ) => {
-//     //   console.log("Received search request:", request.body.searchTerm);
-//       return reply.status(200).send({
-//         username: "USER FROM API.",
-//         email: "email@fromapi.test", // Consider changing this domain for professionalism
-//       });
-//     }
-//   );
-// }
