@@ -16,7 +16,7 @@ export function handleListTournament(senderUsername: string): void {
     tournamentList.push({
       id: tournament.getUniqeID(),
       owner: username,
-      alias: tournament.getlPlayerAlias(),
+      alias: tournament.getPlayerOneAlias(),
       state: tournament.getTournamentState(),
       // optionally include player names, number of players, etc. tournament?
     });
@@ -43,8 +43,8 @@ export function handlerJoinTournament(senderUsername: string, pong_data: JoinGam
   // add player to the tournament
   for (const [username, tournament] of currentTournaments.entries()) {
     if(pong_data.gameId === tournament.getUniqeID()){
-      tournament.addPlayer(senderUsername, pong_data.OpponentAlias)
-      console.log("current players->>>",tournament.getCurrentPlayers())
+      tournament.addPlayer(senderUsername, pong_data.OpponentAlias, senderSocket)
+      // console.log("current players->>>",tournament.getCurrentPlayers())
       // opponent = username;
       tournamendID = tournament.getUniqeID();
       break;

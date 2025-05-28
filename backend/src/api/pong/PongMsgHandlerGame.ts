@@ -44,7 +44,6 @@ export function handleCreateGame(senderUsername: string, pong_data: CreateGameDa
   const uniqueGameID = `${senderUsername}-Game-${Date.now()}`;
   const newGame = new PongGame(uniqueGameID, senderUsername, pong_data.playerAlias, pong_data.gameMode);
   currentGames.set(senderUsername, newGame);
-
   const senderSocket = connectedUsers.get(senderUsername);
   if(pong_data.gameMode === "remote"){
     // REMOTE GAME
@@ -97,7 +96,6 @@ export
 
 function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
   let countdown = globalCountdown;
-
 
   const senderSocket = connectedUsers.get(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
@@ -158,7 +156,7 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
 export function startGameLoop(game: PongGame) {
     const fps = 30;
     const intervalMs = 1000 / fps;
-    
+    console.log("----------------->",game.getlPlayerAlias())
     const intervalId = setInterval(() => {    
     if (game.getGameState() === 'finished') {
       clearInterval(intervalId);
@@ -208,10 +206,18 @@ export function startGameLoop(game: PongGame) {
       const lPlayerSocket = game.getlPlayerSocket();
       const rPlayerSocket = game.getrPlayerSocket();
       if (lPlayerSocket && lPlayerSocket.readyState === WebSocket.OPEN) {
+        console.log("leftplayersend");
         lPlayerSocket.send(JSON.stringify(response));
       }
+      else{
+        console.log("not leftplayersend");
+      }
       if (rPlayerSocket && rPlayerSocket.readyState === WebSocket.OPEN) {
+        console.log("rightplayersend");
         rPlayerSocket.send(JSON.stringify(response));
+      }
+      else{
+        console.log("not rightplayersend");
       }
     }, intervalMs);
   }

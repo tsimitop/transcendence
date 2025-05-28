@@ -182,43 +182,29 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
 
     }
 
-    checkEndOfGame(){
+    checkEndOfGame(): string{
       if(this.gameState === "finished"){
         endOfGame(this.lPlayerName, "Opponent left game")
         endOfGame(this.rPlayerName, "Opponent left game")
       }
-        
       if(this.lPlayerScore >= this.maxScore){
         this.gameState = "finished";
         console.log("checkEndOfGame left player");
         endOfGame(this.lPlayerName, "Left Player WIN")
+        return "left";
       }
       else if(this.rPlayerScore >= this.maxScore){
         this.gameState = "finished";
         console.log("checkEndOfGame right player");
         endOfGame(this.rPlayerName, "Right Player WIN")
+        return "right";
       }
+      return "";
     }
 
 
-//  adjustBallAngleAfterPaddleBounce() {
-//   const paddle = this.ball.getVx() < 0 ? this.lPaddle : this.rPaddle;
-//   const paddleCenter = paddle.getY() + paddle.getHeight() / 2;
-//   const impactPoint = this.ball.getY();
-
-//   const relativeIntersectY = paddleCenter - impactPoint;
-//   const normalizedRelativeIntersectionY = relativeIntersectY / (paddle.getHeight() / 2);
-
-//   const maxBounceAngle = (75 * Math.PI) / 180;
-//   const bounceAngle = normalizedRelativeIntersectionY * maxBounceAngle;
-
-//   const direction = this.ball.getVx() < 0 ? 1 : -1;
-
-//   this.ball.setVx(direction * Math.cos(bounceAngle));
-//   this.ball.setVy(-Math.sin(bounceAngle));
-// }
-
     update(){
+      // let winner: string = "";
       if(this.gameState === "finished") return;
       
       //update ball posistion
@@ -238,6 +224,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
         if(this.outOfFieldCheck()){ this.setToRestart(); }
 
         this.updateGameStatData();
+        // winner = this.checkEndOfGame();
         this.checkEndOfGame();
     }
     getGameStatePayload(): GameStateData { return this.gameStateData; }
