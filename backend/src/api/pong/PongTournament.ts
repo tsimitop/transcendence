@@ -57,22 +57,22 @@ getPlayerOneAlias(): string | undefined {
 getAllPlayers(): Player[] {
 	return Array.from(this.players.values());
 }
-  	addPlayer(name: string, alias: string, socket: any){
-		// prevent duplicate - not necessary / possible?
-		if(this.players.has(name))
-			return;
-		if (socket) {
-			console.log("Socket exists for", name);
-		}
-		this.players.set(name, {name, alias, socket});
-		this.currentPlayers++;
+addPlayer(name: string, alias: string, socket: any){
+	// prevent duplicate - not necessary / possible?
+	if(this.players.has(name))
+		return;
+	if (socket) {
+		console.log("Socket exists for", name);
 	}
-  	removePlayer(name: string){
-		if(this.players.has(name)){
-			this.players.delete(name);
-			this.currentPlayers--;
-		}
+	this.players.set(name, {name, alias, socket});
+	this.currentPlayers++;
+}
+removePlayer(name: string){
+	if(this.players.has(name)){
+		this.players.delete(name);
+		this.currentPlayers--;
 	}
+}
 
 
 	getUniqeID(): string { return this.uniqueID; }
@@ -154,6 +154,7 @@ getAllPlayers(): Player[] {
 			}
 			startGameLoop(currentGames.get(playerArray[0].name)!);
 			startGameLoop(currentGames.get(playerArray[2].name)!);
+			//tournament second round implementation
 
 			setTimeout(() => {
 			}, 1000);

@@ -53,17 +53,29 @@ join game display amount player and status of game doenst look beautifull✅
 reload via pong button on top doesnt work properly✅
 
 27.05
-delete user in tournament when user disconnect -> user in map
-join tournament
-waiting screen tournament with current players
-matches for tournament
+delete user in tournament when user disconnect -> user in map✅
+join tournament✅
+waiting screen tournament with current players✅
+matches for tournament✅
 
 
 
 
 TO DO
 tournamentGame - > 4 player fix, wait for 4 other players‼️
-reconnect?????
+reconnect ❓
 chat doenst work anymore in pong_front branch but in main branch -> waldi 
 change angle slightly of pongball when hitting paddle❓
 
+
+Meeting 29.05
+
+start two games at same time finish of both needs to be checked - ending screen
+ball speed is not always the same at the beginning
+"join after game started -> game list - maybe delay response after clicking"
+"tournament second round implementation"
+
+
+
+
+git squash

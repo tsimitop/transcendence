@@ -289,7 +289,7 @@ export function handleWaitingForUser() {
       hover:bg-blue-500 hover:text-white disabled:hover:bg-white disabled:hover:text-gray-300
     `.replace(/\s+/g, ' ').trim();
 
-
+    //join after game started -> game list - maybe delay response after clicking
     const storedAlias = localStorage.getItem('pong_alias');
     joinBtn.addEventListener('click', () => {
       const joinRequest = {
@@ -385,7 +385,7 @@ export function handleWaitingForUser() {
         hover:bg-blue-500 hover:text-white disabled:hover:bg-white disabled:hover:text-gray-300
       `.replace(/\s+/g, ' ').trim();
   
-  
+      //join after game started -> game list - maybe delay response after clicking
       const storedAlias = localStorage.getItem('pong_alias');
       joinBtn.addEventListener('click', () => {
         const joinRequest = {
