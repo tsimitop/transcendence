@@ -30,6 +30,7 @@ type NewAccessTokenResponseType = {
   email: string;
   username: string;
   isSignedIn: boolean;
+  avatar: string;
   has2Fa?: boolean;
 };
 
@@ -102,6 +103,7 @@ abstract class Router {
 	       username: data.username,
 	       isSignedIn: true,
 	       jwtAccessToken: localStorage.getItem("access_token") || "",
+           avatar: data.avatar,
 	     });
 	   }
 
@@ -134,6 +136,7 @@ abstract class Router {
         username,
         isSignedIn,
         errorMessage,
+		avatar,
       } = data;
       if (!newJwtAccessToken) {
         // throw new Error(
@@ -148,6 +151,7 @@ abstract class Router {
         username,
         isSignedIn,
         jwtAccessToken: newJwtAccessToken,
+		avatar,
       });
 
       const has2Fa = await Router.is2FaActive(userContext.state);
@@ -225,6 +229,7 @@ abstract class Router {
         email: "",
         username: "",
         isSignedIn: false,
+        avatar: "",
       });
       viewToRender = NotFound.create();
       return viewToRender;
@@ -241,6 +246,7 @@ abstract class Router {
           email: "",
           username: "",
           isSignedIn: false,
+          avatar: "",
         });
         viewToRender = Router.getViewForGuestUser(routeToGo);
         return viewToRender;
@@ -259,6 +265,7 @@ abstract class Router {
           email: "",
           username: "",
           isSignedIn: false,
+          avatar: "",
         });
       } else {
         userContext.setState({
@@ -267,13 +274,14 @@ abstract class Router {
           email: userInBackendSession.email,
           username: userInBackendSession.username,
           isSignedIn: userInBackendSession.isSignedIn,
+          avatar: userInBackendSession.avatar,
         });
       }
       viewToRender = Router.getViewForGuestUser(routeToGo);
       return viewToRender;
     }
 
-    const { userId, email, username, isSignedIn } = data;
+    const { userId, email, username, isSignedIn, avatar } = data;
 
     userContext.setState({
       ...userContext.state,
@@ -281,6 +289,7 @@ abstract class Router {
       email,
       username,
       isSignedIn,
+	  avatar,
     });
 
     viewToRender = Router.getViewForSignedInUser(routeToGo);

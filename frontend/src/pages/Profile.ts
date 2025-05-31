@@ -66,6 +66,7 @@ class Profile extends Component {
           username: "",
           isSignedIn: false,
           jwtAccessToken: "",
+		  avatar: "",
         });
         const routeToGo = "/";
         urlContext.setState({ ...urlContext.state, path: routeToGo });
@@ -238,6 +239,7 @@ class Profile extends Component {
 	//PLACEHOLDER
 	let friendRequestsHtml = `<div class="ml-auto text-right" id="pending-friend-requests">
 	</div>`;
+	//   <img src=${CADDY_SERVER}/avatars/${userContext.state.avatar} alt="Avatar as user's profile picture"/>
 
 	//MAIN HTML
 	const html = `
@@ -251,6 +253,11 @@ class Profile extends Component {
 	<div class="flex flex-col gap-1 mb-20">
 	  <p>id: ${userContext.state.id}</p>
 	  <p>avatar: ${userContext.state.avatar}</p>
+	  <img
+	    src=${CADDY_SERVER}/avatars/${userContext.state.avatar}
+	    alt="User's avatar"
+		class="w-24 h-24 object-cover rounded-full"
+		/>
 	  <p>email: ${userContext.state.email}</p>
 	  <p>username: ${userContext.state.username}</p>
 	</div>

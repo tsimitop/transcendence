@@ -48,6 +48,16 @@ localhost {
 		}
 	}
 
+	@avatars {
+		path /avatars/*
+	}
+	handle @avatars {
+		reverse_proxy backend:3000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote}
+		}
+	}
+
 	# Handle the frontend (static files)
 	handle {
 		root * /srv

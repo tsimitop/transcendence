@@ -15,7 +15,7 @@ interface UserProfile {
   is_friend: boolean;
   isSignedIn: boolean;
   onlineStatus: string;
-  avatar?: string;
+  avatar: string;
 }
 
 class Users extends Component {
@@ -56,33 +56,71 @@ class Users extends Component {
       html = `
         <div class="user-profile">
           <h2>Your public profile</h2>
+		  <img
+	        src=${CADDY_SERVER}/avatars/${userContext.state.avatar}
+		    class="w-24 h-24 object-cover rounded-full"
+		  />
           <p>Email: ${user.email}</p>
-          <img src="${user.avatar || "/default-profile.png"}" alt="User's avatar" class="rounded w-[100px] h-[100px]" />
 		  </div>
 		  `;
     } else if (user.is_friend)  { // be able to see online status / BLOCK
-      html = `
-        <div class="user-profile">
-          <h2>${user.username}'s public profile</h2>
-          <p>isUserConnected: ${isUserConnected}</p>
-          <p>user.is_friend: ${user.is_friend}</p>
-          <p>user.onlineStatus: ${user.onlineStatus}</p>
-          <p>Email: ${user.email}</p>
-          <img src="${user.avatar || "/default-profile.png"}" alt="User's avatar" class="rounded w-[100px] h-[100px]" />
-		  <button id="block-btn" class="block-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" data-userid="${user.id}">Block user</button> 
-		  </div>
-		  `;
+		html = `
+        <div class="flex items-center justify-between mt-12 mb-6">
+          <h1 class="text-5xl font-bold">
+		    ${user.username}
+		    <span class="text-base font-normal">(${user.onlineStatus})</span>
+		  </h1>
+		</div>
+			
+	<div class="flex flex-col gap-1 mb-20">
+	  <img
+	    src=${CADDY_SERVER}/avatars/${userContext.state.avatar}
+	    alt="User's avatar"
+		class="w-24 h-24 object-cover rounded-full"
+		/>
+	  <p>Email: ${user.email}</p>
+	</div>
+
+	<div class="flex justify-between items-start mb-12">
+	  <div>
+	    <h2 class="text-3xl font-bold mb-6">Options</h2>
+	    <div class="flex flex-col gap-2 w-[120px]">
+		  <button class="block-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer" data-userid="${user.id}">
+			Block user
+		  </button>
+	    </div>
+	  </div>
+	</div>
+	`;
     } else {// be able to add friend / BLOCK
-      html = `
-        <div class="user-profile">
-          <h2>${user.username}'s public profile</h2>
-          <p>user.is_friend: ${user.is_friend}</p>
-          <p>Email: ${user.email}</p>
-          <img src="${user.avatar || "/default-profile.png"}" alt="User's avatar" class="rounded w-[100px] h-[100px]" /><br>
-		  <button id="friend-btn" class="friend-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" data-userid="${user.id}">Add friend</button> <br><br>
-		  <button id="block-btn" class="block-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" data-userid="${user.id}">Block user</button> <br>
-		  </div>
-		  `;
+		html = `
+        <div class="flex items-center justify-between mt-12 mb-6">
+          <h1 class="text-5xl font-bold">${user.username}</h1>
+		</div>
+			
+	<div class="flex flex-col gap-1 mb-20">
+	  <img
+	    src=${CADDY_SERVER}/avatars/${userContext.state.avatar}
+	    alt="User's avatar"
+		class="w-24 h-24 object-cover rounded-full"
+		/>
+	  <p>Email: ${user.email}</p>
+	</div>
+
+	<div class="flex justify-between items-start mb-12">
+	  <div>
+	    <h2 class="text-3xl font-bold mb-6">Options</h2>
+	    <div class="flex flex-col gap-2 w-[120px]">
+		  <button class="friend-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer" data-userid="${user.id}">
+			Add friend
+		  </button>
+		  <button class="block-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer" data-userid="${user.id}">
+			Block user
+		  </button>
+	    </div>
+	  </div>
+	</div>
+	`;
     }
     main.addEventListener("click", Users.handleClick);
 
