@@ -92,7 +92,8 @@ fastify.post(
       await userDbInstance.createNewUserInUserDb(
         userDb,
         request.body,
-        hashedPassword
+        hashedPassword,
+		"default.png"
       );
     } catch (error) {
 		console.log(error);

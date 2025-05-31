@@ -149,7 +149,7 @@ class SignIn extends Component {
         throw data;
       }
 
-      const { id, email, username, isSignedIn } = data.user;
+      const { id, email, username, isSignedIn, avatar } = data.user;
       if (data.errorMessage.includes("2FA")) {
         userContext.setState({
           ...userContext.state,
@@ -158,6 +158,7 @@ class SignIn extends Component {
           username,
           isSignedIn,
           jwtAccessToken: "",
+		  avatar,
         });
         const routeToGo = "/2fa";
         // urlContext.setState({ ...urlContext.state, path: routeToGo });
@@ -180,6 +181,7 @@ class SignIn extends Component {
         username,
         isSignedIn,
         jwtAccessToken: jwtAccessToken,
+		avatar,
       });
 	  localStorage.setItem("access_token", jwtAccessToken);
       await Router.redirect("/");

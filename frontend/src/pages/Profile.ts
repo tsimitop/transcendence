@@ -250,6 +250,7 @@ class Profile extends Component {
 
 	<div class="flex flex-col gap-1 mb-20">
 	  <p>id: ${userContext.state.id}</p>
+	  <p>avatar: ${userContext.state.avatar}</p>
 	  <p>email: ${userContext.state.email}</p>
 	  <p>username: ${userContext.state.username}</p>
 	</div>

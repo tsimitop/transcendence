@@ -104,9 +104,10 @@ fastify.get(
           {
             email: sub,
             username: email,
-            password: "",
+            password: ""
           },
-          ""
+          "",
+		  "default.png",
         );
 		await userDbInstance.updateFriendDb(
 			userDb,

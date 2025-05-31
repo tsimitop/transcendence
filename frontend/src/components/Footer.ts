@@ -21,6 +21,7 @@ class Footer extends Component {
 			<footer class="flex flex-col justify-center items-center grow-1 ">
 				<p>&copy; Team X - ${new Date().getFullYear()}</p>
 				<p class="text-sm">Icons by <a class="underline" href="https://icons8.com/" target="_blank">Icons8</a></p>
+				<p class="text-sm"><a href="https://www.flaticon.com/free-icons/animal" title="animal icons">Avatars by Freepik - Flaticon</a></p>
 			</footer>`;
     const FooterInstance = new Footer({ html, position: "beforeend" });
     FooterInstance.insertChildren();

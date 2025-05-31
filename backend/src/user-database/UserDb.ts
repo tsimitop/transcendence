@@ -33,14 +33,16 @@ class UserDb extends Sqlite {
   public async createNewUserInUserDb(
     userDb: DbType,
     user: SignUpType,
-    hashedPassword: string
+    hashedPassword: string,
+	avatar: string
   ) {
     const newUserStatement = userDb.prepare(QueryUser.INSERT_NEW_USER);
 
     newUserStatement.run(
       user.email.trim().toLowerCase(),
       user.username.trim(),
-      hashedPassword
+      hashedPassword,
+	  avatar
     );
   }
    // const userTable = userDb.prepare(QueryUser.SELECT_USER_TABLE).all();
@@ -59,12 +61,7 @@ class UserDb extends Sqlite {
 
     const getAllUsersStatement = userDb.prepare(QueryUser.SELECT_ALL_USERS);
 	const allUsers = getAllUsersStatement.all() as User[];
-	// console.log("ALL USERS:");
-	// console.log(allUsers);
 	const existingUsers = allUsers.filter((u) => u.id !== newUserId);
-	const tables = userDb.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
-	// console.log("TABLES:");
-	// console.log(tables);
     const insertFriendStatement = userDb.prepare(QueryFriend.INSERT_NEW_FRIEND_USER);
     for (const existingUser of existingUsers) {
       insertFriendStatement.run(newUserId, existingUser.id, 'default');
@@ -125,7 +122,7 @@ class UserDb extends Sqlite {
       const isLoginByUsername = usernamesList.length;
       const foundUser = isLoginByEmail || isLoginByUsername;
       if (!foundUser) {
-        return { email: "", username: "", isSignedIn: false, id: "" };
+        return { email: "", username: "", isSignedIn: false, id: "", avatar: "" };
       }
       const findPasswordStatement = userDb.prepare(
         isLoginByEmail
@@ -150,7 +147,18 @@ class UserDb extends Sqlite {
       const findIdByUsernameStatement = userDb.prepare(
         QueryUser.FIND_ID_BY_USERNAME
       );
+	  const actualUsername =
+      usernamesList[0]?.username ||
+      (
+        findUsernameByEmailStatement.all(emailsList[0]?.email) as [
+          { username: string }
+        ]
+      )[0]?.username;
       const findIdByEmailStatement = userDb.prepare(QueryUser.FIND_ID_BY_EMAIL);
+	  const avatarStatement = userDb.prepare(QueryUser.FIND_AVATAR_BY_USERNAME);
+	  const avatarResult = avatarStatement.get(actualUsername) as { avatar: string };
+	  const avatar = avatarResult?.avatar;
+
       const user: UserStateType = {
         id: isLoginByEmail
           ? (
@@ -177,7 +185,8 @@ class UserDb extends Sqlite {
               { username: string }
             ]
           )[0].username,
-        isSignedIn: isPasswordValid,
+		  avatar: avatar || "",
+		  isSignedIn: isPasswordValid,
       };
       return user;
     } catch (error) {
@@ -295,6 +304,23 @@ class UserDb extends Sqlite {
     }
 
     return emailsList[0].email;
+  }
+
+  public findAvatarByHashedRefreshToken(
+    userDb: DbType,
+    hashedRefreshToken: string
+  ) {
+    const findEmailStatement = userDb.prepare(
+      QueryUser.FIND_AVATAR_BY_HASHED_REFRESH_TOKEN
+    );
+    const avatarsList = findEmailStatement.all(hashedRefreshToken) as [
+      { avatar: string }
+    ];
+    if (!avatarsList.length) {
+      return "";
+    }
+
+    return avatarsList[0].avatar;
   }
 
   public updateHas2Fa(userDb: DbType, id: string, has2Fa: number) {

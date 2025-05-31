@@ -54,6 +54,7 @@ fastify.post(
           userId: "",
           email: "",
           username: "",
+          avatar: "",
         });
         return;
       }
@@ -79,6 +80,7 @@ fastify.post(
           userId: "",
           email: "",
           username: "",
+          avatar: "",
         });
         return;
       }
@@ -93,6 +95,7 @@ fastify.post(
           userId: "",
           email: "",
           username: "",
+          avatar: "",
         });
         return;
       }
@@ -113,6 +116,7 @@ fastify.post(
           userId: "",
           email: "",
           username: "",
+          avatar: "",
         });
         return;
       }
@@ -143,6 +147,7 @@ fastify.post(
           userId: "",
           email: "",
           username: "",
+          avatar: "",
         });
         return;
       }
@@ -156,6 +161,10 @@ fastify.post(
         hashedRefreshToken
       );
       const username = userDbInstance.findUsernameByHashedRefreshToken(
+        userDb,
+        hashedRefreshToken
+      );
+	  const avatar = userDbInstance.findAvatarByHashedRefreshToken(
         userDb,
         hashedRefreshToken
       );
@@ -174,6 +183,7 @@ fastify.post(
         userId,
         email,
         username,
+        avatar,
       });
       return;
     } catch (error) {
@@ -189,6 +199,7 @@ fastify.post(
         userId: "",
         email: "",
         username: "",
+        avatar: "",
       });
     }
   }

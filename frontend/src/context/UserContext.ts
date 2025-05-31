@@ -8,6 +8,7 @@ export type UserStateType = {
   username: string;
   isSignedIn: boolean;
   jwtAccessToken: string;
+  avatar: string;
 };
 
 export type ValidateAccessTokenResponseType = {
@@ -19,6 +20,7 @@ export type ValidateAccessTokenResponseType = {
   userId: string;
   email: string;
   username: string;
+  avatar: string;
 };
 
 class UserContext extends StateManager<UserStateType> {
@@ -68,6 +70,7 @@ export const userContext = new UserContext({
   username: "",
   isSignedIn: false,
   jwtAccessToken: "",
+  avatar: "",
 });
 
 export default UserContext;

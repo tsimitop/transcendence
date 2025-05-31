@@ -1,4 +1,6 @@
 import Fastify from "fastify";
+import fastifyStatic from "@fastify/static";
+import path from "path";
 import fastifyFormbody from "@fastify/formbody";
 import fastifyCookie from "@fastify/cookie";
 import fastifySession from "@fastify/session";
@@ -21,6 +23,10 @@ const start = async function () {
     await fastify.register(fastifyCookie);
     await fastify.register(usersRoutes);
 	await fastify.register(friendsRoutes);
+	await fastify.register(fastifyStatic, {
+      root: path.join(__dirname, '..', 'avatars'),
+      prefix: '/avatars/', // this is the URL prefix
+    });
     await fastify.register(fastifySession, {
       secret,
       cookie: {

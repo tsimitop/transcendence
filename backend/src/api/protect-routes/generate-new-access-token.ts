@@ -28,6 +28,7 @@ fastify.post(
         email: "",
         username: "",
         isSignedIn: false,
+		avatar: "",
       });
 
       return;
@@ -49,6 +50,7 @@ fastify.post(
         email: "",
         username: "",
         isSignedIn: false,
+		avatar: "",
       });
       return;
     }
@@ -67,7 +69,9 @@ fastify.post(
         email: "",
         username: "",
         isSignedIn: false,
+		avatar: "",
       });
+	  return;
     }
     // if (!encoded) {
     //   reply.send({
@@ -96,6 +100,7 @@ fastify.post(
         email: "",
         username: "",
         isSignedIn: false,
+		avatar: "",
       });
       return;
     }
@@ -113,6 +118,7 @@ fastify.post(
         email: "",
         username: "",
         isSignedIn: false,
+		avatar: "",
       });
       return;
     }
@@ -121,6 +127,10 @@ fastify.post(
       hashedRefreshToken
     );
     const username = userDbInstance.findUsernameByHashedRefreshToken(
+      userDb,
+      hashedRefreshToken
+    );
+	const avatar = userDbInstance.findAvatarByHashedRefreshToken(
       userDb,
       hashedRefreshToken
     );
@@ -133,6 +143,7 @@ fastify.post(
       email,
       username,
       isSignedIn: true,
+	  avatar,
     });
   }
 );

@@ -15,6 +15,7 @@ export type UserStateType = {
   email: string;
   username: string;
   isSignedIn: boolean;
+  avatar: string;
 };
 
 export const sendRefreshAndAccessTokens = async function (
