@@ -6,6 +6,7 @@ export type ValidUrlPathsType =
   | "/pong"
   | "/sign-in"
   | "/profile"
+  | "/edit"
   | "/users"
   | "/dashboard"
   | "/2fa"
@@ -17,6 +18,7 @@ export const PAGES: ValidUrlPathsType[] = [
   "/pong",
   "/sign-in",
   "/profile",
+  "/edit",
   "/users",
   "/dashboard",
   "/2fa",

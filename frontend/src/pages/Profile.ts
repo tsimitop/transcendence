@@ -47,8 +47,14 @@ class Profile extends Component {
       Profile.handlePendingAction(event, 'accept');
     } else if (target.classList.contains("block-btn")) {
       Profile.handlePendingAction(event, 'block');
-    }
+    // } else if (target.classList.contains("update-btn")) {
+    //   Profile.updateProfile();
+	}
   }
+  
+//   public static async updateProfile() {
+//     Router.redirect("/edit");
+//   }
 
   public static async signOut() {
     try {
@@ -272,12 +278,15 @@ class Profile extends Component {
 	      <button class="deactivate-2fa-btn theme-btn-${themeState.state} py-2 cursor-pointer">
 	        Deactivate 2FA
 	      </button>
+
 	    </div>
 	  </div>
 	  ${friendRequestsHtml}
 	</div>
 `;
-
+	    //   <button class="update-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer">
+	    //     Update account
+	    //   </button>
     main.insertAdjacentHTML("beforeend", html);
 
 	Profile.fetchAndRenderFriendRequests();

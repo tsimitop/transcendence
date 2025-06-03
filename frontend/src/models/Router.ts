@@ -5,6 +5,7 @@ import NotFound from "../pages/NotFound";
 import Pong from "../pages/Pong";
 import Header from "../components/Header";
 import Profile from "../pages/Profile";
+import Edit from "../pages/Edit";
 import Users from "../pages/Users";
 import SignIn from "../pages/SignIn";
 import Auth2Fa from "../pages/Auth2Fa";
@@ -51,12 +52,13 @@ abstract class Router {
     "/sign-in": SignIn,
     "/pong": Pong,
     "/profile": Profile,
+    "/edit": Edit,
     "/users": Users,
     "/friends": Users,
     "/2fa": Auth2Fa,
 	"/dashboard": Dashboard,
   };
-  static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile", "/users"];
+  static protectedRoutes: ValidUrlPathsType[] = ["/pong", "/profile", "/users", "/edit"];
   static guestUsersRoutes: ValidUrlPathsType[] = [
     "/sign-in",
     "/sign-up",
@@ -343,7 +345,6 @@ abstract class Router {
 
   static async redirect(pathToRedirect: ValidUrlPathsType) {
     urlContext.setState({ ...urlContext.state, path: pathToRedirect });
-    // console.log("path to redirect:", pathToRedirect);
     const routeToGo = Router.findRouteToGo();
     const viewToRender = await Router.findViewToRender(routeToGo);
     Router.renderPageBasedOnPath(viewToRender);

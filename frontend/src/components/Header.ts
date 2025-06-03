@@ -76,7 +76,11 @@ class Header extends Component {
                   userContext.state.username ||
                   userContext.state.email ||
                   "profile"
-                }</a>`
+                }</a>
+				<a class="nav-link edit-profile-link ${ROUTER_CLASS_NAME}" href="/edit">
+                  Edit
+                </a>
+				`
               : ""
           }
 					<button class="bg-transparent theme-btn cursor-pointer">
@@ -135,6 +139,8 @@ class Header extends Component {
       Header.handleNavigateToProfile();
     } else if (target.classList.contains("user-link")) {
 	  Header.handleSearch();
+	} else if (target.classList.contains("edit-profile-link")) {
+	  Header.handleNavigateToEdit();
 	}
   }
 
@@ -218,6 +224,10 @@ class Header extends Component {
 
   public static handleNavigateToProfile() {
     urlContext.setState({ ...urlContext.state, path: "/profile" });
+  }
+
+  public static handleNavigateToEdit() {
+    urlContext.setState({ ...urlContext.state, path: "/edit" });
   }
 }
 

@@ -20,6 +20,7 @@ export enum QueryUser {
   FIND_USERNAME_BY_EMAIL = `SELECT username FROM ${table} WHERE email = ?`,
   FIND_PASSWORD_BY_USERNAME = `SELECT password FROM ${table} WHERE username = ?`,
   FIND_PASSWORD_BY_EMAIL = `SELECT password FROM ${table} WHERE email = ?`,
+  FIND_PASSWORD_BY_ID = `SELECT password FROM ${table} WHERE id = ?`,
   FIND_ID_BY_EMAIL = `SELECT id FROM ${table} WHERE email = ?`,
   FIND_ID_BY_USERNAME = `SELECT id FROM ${table} WHERE username = ?`,
   FIND_AVATAR_BY_USERNAME = `SELECT avatar FROM ${table} WHERE username = ?`,
@@ -40,4 +41,7 @@ export enum QueryUser {
   FIND_ID_USERNAME_EMAIL = `SELECT id, username, email FROM ${table} WHERE username = ?`,
   MATCH_EACH_ID_TO_USERNAME = `SELECT username FROM ${table} WHERE id = ?`,
   FIND_USER_BY_EMAIL = `SELECT id, email, username, password, avatar FROM users WHERE email = ?`,
+  SET_NEW_USERNAME = `UPDATE ${table} SET username = ? WHERE id = ? `,
+  SET_NEW_EMAIL = `UPDATE ${table} SET email = ? WHERE id = ? `,
+  SET_NEW_PASSWORD = `UPDATE ${table} SET password = ? WHERE id = ? `,
 }
