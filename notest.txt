@@ -1,3 +1,13 @@
+Priority Rank	Original Number	Task
+		1	6	Fix ball speed inconsistency at game start✅
+		2	8	Implement tournament second round (final between winners)
+		3	7	Prevent joining a game that already started (add validation + frontend message)
+		4	4	Adjust ball angle slightly on paddle collision
+		5	1	Improve tournament waiting logic + show number of joined players
+		6	2	Implement reconnect logic (optional/fallback handling)
+		7	5	Ensure parallel games end independently without breaking end screens
+		8	3	Fix chat issue in pong_front branch (chat works in main)
+
 test123@test.de
 
 

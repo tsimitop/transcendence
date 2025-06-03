@@ -21,13 +21,17 @@ export class PongGameBall {
 /*****************************************************/
 /**************     Constructor  *********************/
 /*****************************************************/
-constructor({x , y, radius}: BallParams) {
+constructor({ x, y, radius }: BallParams) {
     this.x = x;
     this.y = y;
-    this.vx = Math.random() > 0.5 ? (0.001 + Math.random() * (0.005 - 0.001)) : -(0.001 + Math.random() * (0.005 - 0.001));
-    this.vy = Math.random() > 0.5 ? (0.001 + Math.random() * (0.005 - 0.001)) : -(0.001 + Math.random() * (0.005 - 0.001));
+    const baseSpeed = 0.01;
+    const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);
+    const direction = Math.random() < 0.5 ? 1 : -1;
+    this.vx = direction * Math.cos(angle) * baseSpeed;
+    this.vy = Math.sin(angle) * baseSpeed;
     this.size = radius;
-  }
+    this.speed = 1;
+}
 
   
 /*****************************************************/
@@ -47,12 +51,15 @@ constructor({x , y, radius}: BallParams) {
   setY(y: number) { this.y += y; }
   setSpeed(s: number) { this.speed += s; }
 
-  reset(){ 
+  reset() {
     this.x = 0.5;
     this.y = 0.5;
-    this.vx = Math.random() > 0.5 ? (0.001 + Math.random() * (0.005 - 0.001)) : -(0.001 + Math.random() * (0.005 - 0.001));
-    this.vy = Math.random() > 0.5 ? (0.001 + Math.random() * (0.005 - 0.001)) : -(0.001 + Math.random() * (0.005 - 0.001));
-    this.speed = 2;
-   }
+    const baseSpeed = 0.01;
+    const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);
+    const direction = Math.random() < 0.5 ? 1 : -1;
+    this.vx = direction * Math.cos(angle) * baseSpeed;
+    this.vy = Math.sin(angle) * baseSpeed;
+    this.speed = 1;
+}
 
 }
