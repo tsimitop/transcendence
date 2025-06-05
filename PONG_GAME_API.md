@@ -85,13 +85,26 @@ game_state response or error
 
 ##### Create Game
 
-```json
+// ```json
+// {
+//   "type": "create_game",
+//   "pong_data": {
+//     "userId": "string",
+//     "gameMode": "classic", // "classic""
+//     "maxScore": 10,
+//     "side": "left" //| "right";
+//     }
+// }
+// ```
+    ```json
 {
   "type": "create_game",
   "pong_data": {
-    "userId": "string",
+    "playerAlias": "string",
     "gameMode": "classic", // "classic""
-    "maxScore": 10
+    "localOpponent": 10,
+    "amountPlayers": "left", //| "right";
+    "tournament": true
     }
 }
 ```
@@ -107,6 +120,7 @@ Which X is good? Depends on latency of the connection i guess?
   "pong_data": {
     "userId": "string",  // we implicitly know the user (connection), however the field can become usefull for multiple player on single client scenario. Game id also isn't really required as a user can only be in a single game.
     "up": boolean,    // true for up, false for down
+    "paddle": "left" // or right
     }
 }
 ```
@@ -134,8 +148,10 @@ Which X is good? Depends on latency of the connection i guess?
       "ball": {
         // from the previous coordinates and the new coordinates
         // ball speed is constant
-        "x": "0.000",  // floats as string
-        "y": "0.000",  // top left corner is (0/0)
+        "x": "0.500",  // floats as string
+        "y": "0.500",  // top left corner is (0/0)
+        "lPayerName": "string",
+        "rPayerName": "string"
       },
       "leftPaddle": { 
           "topPoint": {
@@ -147,11 +163,18 @@ Which X is good? Depends on latency of the connection i guess?
       // does this make sense?
       "rightPaddle": { ... },
       "lastUpdateTime": 1234567890,  // creation date for waiting games
-      "gameMode": "classic",
+      "gameMode": "classic",  // used for local or remote
       "maxScore": 10,
-      "scores": {
-        "playerids...": int, //score
-      }
+      "scores": [
+        {
+          "alias": "Player1",
+          "score": 3
+        },
+        {
+          "alias": "Player2",
+          "score": 5
+        }
+      ],
       "countdown": 3, // Only relevant during countdown
     }
   }

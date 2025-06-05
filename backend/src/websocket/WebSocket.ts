@@ -5,6 +5,9 @@ import { IncomingMessage } from 'http';
 import UserDb from "../user-database/UserDb";
 import { handleWebsocketPayload } from './MessageHandler';
 
+import { endOfGame } from '../api/pong/PongMsgHandler';
+import { deleteGameBecauseUserReconnected } from '../api/pong/PongMsgHandler';
+
 // Load environment variables from .env file
 dotenv.config();
 
@@ -66,20 +69,27 @@ export function startWebSocketServer(server: any) {
 
 	// Check if the user is already connected
     console.log(`[WS] User connected: ${username}`);
+    
+    // delete running game or tournament user made
+    deleteGameBecauseUserReconnected(username)
 
     // Register the user to the active sockets map
     registerUser(username, socket);
 
     // Handle incoming messages
     socket.on('message', (data) => {
-    //   handleMessage(username, data); // debug Chat delete later
-	handleWebsocketPayload(username, data);
+	  handleWebsocketPayload(username, data);
     });
 
     // Handle socket close event
     socket.on('close', () => {
       console.log(`[WS] User disconnected: ${username}`);
       unregisterUser(username);
+
+      endOfGame(username, "WIN THROUGH DISSCONNETION");
+
+      // end game if there is a current game running?
+
     });
 
     // Send welcome message

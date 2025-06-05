@@ -8,7 +8,7 @@ import Component, {
    * Chat component class.
    * @brief Handles UI rendering and WebSocket communication for live chat.
    */
-  class Chat extends Component {
+  export class Chat extends Component {
 	private socket: WebSocket | null = null;
 	private reconnectAttempts = 0;
 	private readonly maxReconnectAttempts = 5;
