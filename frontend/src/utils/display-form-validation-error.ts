@@ -14,3 +14,8 @@ export const displayFormValidationError = function (
 		`
   );
 };
+
+export function clearFormValidationError(errorClassName: string) {
+  const errors = document.querySelectorAll(`.${errorClassName}`);
+  errors.forEach((el) => el.remove());
+}

@@ -89,11 +89,17 @@ fastify.post(
       const saltRounds = 10;
       const salt = await bcrypt.genSalt(saltRounds);
       const hashedPassword = await bcrypt.hash(password, salt);
+	  const avatarOptions = [
+        "default.png", "dragon.png", "gorilla.png", "hippopotamus.png", "owl.png",
+        "polar-bear.png", "puffer-fish.png", "sea-lion.png", "unicorn.png", "wolf.png"
+      ];
+	  const randomIndex = Math.floor(Math.random() * avatarOptions.length);
+	  const selectedAvatar = avatarOptions[randomIndex];
       await userDbInstance.createNewUserInUserDb(
         userDb,
         request.body,
         hashedPassword,
-		"default.png"
+		selectedAvatar
       );
     } catch (error) {
 		console.log(error);

@@ -1,11 +1,12 @@
 import {  FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { QueryFriend } from "../../user-database/friend-queries";
 import { QueryUser } from "../../user-database/queries"; 
 import UserDb from "../../user-database/UserDb";
 import { UserStateType } from "../sign-in/sign-in";
 import { fastify } from "../../server";
 import bcrypt from "bcrypt"
 import FormValidation from "../../utils/FormValidation";
+import path from "path";
+import fs from "fs";
 
 type SimpleUpdate = {
   user: UserStateType;
@@ -39,7 +40,7 @@ fastify.post(
       const validation = new FormValidation ( "", newValue, "" );
 	  const validatedUsername = validation.isUsernameValid();
 	  if (!validatedUsername){
-		reply.code(400).send({errorMessage: "Invalid username!"});
+		reply.code(400).send({ errorMessage: validation.getUsernameError() });
 		return;
 	  }
 	  const set_new_username = userDb.prepare(QueryUser.SET_NEW_USERNAME);
@@ -74,7 +75,7 @@ fastify.post(
 	  const validation = new FormValidation ( newValue, "", "" );
 	  const validatedEmail = validation.isEmailValid();
 	  if (!validatedEmail){
-		reply.code(400).send({errorMessage: "Invalid email!"});
+		reply.code(400).send({ errorMessage: validation.getEmailError() });
 		return;
 	  }
 	  const set_new_email = userDb.prepare(QueryUser.SET_NEW_EMAIL);
@@ -101,7 +102,7 @@ fastify.post(
 	try {
       const userDbInstance = new UserDb("/app/database/test.db");
       const userDb = userDbInstance.openDb();
-	  // confirm correct password
+	  // confirm old password is correct
 	  const passwordStatement = userDb.prepare(QueryUser.FIND_PASSWORD_BY_ID);
 	  const result = passwordStatement.get(user.id) as { password: string };
 	  const isPasswordValid = await bcrypt.compare(oldPass, result.password);
@@ -109,22 +110,18 @@ fastify.post(
 		reply.code(400).send({errorMessage: `Old password could not be verified`});
         return;
 	  }
-	  // confirm valid new password
+	  // confirm new password is valid
 	  const validation = new FormValidation ( email, username, newPass );
 	  const newPassIsValid = validation.isPasswordValid();
 	  if (!newPassIsValid){
-		reply.code(400).send({errorMessage: `New password does not fulfill requirements`});
+		reply.code(400).send({ errorMessage: validation.getPasswordError() });
         return;
 	  }
-      //update stored value of new password+salt
+      //update stored value of new password as hashedPassword
 	  const salt = await bcrypt.genSalt(10);
 	  const hashedPassword = await bcrypt.hash(newPass, salt);
 	  const updatePassStatement = userDb.prepare(QueryUser.SET_NEW_PASSWORD)
 	  updatePassStatement.run(hashedPassword, user.id);
-	//   const confirmNewPassHasChangedStmt = userDb.prepare(QueryUser.FIND_PASSWORD_BY_ID);
-	//   const storedHashed = confirmNewPassHasChangedStmt.get(user.id);
-	//   if (storedHashed !== hashedPassword)
-	// 	reply.code(500).send({errorMessage: "Password was not stored properly!"});
 	  reply.code(200).send({message: "Success!"});
       return;
     } catch (error) {
@@ -134,6 +131,54 @@ fastify.post(
     }
   }
 );
-    //   reply.code(501).send({errorMessage: `result: ${result.password}, isPasswordValid: ${isPasswordValid}`});
 
+fastify.post(
+  "/api/editing/avatar",
+  async function (request, reply
+  ) {
+    const parts = request.parts(); // async iterable for all parts
+    let filePart;
+    let userId;
+
+    for await (const part of parts) {
+      if (part.type === 'file') {
+        filePart = part;
+      } else if (part.type === 'field' && part.fieldname === 'userId') {
+        userId = part.value;
+      }
+    }
+
+    if (!filePart) {
+      reply.code(400).send({ errorMessage: "No file uploaded" });
+      return;
+    }
+
+    if (!userId) {
+      reply.code(400).send({ errorMessage: "No userId provided" });
+      return;
+    }
+
+    const filename = `upload-${Date.now()}-${filePart.filename}`;
+    const uploadPath = path.join(__dirname, '../../../avatars', filename);
+    await new Promise((resolve, reject) => {
+      const stream = fs.createWriteStream(uploadPath);
+      filePart.file.pipe(stream);
+      filePart.file.on('end', resolve);
+      filePart.file.on('error', reject);
+    });
+
+    try {
+      const userDbInstance = new UserDb("/app/database/test.db");
+      const userDb = userDbInstance.openDb();
+      const storeAvatarStatement = userDb.prepare(QueryUser.SET_NEW_AVATAR);
+      storeAvatarStatement.run(filename, userId);
+    } catch (error) {
+      reply.code(500).send({
+        errorMessage: `Something went wrong while uploading the avatar: ${filename}!`,
+      });
+      return;
+    }
+
+    reply.send({message: `Avatar uploaded: ${filename}`});
+  });
 }

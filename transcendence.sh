@@ -175,6 +175,29 @@ removebackenddb() {
     print_success "Backend database removed successfully"
 }
 
+# Remove avatar images that have been uploaded by users
+remove_uploaded_avatars() {
+    print_header "Removing uploaded avatar files"
+
+    local avatar_dir="./backend/avatars"
+    local pattern="upload-*"
+
+    if [ ! -d "$avatar_dir" ]; then
+        print_warning "Avatar directory does not exist: $avatar_dir"
+        return
+    fi
+
+    local files=( "$avatar_dir"/$pattern )
+
+    if [ -e "${files[0]}" ]; then
+        print_verbose "Removing files: ${files[*]}"
+        rm -f "${files[@]}"
+        print_success "Uploaded avatar files removed successfully"
+    else
+        print_warning "No uploaded avatar files found in $avatar_dir"
+    fi
+}
+
 # Remove all Docker containers, images, and volumes
 removeall() {
     print_header "Removing all Docker containers, images, and volumes"
@@ -182,6 +205,7 @@ removeall() {
     removeallimages
     removeallvolumes
     removebackenddb
+	remove_uploaded_avatars
     print_verbose "Running system prune with command: docker system prune -af --volumes"
     docker system prune -af --volumes
     print_success "Docker system cleaned up successfully"

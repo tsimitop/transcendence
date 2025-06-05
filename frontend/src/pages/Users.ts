@@ -57,7 +57,7 @@ class Users extends Component {
         <div class="user-profile">
           <h2>Your public profile</h2>
 		  <img
-	        src=${CADDY_SERVER}/avatars/${userContext.state.avatar}
+	        src=${CADDY_SERVER}/avatars/${user.avatar}
 		    class="w-24 h-24 object-cover rounded-full"
 		  />
           <p>Email: ${user.email}</p>
@@ -74,7 +74,7 @@ class Users extends Component {
 			
 	<div class="flex flex-col gap-1 mb-20">
 	  <img
-	    src=${CADDY_SERVER}/avatars/${userContext.state.avatar}
+	    src=${CADDY_SERVER}/avatars/${user.avatar}
 	    alt="User's avatar"
 		class="w-24 h-24 object-cover rounded-full"
 		/>
@@ -100,7 +100,7 @@ class Users extends Component {
 			
 	<div class="flex flex-col gap-1 mb-20">
 	  <img
-	    src=${CADDY_SERVER}/avatars/${userContext.state.avatar}
+	    src=${CADDY_SERVER}/avatars/${user.avatar}
 	    alt="User's avatar"
 		class="w-24 h-24 object-cover rounded-full"
 		/>

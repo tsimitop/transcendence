@@ -30,6 +30,18 @@ class FormValidation {
     return passwordRegex.test(this._password);
   }
 
+  getEmailError() {
+    return this.isEmailValid() ? null : FormValidation.emailError;
+  }
+
+  getUsernameError() {
+    return this.isUsernameValid() ? null : FormValidation.usernameError;
+  }
+
+  getPasswordError() {
+    return this.isPasswordValid() ? null : FormValidation.passwordError;
+  }
+
   isFormValid() {
     const validEmail = this.isEmailValid();
     const validUsername = this.isUsernameValid();

@@ -23,7 +23,7 @@ fastify.post("/api/users", async function (request: FastifyRequest<{ Body: Searc
     const userDbInstance = new UserDb("/app/database/test.db");
 	let userDb;
 	userDb = userDbInstance.openDb();
-	const getUserIdStatement = userDb.prepare(QueryUser.FIND_ID_USERNAME_EMAIL);
+	const getUserIdStatement = userDb.prepare(QueryUser.FIND_ID_USERNAME_EMAIL_AVATAR);
 	const result = getUserIdStatement.get(username) as { id: number, username: string, email: string, avatar: string } | undefined;
 	const currentUserId = request.body.userState.id;
 	const getFriendStatus = userDb.prepare(QueryFriend.GET_FRIENDSHIP_STATUS);
@@ -51,6 +51,7 @@ fastify.post("/api/users", async function (request: FastifyRequest<{ Body: Searc
 	    username: result.username,
 	    is_friend: extractedStatus === "accepted",
 	    onlineStatus: connectionStatus,
+	    // avatar: "default.png",
 	    avatar: result.avatar,
 	  }
 	});
