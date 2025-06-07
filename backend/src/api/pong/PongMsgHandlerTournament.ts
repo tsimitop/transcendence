@@ -39,21 +39,22 @@ export function handlerJoinTournament(senderUsername: string, pong_data: JoinGam
   const senderSocket = connectedUsers.get(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
-  let tournamendID: string = "";
+  let tournamentID: string = "";
   // add player to the tournament
   for (const [username, tournament] of currentTournaments.entries()) {
-    if(pong_data.gameId === tournament.getUniqeID()){
+    if(pong_data.gameId === tournament.getUniqeID() 
+      && tournament.playerCanJoin(senderUsername, pong_data.OpponentAlias)) {
       tournament.addPlayer(senderUsername, pong_data.OpponentAlias, senderSocket)
       // console.log("current players->>>",tournament.getCurrentPlayers())
       // opponent = username;
-      tournamendID = tournament.getUniqeID();
+      tournamentID = tournament.getUniqeID();
       break;
     }
   }
   const response = {
       target_endpoint: 'pong-api',
       type: 'game_created',
-      gameId: tournamendID
+      gameId: tournamentID
   };
   senderSocket.send(JSON.stringify(response));
   // check if tournament has 4 players and start 2 pong instances and make the game running

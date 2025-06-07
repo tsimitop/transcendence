@@ -35,9 +35,6 @@ export function handleListGames(senderUsername: string): void {
 }
 
 
-
-
-
 export function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
 
   // console.log("pong_data.gameMode ", pong_data.gameMode);
@@ -92,9 +89,7 @@ export function handleCreateGame(senderUsername: string, pong_data: CreateGameDa
 
 }
 
-export 
-
-function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
+export function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
   let countdown = globalCountdown;
 
   const senderSocket = connectedUsers.get(senderUsername);
@@ -103,7 +98,9 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   let opponent: string = "";
   // console.log("game id", pong_data);
   for (const [username, game] of currentGames.entries()) {
-    if(pong_data.gameId === game.getUniqeID()){
+    if(pong_data.gameId === game.getUniqeID() 
+      && game.getGameState() === "waiting"
+      && game.getlPlayerName() !== senderUsername) {  // we cannot join our own game
       game.setGameState('countdown');
       game.setOpponentName(senderUsername, pong_data.OpponentAlias);
       // console.log("-->",game.getrPlayerName(), game.getrPlayerAlias());
@@ -113,7 +110,10 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
   }
   // console.log("opponent ", opponent);
   const opponentSocket = connectedUsers.get(opponent);
-  if (!opponentSocket || opponentSocket.readyState !== WebSocket.OPEN) return;
+  if (!opponentSocket || opponentSocket.readyState !== WebSocket.OPEN) {
+    console.error(`Opponent socket is not open or does not exist: ${opponent}`);
+    return;
+  }
   const response = {
         target_endpoint: 'pong-api',
         type: 'countdown',
@@ -126,9 +126,6 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
 
   // set sockets to current instance
   currentGames.get(opponent)?.setSockets(senderSocket, opponentSocket);
-  
-
-  
     const interval = setInterval(() => {
     countdown--;
     if (countdown <= 0) {
@@ -142,15 +139,11 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
       }
       startGameLoop(currentGames.get(opponent)!);
 
-
-
       setTimeout(() => {
       }, 1000);
     } 
   }, 1000);
 }
-
-
 
 
 export function startGameLoop(game: PongGame) {
@@ -222,7 +215,7 @@ export function startGameLoop(game: PongGame) {
         }
     };
   
-  
+
       const lPlayerSocket = game.getlPlayerSocket();
       const rPlayerSocket = game.getrPlayerSocket();
       if (lPlayerSocket && lPlayerSocket.readyState === WebSocket.OPEN) {

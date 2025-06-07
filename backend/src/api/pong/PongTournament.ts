@@ -23,6 +23,7 @@ export class Tournament {
 	// private PlayerOneName: string = "PlayerOneName";
 	private currentPlayers: number = 0; 
 	private gameState: TournamentState = "waiting";
+	public static readonly MAX_PLAYERS: number = 4; // Maximum players in a tournament
 
 	private players: Map<string, Player> = new Map();
 	private matchWinners: Player[] = [];
@@ -61,21 +62,36 @@ export class Tournament {
 		return this.players.has(playerName);
 	}
 
-	addPlayer(name: string, alias: string, socket: any) {
-	if (this.players.has(name)) {
-		console.warn(`Player with name ${name} already in tournament`);
-		return;
-	}
-
-	for (const player of this.players.values()) {
-		if (player.alias === alias) {
-		console.warn(`Alias ${alias} is already used in tournament`);
-		return;
+	playerCanJoin(playerName: string, alias: string): boolean {
+		if (this.getTournamentState() !== 'waiting') {
+			console.warn("Tournament is not in waiting state, cannot join");
+			return false;
 		}
+		if (this.currentPlayers >= Tournament.MAX_PLAYERS) {
+			console.warn("Tournament is full, cannot join");
+			return false;
+		}
+		if (this.players.has(playerName)) {
+			console.warn(`Player with name ${playerName} already in tournament`);
+			return false;
+		}
+		for (const player of this.players.values()) {
+			if (player.alias === alias) {
+				console.warn(`Alias ${alias} is already used in tournament`);
+				return false;
+			}
+		}
+		return true;
 	}
 
-	this.players.set(name, { name, alias, socket });
-	this.currentPlayers++;
+	addPlayer(name: string, alias: string, socket: any) {
+		if (!this.playerCanJoin(name, alias)) {
+			console.debug(`Player ${name} with alias ${alias} cannot join tournament`);
+			return;
+		}
+
+		this.players.set(name, { name, alias, socket });
+		this.currentPlayers++;
 	}
 
 	removePlayer(name: string) {
