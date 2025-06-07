@@ -1,12 +1,14 @@
 {
 	log {
-		level warn
+		level info
 	}
 }
 
-localhost {
+localhost:4443 transcendence.felixboeck.com:4443 {
 	# TLS configuration for self-signed certificates
-	tls internal
+	tls internal {
+		on_demand
+	}
 
 	# WebSocket endpoint
 	@websockets {

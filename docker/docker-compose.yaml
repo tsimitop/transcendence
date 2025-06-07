@@ -32,7 +32,7 @@ services:
     volumes:
       - ../frontend/dist:/srv
     ports:  # you can access the frontend on https://localhost:4443
-      - "4443:443"  # lets use 4443 as it doesn't need root privileges
+      - "4443:4443"  # lets use 4443 as it doesn't need root privileges
       # const CADDY_SERVER in frontend src needs to be set too if port is changed
     networks:
       - ft_transcendence
