@@ -5,7 +5,7 @@ import { CreateGameData } from './PongMessages';
 import { PongGame } from './PongGame';
 import { globalCountdown } from './PongMsgHandler';
 import { JoinGameData } from './PongMessages';
-
+import { endOfGame } from './PongMsgHandler';
 
 
 export function handleListGames(senderUsername: string): void {
@@ -158,13 +158,33 @@ export function startGameLoop(game: PongGame) {
     const intervalMs = 1000 / fps;
     console.log("----------------->",game.getlPlayerAlias())
     const intervalId = setInterval(() => {    
+	try {
+	  game.update();
+	} catch (err) {
+	  console.error("Error during game.update():", err);
+	}
     if (game.getGameState() === 'finished') {
       clearInterval(intervalId);
       // console.log(`Game ${game.getUniqeID()} ended.`);
   
       return;
       }
-      game.update();
+
+	  const lSocket = game.getlPlayerSocket();
+	  const rSocket = game.getrPlayerSocket();
+
+      if (!lSocket || lSocket.readyState !== WebSocket.OPEN) {
+        endOfGame(game.getrPlayerName(), "Opponent disconnected (left)");
+        clearInterval(intervalId);
+        return;
+      }
+
+      if (!rSocket || rSocket.readyState !== WebSocket.OPEN) {
+        endOfGame(game.getlPlayerName(), "Opponent disconnected (right)");
+        clearInterval(intervalId);
+        return;
+      }
+
       const gameState = game.getGameStatePayload();
       const response = {
             target_endpoint: 'pong-api',
