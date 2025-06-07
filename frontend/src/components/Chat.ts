@@ -3,6 +3,7 @@ import Component, {
 	ChildElementType,
 	ChildrenStringType,
   } from "../models/Component";
+import { CADDY_SERVER } from "../constants";
   
   /**
    * Chat component class.
@@ -135,7 +136,7 @@ import Component, {
 	  }
   
 	  // Open a WebSocket connection using the JWT token
-	  const socketUrl = `wss://localhost:4443/ws?token=${token}`;
+	  const socketUrl = `${CADDY_SERVER.replace(/^http/, "ws")}/ws?token=${token}`;
 	  this.socket = new WebSocket(socketUrl);
   
 	  // Connection established

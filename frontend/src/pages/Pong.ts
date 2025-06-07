@@ -11,6 +11,7 @@ import { setupMenu } from './pong/PongMenu';
 import { handlePongMessage } from "./pong/PongMessageHandler";
 import { PongInputHandler } from "./pong/PongInputHandler";
 import { userContext } from "../context/UserContext";
+import { CADDY_SERVER } from "../constants";
 
 
 export class Pong extends Component {
@@ -87,7 +88,7 @@ export class Pong extends Component {
       }
 
 
-    const socketUrl = `wss://localhost:4443/ws?token=${token}`;
+    const socketUrl = `${CADDY_SERVER.replace(/^http/, "ws")}/ws?token=${token}`;
     this.socket = new WebSocket(socketUrl);
   
 	  // Connection established
