@@ -40,8 +40,6 @@ services:
       - ft_transcendence
     env_file:
       - ../.env
-    environment:
-    - TRANSCENDENCE_HOSTNAME=localhost
     depends_on:
       - backend
       - frontend-dev  # it doesn't really wait for it to build the frontend, but i think it should be fine
