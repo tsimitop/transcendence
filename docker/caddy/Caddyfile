@@ -4,7 +4,7 @@
 	}
 }
 
-localhost:4443 transcendence.felixboeck.com:4443 {
+{env.TRANSCENDENCE_HOSTNAME}:4443 {
 	# TLS configuration for self-signed certificates
 	tls internal {
 		on_demand
