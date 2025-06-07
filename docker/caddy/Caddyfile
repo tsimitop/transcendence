@@ -6,9 +6,7 @@
 
 {env.TRANSCENDENCE_HOSTNAME}:4443 {
 	# TLS configuration for self-signed certificates
-	tls internal {
-		on_demand
-	}
+	tls internal
 
 	# WebSocket endpoint
 	@websockets {

@@ -12,8 +12,6 @@ services:
       - "5173:5173"  # requires caddy to run for the proxy to the backend
     networks:
       - ft_transcendence
-    env_file:
-      - ../.env
 
   backend:
     container_name: backend
