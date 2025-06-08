@@ -72,7 +72,6 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
         handleCreateTournament(senderUsername, message.pong_data);
         break;
       default:
-        sendErrorMessage(senderUsername, `Unknown message type: ${message.type}`, 4001);
         console.warn(`[PONG WS] Unknown message: ${message}`);
     }
   } catch (err) {
@@ -195,37 +194,4 @@ export function deleteGameBecauseUserReconnected(user: string): void {
       tournament.removePlayer(user);
     } 
   }
-}
-
-
-/**********************************************************************************/
-
-function sendMessage(senderUsername: string, type: string, pong_data: any): void {
-  // used to send messages to the client
-  const message: PongMessage = {
-      type: type,
-      pong_data: pong_data,
-  };
-  // const wrapped_msg: WebsocketApiRequest = {
-  //   target_endpoint: "pong-api",
-  //   payload: message
-  // }
-
-  // const socket = connectedUsers.get(senderUsername);
-  // if (socket) {
-  //     socket.send(JSON.stringify(wrapped_msg));
-  // } else {
-  //     console.debug(`[PONG WS] User ${senderUsername} not connected, cant send message`);
-  // }
-}
-
-function sendErrorMessage(senderUsername: string, errorMessage: string, errorCode: number = 69420): void {
-  // used to send error messages to the client
-
-  const errorData: PongErrorData = {
-      message: errorMessage,
-      code: errorCode,  // do we really need this?
-  };
-  sendMessage(senderUsername, 'error', errorData);
-  console.debug(`[PONG WS] Error message sent to ${senderUsername}: ${errorMessage} (code: ${errorCode})`);
 }
