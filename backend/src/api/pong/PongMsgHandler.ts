@@ -155,7 +155,11 @@ export function endOfGame(user: string, message: string) {
     if (rsocket?.readyState === WebSocket.OPEN) {
       rsocket.send(JSON.stringify(response));
     }
-    currentGames.delete(username);
+
+    // Remove game from all player keys (both left and right player)
+    currentGames.delete(lPlayer);
+    currentGames.delete(rPlayer);
+
     for (const [_, tournament] of currentTournaments.entries()) {
       if (tournament.hasPlayer(user)) {
         console.log("notifyMatchEnd called with:", user);

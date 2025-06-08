@@ -115,14 +115,18 @@ export class Tournament {
 		matchOne.setOpponentName(playerArray[1].name, playerArray[1].alias);
 		matchOne.setGameState('countdown');
 		matchOne.setSockets(playerArray[0].socket, playerArray[1].socket);
+		// Store game under both players' names so both can access it
 		currentGames.set(playerArray[0].name, matchOne);
+		currentGames.set(playerArray[1].name, matchOne);
 
 		const matchTwo = new PongGame(`${playerArray[2].name}-Game-${Date.now()}`,
 		  playerArray[2].name, playerArray[2].alias, "remote");
 		matchTwo.setOpponentName(playerArray[3].name, playerArray[3].alias);
 		matchTwo.setGameState('countdown');
 		matchTwo.setSockets(playerArray[2].socket, playerArray[3].socket);
+		// Store game under both players' names so both can access it
 		currentGames.set(playerArray[2].name, matchTwo);
+		currentGames.set(playerArray[3].name, matchTwo);
 
 		const response = {
 			target_endpoint: 'pong-api',
@@ -184,7 +188,9 @@ export class Tournament {
 		finalGame.setOpponentName(winner2.name, winner2.alias);
 		finalGame.setGameState("countdown");
 		finalGame.setSockets(winner1.socket, winner2.socket);
+		// Store final game under both players' names so both can access it
 		currentGames.set(winner1.name, finalGame);
+		currentGames.set(winner2.name, finalGame);
 
 		this.finalStarted = true;
 		let countdown = globalCountdown;
