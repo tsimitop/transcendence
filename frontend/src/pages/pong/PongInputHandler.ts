@@ -43,6 +43,7 @@ public start(): void {
   }
   this.intervalId = setInterval(() => {
     if (this.socket.readyState !== WebSocket.OPEN) {
+      console.log("Socket is not open in interval");
       return;
     }
 

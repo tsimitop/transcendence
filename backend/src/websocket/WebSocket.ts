@@ -28,11 +28,11 @@ export function getUserSocket(username: string): WebSocket | undefined {
 
   // Prefer chat connection, fallback to any available connection
   const chatConnection = userConnections.get('chat');
-  if (chatConnection) return chatConnection.socket;
-
-  // Return first available connection
-  const firstConnection = userConnections.values().next().value;
-  return firstConnection?.socket;
+  if (chatConnection) {
+    return chatConnection.socket;
+    } else {
+    return undefined;
+  }
 }
 
 
@@ -82,7 +82,7 @@ export function startWebSocketServer(server: any) {
 
     // Extract connection type from query parameters
     const url = new URL(req.url || '', `http://${req.headers.host}`);
-    const connectionType = url.searchParams.get('type') as 'chat' | 'pong';
+    const connectionType = url.searchParams.get('type') as 'pong' | 'chat';
 
 	  // Check if the user is already connected
     console.log(`[WS] User connected: ${username} (type: ${connectionType})`);
