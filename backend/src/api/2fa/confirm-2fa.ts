@@ -13,10 +13,26 @@ fastify.post(
     request: FastifyRequest<{ Body: Confirm2FaRequestType }>,
     reply
   ) {
-    const user = request.body.user;
-    const userDbInstance = new UserDb("database/test.db");
-    const userDb = userDbInstance.openDb();
-    userDbInstance.updateHas2Fa(userDb, user.id, 1);
-    reply.send({ test: request.body });
+    try {
+      const user = request.body.user;
+
+      if (!user || !user.id) {
+        return reply.status(400).send({
+          error: "Invalid input: user is required"
+        });
+      }
+
+      const userDbInstance = new UserDb("database/test.db");
+      const userDb = userDbInstance.openDb();
+      userDbInstance.updateHas2Fa(userDb, user.id, 1);
+      userDb.close();
+
+      reply.send({ test: request.body });
+    } catch (error) {
+      console.log(error);
+      return reply.status(500).send({
+        error: "Internal server error"
+      });
+    }
   }
 );

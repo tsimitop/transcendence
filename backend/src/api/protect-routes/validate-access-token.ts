@@ -120,25 +120,14 @@ fastify.post(
         return;
       }
 
-      const accessTokenInHeader =
-        request.headers.authorization?.split(" ")[1] || null;
-      // console.log(
-      //   "----------------accessTokenInHeader--------------:",
-      //   accessTokenInHeader
-      // );
+      const accessTokenInCookies = checkAccessTokenInCookies(
+        request.cookies.accesstoken
+      );
 
-      let accessTokenInCookies = "";
-
-      if (!accessTokenInHeader) {
-        accessTokenInCookies = checkAccessTokenInCookies(
-          request.cookies.accesstoken
-        );
-      }
-
-      if (!accessTokenInHeader && !accessTokenInCookies) {
+      if (!accessTokenInCookies) {
         reply.send({
           errorMessage:
-            "No access token in Authorization header! Refresh token will be used to generate a new access token",
+            "No access token in cookies! Refresh token will be used to generate a new access token",
           isRefreshTokenValid: true,
           isAccessTokenValid: false,
           isNewAccessTokenNeeded: true,
@@ -168,11 +157,7 @@ fastify.post(
         hashedRefreshToken
       );
 
-      if (accessTokenInHeader) {
-        validateAccessToken(accessTokenInHeader);
-      } else {
-        validateAccessToken(accessTokenInCookies);
-      }
+      validateAccessToken(accessTokenInCookies);
       reply.send({
         errorMessage: "",
         isRefreshTokenValid: true,

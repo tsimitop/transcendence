@@ -7,7 +7,6 @@ export type UserStateType = {
   email: string;
   username: string;
   isSignedIn: boolean;
-  jwtAccessToken: string;
   avatar: string;
 };
 
@@ -68,7 +67,6 @@ export const userContext = new UserContext({
   email: "",
   username: "",
   isSignedIn: false,
-  jwtAccessToken: "",
   avatar: "",
 });
 

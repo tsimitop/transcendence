@@ -2,6 +2,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { CADDY_SERVER, ROUTER_CLASS_NAME } from "../constants";
 import themeState from "../context/ThemeContext";
+import { urlContext } from "../context/UrlContext";
 import { userContext, UserStateType } from "../context/UserContext";
 import Component, {
   ChildElementType,
@@ -9,6 +10,7 @@ import Component, {
 } from "../models/Component";
 import Router from "../models/Router";
 import { displayFormValidationError } from "../utils/display-form-validation-error";
+import Auth2Fa from "./Auth2Fa";
 
 class SignIn extends Component {
   static validationErrorClassName = "sign-in-validation-error";
@@ -142,46 +144,46 @@ class SignIn extends Component {
       const data = (await response.json()) as {
         errorMessage: string;
         user: UserStateType | null;
-        jwtAccessToken: string;
       };
+
+      console.log("SignIn response data:", data);
 
       if (!data.user) {
         throw data;
       }
 
       const { id, email, username, isSignedIn, avatar } = data.user;
+      console.log("Extracted user data:", { id, email, username, isSignedIn, avatar });
+
       if (data.errorMessage.includes("2FA")) {
+        console.log("Setting userContext for 2FA with:", { id, email, username, isSignedIn, avatar });
         userContext.setState({
-          ...userContext.state,
           id,
           email,
           username,
           isSignedIn,
-          jwtAccessToken: "",
-		  avatar,
+          avatar: avatar || "default.png",
         });
+        console.log("UserContext after setState:", userContext.state);
         const routeToGo = "/2fa";
-        // urlContext.setState({ ...urlContext.state, path: routeToGo });
-        // window.history.pushState({}, "", routeToGo);
-        const viewToRender = await Router.findViewToRender(routeToGo);
+        urlContext.setState({ ...urlContext.state, path: routeToGo });
+        window.history.pushState({}, "", routeToGo);
+        const viewToRender = Auth2Fa.create();
         Router.renderPageBasedOnPath(viewToRender);
         Header.highlightActiveNavLink();
         Router.listenForRouteChange();
         Router.handleBackAndForward();
         return;
       }
-      const { jwtAccessToken: _ } = data;
       if (!isSignedIn) {
         throw data;
       }
       userContext.setState({
-        ...userContext.state,
         id,
         email,
         username,
         isSignedIn,
-        jwtAccessToken: "",
-		avatar,
+        avatar: avatar || "default.png",
       });
       await Router.redirect("/");
     } catch (error) {

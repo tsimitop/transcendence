@@ -15,21 +15,57 @@ fastify.post(
     request: FastifyRequest<{ Body: Validate2FaRequestType }>,
     reply
   ) {
-    const { user, code2Fa } = request.body;
-    const userDbInstance = new UserDb("database/test.db");
-    const userDb = userDbInstance.openDb();
-    const totpSecret = userDbInstance.getTotpSecret(userDb, user.id);
-    const is2FaCodeValid = speakeasy.totp.verify({
-      secret: totpSecret,
-      encoding: "base32",
-      token: code2Fa,
-    });
+    try {
+      const { user, code2Fa } = request.body;
 
-    if (is2FaCodeValid) {
-      await sendRefreshAndAccessTokens(user, userDbInstance, userDb, reply);
-    } else {
-      reply.send({
-        errorMessage: "Please enter the valid 6-digit code",
+      console.log("2FA validation request:", {
+        user: user ? { id: user.id, username: user.username, email: user.email } : null,
+        code2Fa: code2Fa
+      });
+
+      if (!user || !user.id || !code2Fa) {
+        console.log("2FA validation failed - missing data:", {
+          hasUser: !!user,
+          hasUserId: !!(user && user.id),
+          hasCode2Fa: !!code2Fa
+        });
+        return reply.status(400).send({
+          errorMessage: "Invalid input: user and 2FA code are required",
+          isSignedIn: false,
+        });
+      }
+
+      const userDbInstance = new UserDb("database/test.db");
+      const userDb = userDbInstance.openDb();
+      const totpSecret = userDbInstance.getTotpSecret(userDb, user.id);
+
+      if (!totpSecret) {
+        userDb.close();
+        return reply.status(404).send({
+          errorMessage: "User not found or 2FA not configured",
+          isSignedIn: false,
+        });
+      }
+
+      const is2FaCodeValid = speakeasy.totp.verify({
+        secret: totpSecret,
+        encoding: "base32",
+        token: code2Fa,
+      });
+
+      if (is2FaCodeValid) {
+        await sendRefreshAndAccessTokens(user, userDbInstance, userDb, reply);
+      } else {
+        userDb.close();
+        reply.send({
+          errorMessage: "Please enter the valid 6-digit code",
+          isSignedIn: false,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      return reply.status(500).send({
+        errorMessage: "Internal server error",
         isSignedIn: false,
       });
     }

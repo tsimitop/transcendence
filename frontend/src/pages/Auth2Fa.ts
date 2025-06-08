@@ -93,46 +93,50 @@ class Auth2Fa extends Component {
 
   public static async validate2Fa(code2Fa: string) {
     const user = userContext.state;
+    console.log("Frontend sending 2FA validation:", {
+      user: { id: user.id, username: user.username, email: user.email, isSignedIn: user.isSignedIn },
+      code2Fa: code2Fa
+    });
     try {
-      const response = await fetch(`${CADDY_SERVER}/api/validate-2fa`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user, code2Fa }),
-        signal: AbortSignal.timeout(5000),
-      });
-      const data = await response.json();
-      if (data.errorMessage || data.error) {
-        console.log(data);
-        // throw new Error("Wrong 2FA code!");
-        throw data;
-      }
-	const routeToGo = "/profile";
-	urlContext.setState({ ...urlContext.state, path: routeToGo });
-	window.history.pushState({}, "", routeToGo);
-	const { jwtAccessToken, user: validuser } = data;
-	if (!validuser || !jwtAccessToken) {
-		throw new Error("Invalid response from server: user or token missing");
-	  }
-	userContext.setState({
-	id: validuser.id,
-	email: validuser.email,
-	username: validuser.username,
-	jwtAccessToken: "",
-	isSignedIn: true,
-	avatar: "default.png"
-	});
-	await maybeStartChat();
-	const viewToRender = await Router.findViewToRender(routeToGo);
-	Router.renderPageBasedOnPath(viewToRender);
-	Header.highlightActiveNavLink();
-	Router.listenForRouteChange();
-	Router.handleBackAndForward();
-    } catch (error) {
-      const formAndValidationErrorContainer = document.querySelector(
+        const response = await fetch(`${CADDY_SERVER}/api/validate-2fa`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ user, code2Fa }),
+          signal: AbortSignal.timeout(5000),
+        });
+        const data = await response.json();
+        if (data.errorMessage || data.error) {
+          console.log(data);
+          throw data;
+        }
+        const routeToGo = "/profile";
+        urlContext.setState({ ...urlContext.state, path: routeToGo });
+        window.history.pushState({}, "", routeToGo);
+        const { errorMessage: _, user: validuser } = data;
+        if (!validuser) {
+          throw new Error("Invalid response from server: user missing");
+        }
+
+        userContext.setState({
+          ...userContext.state,
+          isSignedIn: true,
+        });
+
+        await maybeStartChat();
+        const viewToRender = await Router.findViewToRender(routeToGo);
+        Router.renderPageBasedOnPath(viewToRender);
+        Header.highlightActiveNavLink();
+        Router.listenForRouteChange();
+        Router.handleBackAndForward();
+
+      } catch (error) {
+        
+        const formAndValidationErrorContainer = document.querySelector(
         ".form-and-validation-container"
+      
       ) as HTMLElement;
 
       const errorMessage = `${

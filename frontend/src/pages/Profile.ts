@@ -71,7 +71,6 @@ class Profile extends Component {
           email: "",
           username: "",
           isSignedIn: false,
-          jwtAccessToken: "",
 		  avatar: "",
         });
         const routeToGo = "/";

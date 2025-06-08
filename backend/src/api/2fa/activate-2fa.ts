@@ -15,28 +15,34 @@ fastify.post(
     request: FastifyRequest<{ Body: activate2FaRequestType }>,
     reply
   ) {
-    const user = request.body.user;
-    const totpSecret = speakeasy.generateSecret({ name: "transcendence" });
-    if (!totpSecret.otpauth_url) {
-      reply.send({
-        errorMessage: "Something went wrong!",
-      });
-      return;
-    }
-
     try {
+      const user = request.body.user;
+
+      if (!user || !user.id) {
+        return reply.status(400).send({
+          errorMessage: "Invalid input: user is required",
+        });
+      }
+
+      const totpSecret = speakeasy.generateSecret({ name: "transcendence" });
+      if (!totpSecret.otpauth_url) {
+        return reply.status(500).send({
+          errorMessage: "Failed to generate 2FA secret",
+        });
+      }
+
       const dataUrl = await Qrcode.toDataURL(totpSecret.otpauth_url);
       const userDbInstance = new UserDb("database/test.db");
       const userDb = userDbInstance.openDb();
       userDbInstance.updateTotpSecret(userDb, user.id, totpSecret.base32);
+      userDb.close();
+
       reply.send({ dataUrl });
-      return;
     } catch (error) {
       console.log(error);
-      reply.send({
-        errorMessage: "Something went wrong!",
+      return reply.status(500).send({
+        errorMessage: "Internal server error",
       });
-      return;
     }
   }
 );

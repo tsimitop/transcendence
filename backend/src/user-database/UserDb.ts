@@ -335,18 +335,27 @@ class UserDb extends Sqlite {
     updateTotpSecretStatement.run(totpSecret, id);
   }
 
-  public get2FaStatus(userDb: DbType, id: string) {
+  public get2FaStatus(userDb: DbType, id: string): boolean | null {
     const status2FaStatement = userDb.prepare(QueryUser.GET_2FA_STATUS);
-    const result = status2FaStatement.all(id) as [{ has_2fa: boolean }];
-    const has2Fa = result[0].has_2fa;
-    return has2Fa;
+    const result = status2FaStatement.all(id) as { has_2fa: boolean }[];
+
+    if (!result.length || !result[0]) {
+      return null;
+    }
+
+    return result[0].has_2fa;
   }
 
-  public getTotpSecret(userDb: DbType, id: string) {
+  public getTotpSecret(userDb: DbType, id: string): string | null {
     const getTotpStatement = userDb.prepare(QueryUser.GET_TOTP_SECRET);
-    const result = getTotpStatement.all(id) as [{ totp_secret: string }];
+    const result = getTotpStatement.all(id) as { totp_secret: string }[];
+
+    if (!result.length || !result[0]) {
+      return null;
+    }
+
     const totpSecret = result[0].totp_secret;
-    return totpSecret;
+    return totpSecret || null;
   }
 
 //   public sendFriendRequest(userDbUser: DbType, userDbFriend: DbType) {

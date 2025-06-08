@@ -55,14 +55,15 @@ export const sendRefreshAndAccessTokens = async function (
     sameSite: "none",
     expires: new Date(Date.now() + 15 * 60 * 1000),
   });
-  reply.send({ errorMessage: "", user, jwtAccessToken: "" });
+  reply.send({ errorMessage: "", user });
 };
 
-export const hasUserActive2Fa = async function (user: UserStateType) {
+export const hasUserActive2Fa = async function (user: UserStateType): Promise<boolean> {
   const userDbInstance = new UserDb("database/test.db");
   const userDb = userDbInstance.openDb();
   const has2Fa = userDbInstance.get2FaStatus(userDb, user.id);
-  return has2Fa;
+  userDb.close();
+  return has2Fa === null ? false : has2Fa;
 };
 
 fastify.post(
@@ -74,7 +75,6 @@ fastify.post(
       reply.send({
         errorMessage: "Invalid input",
         user: null,
-        jwtAccessToken: "",
       });
       return;
     }
@@ -91,7 +91,6 @@ fastify.post(
       reply.send({
         errorMessage: "Invalid username or password!",
         user: null,
-        jwtAccessToken: "",
       });
       return;
     }
@@ -103,7 +102,6 @@ fastify.post(
       reply.send({
         errorMessage: "2FA code is required",
         user,
-        jwtAccessToken: "",
       });
     }
   }
