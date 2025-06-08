@@ -13,13 +13,15 @@ export function handleListTournament(senderUsername: string): void {
   const tournamentList = [];
 
   for (const [username, tournament] of currentTournaments.entries()) {
-    tournamentList.push({
-      id: tournament.getUniqeID(),
-      owner: username,
-      alias: tournament.getPlayerOneAlias(),
-      state: tournament.getTournamentState(),
-      // optionally include player names, number of players, etc. tournament?
-    });
+    if (tournament.getTournamentState() === "waiting") {
+      tournamentList.push({
+        id: tournament.getUniqeID(),
+        owner: username,
+        alias: tournament.getPlayerOneAlias(),
+        state: tournament.getTournamentState(),
+        // optionally include player names, number of players, etc. tournament?
+      });
+    }
   }
   
   const response = {
