@@ -41,8 +41,7 @@ fastify.post(
     try {
       const userDbInstance = new UserDb("database/test.db");
       const userDb = userDbInstance.openDb();
-      const cookieRefreshToken =
-        request.cookies.refreshtoken || request.cookies.oauthrefreshtoken;
+      const cookieRefreshToken = request.cookies.refreshtoken;
       // if (!request.body || !request.body?.user || !request.body?.user?.id) {
       if (!cookieRefreshToken) {
         reply.send({

@@ -37,7 +37,6 @@ class UserContext extends StateManager<UserStateType> {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${this.state.jwtAccessToken}`,
           },
           body: JSON.stringify({ user: this.state }),
           signal: AbortSignal.timeout(5000),
@@ -58,7 +57,7 @@ class UserContext extends StateManager<UserStateType> {
 	if (!willBeSignedIn && wasSignedIn) {
 	  maybeStopChat();
 	}
-	if (willBeSignedIn && !wasSignedIn && newState.jwtAccessToken) {
+	if (willBeSignedIn && !wasSignedIn) {
 	  maybeStartChat();
 	}
   }

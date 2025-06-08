@@ -17,8 +17,7 @@ fastify.post(
   "/api/generate-new-access-token",
   // (request: FastifyRequest<{ Body: RequestNewAccessTokenType }>, reply) => {
   async (request, reply) => {
-    const cookieRefreshToken =
-      request.cookies.refreshtoken || request.cookies.oauthrefreshtoken;
+    const cookieRefreshToken = request.cookies.refreshtoken;
     if (!cookieRefreshToken) {
       reply.send({
         errorMessage:
@@ -136,9 +135,15 @@ fastify.post(
     );
     const newJwtAccessToken = signJwtAccessToken(userId);
     // console.log("*******************", newJwtAccessToken);
+    reply.cookie("accesstoken", newJwtAccessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      expires: new Date(Date.now() + 15 * 60 * 1000),
+    });
     reply.send({
       errorMessage: "",
-      newJwtAccessToken,
+      newJwtAccessToken: "",
       userId,
       email,
       username,

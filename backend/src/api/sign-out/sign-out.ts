@@ -9,12 +9,6 @@ fastify.post("/api/sign-out", async function (request, reply) {
     sameSite: "none",
     path: "/api",
   });
-  reply.clearCookie("oauthrefreshtoken", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    path: "/api",
-  });
   reply.clearCookie("accesstoken", {
     httpOnly: true,
     secure: true,

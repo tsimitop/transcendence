@@ -32,4 +32,4 @@ export const GUEST_USER_REDIRECTION_PATH: ValidUrlPathsType = "/sign-in";
 
 // this affects the other stuff, change the port in the docker compose file too if you change this
 // otherwise cors will not work
-export const CADDY_SERVER = "https://localhost:4443";
+export const CADDY_SERVER = `https://${window.location.hostname}:4443`;

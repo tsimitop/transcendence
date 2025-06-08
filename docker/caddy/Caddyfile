@@ -1,11 +1,10 @@
 {
 	log {
-		level warn
+		level info
 	}
 }
 
-# localhost:443 {
-localhost {
+{env.TRANSCENDENCE_HOSTNAME}:4443 {
 	# TLS configuration for self-signed certificates
 	tls internal
 

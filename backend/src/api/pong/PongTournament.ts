@@ -1,9 +1,8 @@
 import { connectedUsers } from "../../websocket/WebSocket";
-import { currentGames } from "./PongMsgHandler";
+import { currentGames, currentTournaments } from "./PongMsgHandler";
 import { PongGame } from "./PongGame";
 import { globalCountdown } from "./PongMsgHandler";
 import { startGameLoop } from "./PongMsgHandlerGame";
-
 
 type TournamentState = 'waiting' | 'countdown' | 'playing' | 'paused' | 'finished';
 
@@ -19,149 +18,209 @@ export class Tournament {
 /**************     Variables    *********************/
 /*****************************************************/
 
-  	private uniqueID: string;
+	private uniqueID: string;
 	// private PlayerOneAlias: string = "PlayerOneAlias";
 	// private PlayerOneName: string = "PlayerOneName";
 	private currentPlayers: number = 0; 
 	private gameState: TournamentState = "waiting";
+	public static readonly MAX_PLAYERS: number = 4; // Maximum players in a tournament
 
 	private players: Map<string, Player> = new Map();
-
+	private matchWinners: Player[] = [];
+	private finalStarted: boolean = false;
 
 /*****************************************************/
 /**************     Constructor  *********************/
 /*****************************************************/
 
-constructor(uniqueID: string, playerName: string, playerAlias: string ) {
-	this.uniqueID = uniqueID;
-	// this.PlayerOneName = playerName;
-	// this.PlayerOneAlias = playerAlias;
-	const socket = connectedUsers.get(playerName);
-
-	this.addPlayer(playerName, playerAlias, socket);
-
-  }
-
+	constructor(uniqueID: string, playerName: string, playerAlias: string ) {
+		this.uniqueID = uniqueID;
+		// this.PlayerOneName = playerName;
+		// this.PlayerOneAlias = playerAlias;
+		const socket = connectedUsers.get(playerName);
+		this.addPlayer(playerName, playerAlias, socket);
+	}
 
 /*****************************************************/
 /**************        Methods   *********************/
 /*****************************************************/
-getPlayerOneAlias(): string | undefined {
-	const firstEntry = this.players.entries().next().value;
-
-	return firstEntry?.[0];
-}
-
-
-
-getAllPlayers(): Player[] {
-	return Array.from(this.players.values());
-}
-addPlayer(name: string, alias: string, socket: any){
-	// prevent duplicate - not necessary / possible?
-	if(this.players.has(name))
-		return;
-	if (socket) {
-		console.log("Socket exists for", name);
-	}
-	this.players.set(name, {name, alias, socket});
-	this.currentPlayers++;
-}
-removePlayer(name: string){
-	if(this.players.has(name)){
-		this.players.delete(name);
-		this.currentPlayers--;
-	}
-}
-
 
 	getUniqeID(): string { return this.uniqueID; }
-    getTournamentState(): TournamentState { return this.gameState; }
+	getTournamentState(): TournamentState { return this.gameState; }
 	getCurrentPlayers(): number { return this.currentPlayers; }
 
-	readyToStart(): boolean{
-		if(this.currentPlayers === 4)
-			return true;
-		else
-			return false;
+	getPlayerOneAlias(): string | undefined {
+		const firstEntry = this.players.entries().next().value;
+		return firstEntry?.[0];
 	}
 
-	start() {
+	getAllPlayers(): Player[] {
+		return Array.from(this.players.values());
+	}
+
+	hasPlayer(playerName: string): boolean {
+		return this.players.has(playerName);
+	}
+
+	playerCanJoin(playerName: string, alias: string): boolean {
+		if (this.getTournamentState() !== 'waiting') {
+			console.warn("Tournament is not in waiting state, cannot join");
+			return false;
+		}
+		if (this.currentPlayers >= Tournament.MAX_PLAYERS) {
+			console.warn("Tournament is full, cannot join");
+			return false;
+		}
+		if (this.players.has(playerName)) {
+			console.warn(`Player with name ${playerName} already in tournament`);
+			return false;
+		}
+		for (const player of this.players.values()) {
+			if (player.alias === alias) {
+				console.warn(`Alias ${alias} is already used in tournament`);
+				return false;
+			}
+		}
+		return true;
+	}
+
+	addPlayer(name: string, alias: string, socket: any) {
+		if (!this.playerCanJoin(name, alias)) {
+			console.debug(`Player ${name} with alias ${alias} cannot join tournament`);
+			return;
+		}
+
+		this.players.set(name, { name, alias, socket });
+		this.currentPlayers++;
+	}
+
+	removePlayer(name: string) {
+		if (this.players.has(name)) {
+			this.players.delete(name);
+			this.currentPlayers--;
+		}
+	}
+
+	readyToStart(): boolean{
+		return this.currentPlayers === 4;
+	}
+
+	start(): void {
 		let countdown = globalCountdown;
+		console.log("Tournament is starting");
 
-		console.log("Tournament is starting")
 		const playerArray = Array.from(this.players.values());
-		console.log(playerArray[0].name, "<->", playerArray[0].alias);
-		console.log(playerArray[1].name, "<->", playerArray[1].alias);
-		console.log(playerArray[2].name, "<->", playerArray[2].alias);
-		console.log(playerArray[3].name, "<->", playerArray[3].alias);
 
-		// create match one
-		const uniqueGameIDOne = `${playerArray[0].name}-Game-${Date.now()}`;
-		const matchOne = new PongGame(uniqueGameIDOne, playerArray[0].name, playerArray[0].alias, "remote");
-			// set it to gameslist
-			currentGames.set(playerArray[0].name, matchOne);
-			// add state and opponent
-			matchOne.setGameState('countdown');
-			matchOne.setOpponentName(playerArray[1].name, playerArray[1].alias);
+		const matchOne = new PongGame(`${playerArray[0].name}-Game-${Date.now()}`, playerArray[0].name, playerArray[0].alias, "remote");
+		matchOne.setOpponentName(playerArray[1].name, playerArray[1].alias);
+		matchOne.setGameState('countdown');
+		matchOne.setSockets(playerArray[0].socket, playerArray[1].socket);
+		currentGames.set(playerArray[0].name, matchOne);
 
-
-		// create match two
-		const uniqueGameIDTwo = `${playerArray[2].name}-Game-${Date.now()}`;
-		const matchTwo = new PongGame(uniqueGameIDTwo, playerArray[2].name, playerArray[2].alias, "remote");
-		// 	// set it to gameslist
-			currentGames.set(playerArray[2].name, matchTwo);
-
-		// 	// add opponent
-			matchTwo.setOpponentName(playerArray[3].name, playerArray[3].alias);
-			matchTwo.setGameState('countdown');
+		const matchTwo = new PongGame(`${playerArray[2].name}-Game-${Date.now()}`,
+		  playerArray[2].name, playerArray[2].alias, "remote");
+		matchTwo.setOpponentName(playerArray[3].name, playerArray[3].alias);
+		matchTwo.setGameState('countdown');
+		matchTwo.setSockets(playerArray[2].socket, playerArray[3].socket);
+		currentGames.set(playerArray[2].name, matchTwo);
 
 		const response = {
-				target_endpoint: 'pong-api',
-				type: 'countdown',
-				value : countdown
-		  };
-	
-		  if (!playerArray[0].socket || playerArray[0].socket.readyState !== WebSocket.OPEN) return;
-		  if (!playerArray[1].socket || playerArray[1].socket.readyState !== WebSocket.OPEN) return;
-		  if (!playerArray[2].socket || playerArray[2].socket.readyState !== WebSocket.OPEN) return;
-		  if (!playerArray[3].socket || playerArray[3].socket.readyState !== WebSocket.OPEN) return;
+			target_endpoint: 'pong-api',
+			type: 'countdown',
+			value : countdown
+		};
 
-		  playerArray[0].socket.send(JSON.stringify(response));
-		  playerArray[1].socket.send(JSON.stringify(response));
-		  playerArray[2].socket.send(JSON.stringify(response));
-		  playerArray[3].socket.send(JSON.stringify(response));
+		playerArray.forEach(p => {
+			if (p.socket?.readyState === WebSocket.OPEN) {
+				p.socket.send(JSON.stringify(response));
+			}
+		});
 
-  		// set sockets to current instance
-		  matchOne.setSockets(playerArray[0].socket, playerArray[1].socket);
-		  matchTwo.setSockets(playerArray[2].socket, playerArray[3].socket);
-		  
-		//   doesnt work i dont know why instead upper line works
-		//   currentGames.get(playerArray[1].name)?.setSockets(playerArray[0].socket, playerArray[1].socket);
-		//   currentGames.get(playerArray[3].name)?.setSockets(playerArray[2].socket, playerArray[3].socket);
-
-			const interval = setInterval(() => {
+		const interval = setInterval(() => {
 			countdown--;
 			if (countdown <= 0) {
-			clearInterval(interval);
-			for (const [username, game] of currentGames.entries()) {
-				if(uniqueGameIDOne === game.getUniqeID()){
-					game.setGameState('playing');
-				}
-				if(uniqueGameIDTwo === game.getUniqeID()){
-				game.setGameState('playing');
-				}
+				clearInterval(interval);
+				matchOne.setGameState('playing');
+				matchTwo.setGameState('playing');
+				startGameLoop(matchOne);
+				startGameLoop(matchTwo);
 			}
-			startGameLoop(currentGames.get(playerArray[0].name)!);
-			startGameLoop(currentGames.get(playerArray[2].name)!);
-			//tournament second round implementation
-
-			setTimeout(() => {
-			}, 1000);
-			} 
 		}, 1000);
+	}
+
+	public notifyMatchEnd(winnerName: string): void {
+		console.log(`notifyMatchEnd called with: ${winnerName}`);
+		console.log("Final started:", this.finalStarted);
+		console.log("Current matchWinners:", this.matchWinners.map(p => p.alias));
+
+		const winner = this.players.get(winnerName);
+		if (!winner) {
+			console.warn("Winner not found in tournament players.");
+			return;
+		}
+
+		if (this.finalStarted) {
+			console.log(`Final match ended. ${winner.alias} wins the tournament.`);
+			this.finishTournament(winnerName);
+			return;
+		}
+
+		this.matchWinners.push(winner);
+		console.log(`Tournament: ${winner.alias} won a match.`);
+
+		if (this.matchWinners.length === 2) {
+			this.startFinal();
+		}
+	}
 
 
+	private startFinal(): void {
+		console.log("Starting final round of tournament");
 
+		const [winner1, winner2] = this.matchWinners;
+
+		const finalGameId = `${winner1.name}-Final-${Date.now()}`;
+		const finalGame = new PongGame(finalGameId, winner1.name, winner1.alias, "remote");
+		finalGame.setOpponentName(winner2.name, winner2.alias);
+		finalGame.setGameState("countdown");
+		finalGame.setSockets(winner1.socket, winner2.socket);
+		currentGames.set(winner1.name, finalGame);
+
+		this.finalStarted = true;
+		let countdown = globalCountdown;
+		const response = {
+			target_endpoint: 'pong-api',
+			type: 'countdown',
+			value: countdown
+		};
+
+		winner1.socket.send(JSON.stringify(response));
+		winner2.socket.send(JSON.stringify(response));
+
+		const interval = setInterval(() => {
+			countdown--;
+			if (countdown <= 0) {
+				clearInterval(interval);
+				finalGame.setGameState("playing");
+				startGameLoop(finalGame);
+			}
+		}, 1000);
+	}
+
+	private finishTournament(winnerName: string): void {
+		const winnerAlias = this.players.get(winnerName)?.alias ?? winnerName;
+
+		for (const player of this.players.values()) {
+			if (player.socket?.readyState === WebSocket.OPEN) {
+				player.socket.send(JSON.stringify({
+					target_endpoint: 'pong-api',
+					type: 'tournament_end',
+					value: `${winnerAlias} has won the tournament!`
+				}));
+			}
+		}
+
+		currentTournaments.delete(this.uniqueID);
+		console.log(`Tournament ${this.uniqueID} is finished and removed.`);
 	}
 }

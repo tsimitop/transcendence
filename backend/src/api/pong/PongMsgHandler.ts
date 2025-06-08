@@ -126,38 +126,48 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
 }
 
 export function endOfGame(user: string, message: string) {
-  // console.log("user dissssssssconected");
   for (const [username, game] of currentGames.entries()) {
-    if(user === game.getlPlayerName() || user === game.getrPlayerName()) {
-      game.setGameState("finished");
+    const lPlayer = game.getlPlayerName();
+    const rPlayer = game.getrPlayerName();
 
-      const response = {
-        target_endpoint: 'pong-api',
-        type: 'game_over',
-        pong_data: {
-          gameId: game.getUniqeID(),
-          winnerId: user,
-          message: message,
-          finalScore: {
-            left: game.getlPlayerScore(),
-            right: game.getrPlayerScore()
-            }
+    if (user !== lPlayer && user !== rPlayer) continue;
+
+    game.setGameState("finished");
+
+    const winnerId = user;
+    const response = {
+      target_endpoint: 'pong-api',
+      type: 'game_over',
+      pong_data: {
+        gameId: game.getUniqeID(),
+        winnerId: winnerId,
+        message: message,
+        finalScore: {
+          left: game.getlPlayerScore(),
+          right: game.getrPlayerScore(),
         }
       }
-      const lsocket = game.getlPlayerSocket();
-      const rsocket = game.getrPlayerSocket();
-      currentGames.delete(username);
-      if (lsocket && lsocket.readyState === WebSocket.OPEN){
-        lsocket.send(JSON.stringify(response));
-      }
-      if (rsocket && rsocket.readyState === WebSocket.OPEN){
-        rsocket.send(JSON.stringify(response));
+    };
+    const lsocket = game.getlPlayerSocket();
+    const rsocket = game.getrPlayerSocket();
+    if (lsocket?.readyState === WebSocket.OPEN) {
+      lsocket.send(JSON.stringify(response));
+    }
+    if (rsocket?.readyState === WebSocket.OPEN) {
+      rsocket.send(JSON.stringify(response));
+    }
+    currentGames.delete(username);
+    for (const [_, tournament] of currentTournaments.entries()) {
+      if (tournament.hasPlayer(user)) {
+        console.log("notifyMatchEnd called with:", user);
+        tournament.notifyMatchEnd(user);
+        break;
       }
     }
-    // console.log(`Game with key ${username} removed from currentGames`);
     break;
   }
 }
+
   
 
 export function deleteGameBecauseUserReconnected(user: string): void {
