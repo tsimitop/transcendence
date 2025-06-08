@@ -14,26 +14,40 @@ dotenv.config();
 // Set the JWT secret from environment variables
 const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET!;
 
-/**
- * @brief A map of connected users.
- * @key  username, Value: WebSocket connection
- */
-export const connectedUsers = new Map<string, WebSocket>();
+interface UserConnection {
+  socket: WebSocket;
+  type: 'chat' | 'pong';
+  connectedAt: Date;
+}
 
-/**
- * @brief A map of blocked users.
- * @key username, Value: Set of blocked usernames
- */
+export const connectedUsers = new Map<string, Map<string, UserConnection>>();
+
+export function getUserSocket(username: string): WebSocket | undefined {
+  const userConnections = connectedUsers.get(username);
+  if (!userConnections || userConnections.size === 0) return undefined;
+
+  // Prefer chat connection, fallback to any available connection
+  const chatConnection = userConnections.get('chat');
+  if (chatConnection) return chatConnection.socket;
+
+  // Return first available connection
+  const firstConnection = userConnections.values().next().value;
+  return firstConnection?.socket;
+}
+
+
+export function getPongSocket(username: string): WebSocket | undefined {
+  const userConnections = connectedUsers.get(username);
+  if (!userConnections) return undefined;
+
+  const pongConnection = userConnections.get('pong');
+  return pongConnection?.socket;
+}
+
+
 export const blockedUsers = new Map<string, Set<string>>();
 
-/**
- * @brief Starts the WebSocket server and handles incoming socket connections.
- * @param server - The HTTP/HTTPS server to bind WebSocket to.
- * @note In development mode (e.g., with Vite + HMR), this handler may be called
- * multiple times as the frontend reloads. This results in repeated
- * `[WS] User connected` and `[WS] User disconnected` log messages.
- * This is expected during development and does not occur in production.
- */
+
 export function startWebSocketServer(server: any) {
   const wss = new WebSocketServer({ server, path: '/ws' });
 
@@ -56,25 +70,30 @@ export function startWebSocketServer(server: any) {
 		socket.close(4002, 'Invalid Token');
 		return;
 	  }
-	
+
 	  const userDbInstance = new UserDb("database/test.db");
 	  const userDb = userDbInstance.openDb();
-	
+
 	  const username = userDbInstance.findUsernameByUserId(userDb, userId);
 	  if (!username) {
 		socket.close(4003, 'User Not Found');
 		return;
 	  }
-	
 
-	// Check if the user is already connected
-    console.log(`[WS] User connected: ${username}`);
-    
-    // delete running game or tournament user made
-    deleteGameBecauseUserReconnected(username)
+    // Extract connection type from query parameters
+    const url = new URL(req.url || '', `http://${req.headers.host}`);
+    const connectionType = url.searchParams.get('type') as 'chat' | 'pong';
+
+	  // Check if the user is already connected
+    console.log(`[WS] User connected: ${username} (type: ${connectionType})`);
+
+    // Only delete running games for pong connections
+    if (connectionType === 'pong') {
+      deleteGameBecauseUserReconnected(username);
+    }
 
     // Register the user to the active sockets map
-    registerUser(username, socket);
+    registerUser(username, socket, connectionType);
 
     // Handle incoming messages
     socket.on('message', (data) => {
@@ -83,13 +102,13 @@ export function startWebSocketServer(server: any) {
 
     // Handle socket close event
     socket.on('close', () => {
-      console.log(`[WS] User disconnected: ${username}`);
-      unregisterUser(username);
+      console.log(`[WS] User disconnected: ${username} (type: ${connectionType})`);
+      unregisterUser(username, connectionType);
 
-      endOfGame(username, "WIN THROUGH DISSCONNETION");
-
-      // end game if there is a current game running?
-
+      // Only end games for pong connections
+      if (connectionType === 'pong') {
+        endOfGame(username, "WIN THROUGH DISSCONNETION");
+      }
     });
 
     // Send welcome message
@@ -100,11 +119,7 @@ export function startWebSocketServer(server: any) {
   });
 }
 
-/**
- * @brief Extracts the JWT token from the incoming WebSocket upgrade request.
- * @param req - The incoming HTTP upgrade request.
- * @returns The JWT token if present, or null.
- */
+
 function getTokenFromRequest(req: IncomingMessage): string | null {
   // WebSocket connections don't automatically send cookies, so we primarily rely on query parameters
   const url = new URL(req.url || '', `http://${req.headers.host}`);
@@ -131,19 +146,29 @@ function getTokenFromRequest(req: IncomingMessage): string | null {
   return null;
 }
 
-/**
- * @brief Registers a user as connected
- * @param username - The username of the connecting user
- * @param socket - The WebSocket associated with this user
- */
-export function registerUser(username: string, socket: WebSocket): void {
-	connectedUsers.set(username, socket);
+
+export function registerUser(username: string, socket: WebSocket, type: 'chat' | 'pong' = 'chat'): void {
+  if (!connectedUsers.has(username)) {
+    connectedUsers.set(username, new Map());
   }
-  
-  /**
-   * @brief Removes a user from the list of connected users
-   * @param username - The username of the disconnecting user
-   */
-  export function unregisterUser(username: string): void {
-	connectedUsers.delete(username);
+
+  const userConnections = connectedUsers.get(username)!;
+  userConnections.set(type, {
+    socket,
+    type,
+    connectedAt: new Date()
+  });
+}
+
+
+export function unregisterUser(username: string, type: 'chat' | 'pong' = 'chat'): void {
+  const userConnections = connectedUsers.get(username);
+  if (!userConnections) return;
+
+  userConnections.delete(type);
+
+  // If no connections remain, remove the user entirely
+  if (userConnections.size === 0) {
+    connectedUsers.delete(username);
   }
+}

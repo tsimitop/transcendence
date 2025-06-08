@@ -135,7 +135,7 @@ import { CADDY_SERVER } from "../constants";
 		}
 		
 		// Open a WebSocket connection using the token from cookies
-		const socketUrl = `${CADDY_SERVER.replace(/^http/, "ws")}/ws?token=${data.token}`;
+		const socketUrl = `${CADDY_SERVER.replace(/^http/, "ws")}/ws?token=${data.token}&type=chat`;
 		this.socket = new WebSocket(socketUrl);
 	
 		// Connection established

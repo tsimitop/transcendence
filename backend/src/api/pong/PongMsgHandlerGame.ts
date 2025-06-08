@@ -1,5 +1,5 @@
 
-import { connectedUsers } from '../../websocket/WebSocket';
+import { connectedUsers, getPongSocket } from '../../websocket/WebSocket';
 import { currentGames } from './PongMsgHandler';
 import { CreateGameData } from './PongMessages';
 import { PongGame } from './PongGame';
@@ -9,7 +9,7 @@ import { endOfGame } from './PongMsgHandler';
 
 
 export function handleListGames(senderUsername: string): void {
-  const senderSocket = connectedUsers.get(senderUsername);
+  const senderSocket = getPongSocket(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
   const gameList = [];
@@ -41,7 +41,7 @@ export function handleCreateGame(senderUsername: string, pong_data: CreateGameDa
   const uniqueGameID = `${senderUsername}-Game-${Date.now()}`;
   const newGame = new PongGame(uniqueGameID, senderUsername, pong_data.playerAlias, pong_data.gameMode);
   currentGames.set(senderUsername, newGame);
-  const senderSocket = connectedUsers.get(senderUsername);
+  const senderSocket = getPongSocket(senderUsername);
   if(pong_data.gameMode === "remote"){
     // REMOTE GAME
     if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
@@ -92,7 +92,7 @@ export function handleCreateGame(senderUsername: string, pong_data: CreateGameDa
 export function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
   let countdown = globalCountdown;
 
-  const senderSocket = connectedUsers.get(senderUsername);
+  const senderSocket = getPongSocket(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
   let opponent: string = "";
@@ -109,7 +109,7 @@ export function handlerJoinGame(senderUsername: string, pong_data: JoinGameData)
     }
   }
   // console.log("opponent ", opponent);
-  const opponentSocket = connectedUsers.get(opponent);
+  const opponentSocket = getPongSocket(opponent);
   if (!opponentSocket || opponentSocket.readyState !== WebSocket.OPEN) {
     console.error(`Opponent socket is not open or does not exist: ${opponent}`);
     return;

@@ -1,5 +1,5 @@
 import {PongMessage, PongErrorData, KeyboardInputData, LocalGame, CreateGameData} from './PongMessages';
-import { connectedUsers } from '../../websocket/WebSocket';
+import { connectedUsers, getPongSocket } from '../../websocket/WebSocket';
 import { PongGame } from './PongGame';
 import { JoinGameData } from './PongMessages';
 import { Tournament } from './PongTournament';

@@ -1,4 +1,4 @@
-import { connectedUsers } from '../../websocket/WebSocket';
+import { connectedUsers, getPongSocket } from '../../websocket/WebSocket';
 import { currentTournaments } from './PongMsgHandler';
 import { Tournament } from './PongTournament';
 import { JoinGameData } from './PongMessages';
@@ -7,7 +7,7 @@ import { CreateGameData } from './PongMessages';
 
 export function handleListTournament(senderUsername: string): void {
   // console.log("handleListTournament");
-  const senderSocket = connectedUsers.get(senderUsername);
+  const senderSocket = getPongSocket(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
   const tournamentList = [];
@@ -36,7 +36,7 @@ export function handleListTournament(senderUsername: string): void {
 export function handlerJoinTournament(senderUsername: string, pong_data: JoinGameData): void {
 
   console.log("handlerJoinTournament")
-  const senderSocket = connectedUsers.get(senderUsername);
+  const senderSocket = getPongSocket(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
   let tournamentID: string = "";
@@ -74,7 +74,7 @@ export function handleCreateTournament(senderUsername: string, pong_data: Create
   // add tournament to list
   currentTournaments.set(senderUsername, newTournament);
 
-  const senderSocket = connectedUsers.get(senderUsername);
+  const senderSocket = getPongSocket(senderUsername);
     if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
       const response = {
         target_endpoint: 'pong-api',

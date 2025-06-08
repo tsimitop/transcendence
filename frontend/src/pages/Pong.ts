@@ -90,7 +90,7 @@ export class Pong extends Component {
       }
       
       // Open a WebSocket connection using the token from cookies
-      const socketUrl = `${CADDY_SERVER.replace(/^http/, "ws")}/ws?token=${data.token}`;
+      const socketUrl = `${CADDY_SERVER.replace(/^http/, "ws")}/ws?token=${data.token}&type=pong`;
       this.socket = new WebSocket(socketUrl);
     
       // Connection established
