@@ -53,7 +53,7 @@ case "$1" in
         docker rm -f $(docker ps -aq) 2>/dev/null || true
         docker volume rm $(docker volume ls -q) 2>/dev/null || true
         rm ./backend/database/test.db
-        rm ./frontend/dist
+        rm -rf ./frontend/dist
         echo "All containers and volumes removed."
         ;;
     *)
