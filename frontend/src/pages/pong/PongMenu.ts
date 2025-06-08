@@ -158,7 +158,7 @@ export function setupMenu(pong: Pong) {
     if (gameListInterval) clearInterval(gameListInterval);
     gameListInterval = window.setInterval(() => {
       pong.socket?.send(JSON.stringify({ target_endpoint: 'pong-api', payload: { type: 'game_list' } }));
-    }, 5000);
+    }, 1000);
   };
 
   joinRemoteTournamentGamePageBtn.onclick = () => {

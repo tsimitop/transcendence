@@ -15,13 +15,15 @@ export function handleListGames(senderUsername: string): void {
   const gameList = [];
 
   for (const [username, game] of currentGames.entries()) {
-    gameList.push({
-      id: game.getUniqeID(),
-      owner: username,
-      alias: game.getlPlayerAlias(),
-      state: game.getGameState(),
-      // optionally include player names, number of players, etc. tournament?
-    });
+    if (game.getGameState() === "waiting") {
+      gameList.push({
+        id: game.getUniqeID(),
+        owner: username,
+        alias: game.getlPlayerAlias(),
+        state: game.getGameState(),
+        // optionally include player names, number of players, etc. tournament?
+      });
+    }
   }
   
   const response = {
