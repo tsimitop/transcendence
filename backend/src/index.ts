@@ -12,3 +12,4 @@ import "./api/2fa/get-user-session-data";
 import "./api/2fa/deactivate-2fa";
 import "./api/protect-routes/validate-access-token";
 import "./api/protect-routes/generate-new-access-token";
+import "./api/websocket/get-ws-token";

@@ -6,6 +6,12 @@ abstract class Dom {
   }
 
   public static clearDOM = function (): void {
+    // Clean up any Pong components before clearing
+    const pongComponent = Dom._root.querySelector('pong-component') as any;
+    if (pongComponent && typeof pongComponent.cleanup === 'function') {
+      pongComponent.cleanup();
+    }
+    
     Dom._root.innerHTML = "";
   };
 

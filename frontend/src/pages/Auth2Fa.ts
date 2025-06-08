@@ -116,12 +116,11 @@ class Auth2Fa extends Component {
 	if (!validuser || !jwtAccessToken) {
 		throw new Error("Invalid response from server: user or token missing");
 	  }
-	localStorage.setItem("access_token", jwtAccessToken);
 	userContext.setState({
 	id: validuser.id,
 	email: validuser.email,
 	username: validuser.username,
-	jwtAccessToken,
+	jwtAccessToken: "",
 	isSignedIn: true,
 	});
 	await maybeStartChat();

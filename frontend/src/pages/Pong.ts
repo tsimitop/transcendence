@@ -57,60 +57,67 @@ export class Pong extends Component {
     PongInstance.insertChildren();
     PongInstance.classList.add("page");
   
-  PongInstance.initSocket(); // socket connects here
+    // Initialize socket asynchronously after component creation
+    setTimeout(async () => {
+      await PongInstance.initSocket();
+    }, 0);
 
-  // ✅ Wait until DOM is ready before setting up menu
-  setTimeout(() => {
-    const menu = document.getElementById('menuScreen');
-    if (menu) menu.style.display = 'flex';
-    else console.warn("menuScreen not found!");
+    // ✅ Wait until DOM is ready before setting up menu
+    setTimeout(() => {
+      const menu = document.getElementById('menuScreen');
+      if (menu) menu.style.display = 'flex';
+      else console.warn("menuScreen not found!");
 
-    setupMenu(PongInstance);
-  }, 0);
+      setupMenu(PongInstance);
+    }, 0);
 
-  return PongInstance;
+    return PongInstance;
   }
 
-  public initSocket(retryCount = 0): void {
-    const token = localStorage.getItem('access_token');
-
-	  // Retry a few times if token is not yet in localStorage
-	  if (!token) {
-      if (retryCount >= this.maxReconnectAttempts) {
-        console.error("Access token not found. Chat is disabled.");
-        // this.showSystemMessage("[Chat disabled: No token found]", "text-red-500");
+  public async initSocket(): Promise<void> {
+    try {
+      // Get the access token from the server
+      const response = await fetch(`${CADDY_SERVER}/api/ws-token`, {
+        method: "GET",
+        credentials: "include",
+      });
+      const data = await response.json();
+      
+      if (data.errorMessage || !data.token) {
+        console.error("Failed to get WebSocket token:", data.errorMessage);
+        this.showSystemMessage("[Pong disabled: No token found]", "text-red-500");
         return;
       }
+      
+      // Open a WebSocket connection using the token from cookies
+      const socketUrl = `${CADDY_SERVER.replace(/^http/, "ws")}/ws?token=${data.token}`;
+      this.socket = new WebSocket(socketUrl);
     
-      console.warn(`Access token missing. Retrying in 500ms... (attempt ${retryCount + 1})`);
-      setTimeout(() => this.initSocket(retryCount + 1), 500);
-      return;
-      }
+      // Connection established
+      this.socket.onopen = () => {
+        const username = userContext.state.username;
 
-
-    const socketUrl = `${CADDY_SERVER.replace(/^http/, "ws")}/ws?token=${token}`;
-    this.socket = new WebSocket(socketUrl);
-  
-	  // Connection established
-	  this.socket.onopen = () => {
-      const username = userContext.state.username;
-
-      console.log("Connected to pong server.");
-      this.reconnectAttempts = 0;
-      this.showSystemMessage("[Connected to server]", "text-green-500");
-      this.inputHandler = new PongInputHandler(this.socket!,  username);
-      this.inputHandler.start();
-
-
-
+        console.log("Connected to pong server.");
+        this.reconnectAttempts = 0;
+        this.showSystemMessage("[Connected to server]", "text-green-500");
+        this.inputHandler = new PongInputHandler(this.socket!,  username);
+        this.inputHandler.start();
       };
+    } catch (error) {
+      console.error("Failed to initialize WebSocket:", error);
+      this.showSystemMessage("[Pong disabled: Connection failed]", "text-red-500");
+      return;
+    }
   
       this.socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           if(data.target_endpoint == 'pong-api')
           {
-            handlePongMessage(data, this.socket);
+            // Check if the component is still in the DOM before handling messages
+            if (document.querySelector('pong-component')) {
+              handlePongMessage(data, this.socket);
+            }
           }
         } catch (e) {
           console.error("Failed to parse JSON from backend:", e);
@@ -141,6 +148,12 @@ export class Pong extends Component {
      * @brief Attempts to reconnect using exponential backoff.
      */
     private tryReconnect(): void {
+      // Don't try to reconnect if component is no longer in DOM
+      if (!document.querySelector('pong-component')) {
+        console.log("Pong component not in DOM, stopping reconnection attempts");
+        return;
+      }
+      
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error("Max reconnect attempts reached. Chat is permanently offline.");
       this.showSystemMessage("[Disconnected from server]", "text-red-500");
@@ -172,6 +185,27 @@ export class Pong extends Component {
       msgBox.appendChild(message);
       msgBox.scrollTop = msgBox.scrollHeight;
       }
+    }
+
+    /**
+     * @brief Cleanup method to properly close WebSocket connection
+     */
+    public cleanup(): void {
+      if (this.socket && this.socket.readyState !== WebSocket.CLOSED) {
+        this.socket.close();
+        this.socket = null;
+      }
+      if (this.inputHandler) {
+        this.inputHandler.stop();
+        this.inputHandler = null;
+      }
+    }
+
+    /**
+     * @brief Called when component is removed from DOM
+     */
+    public disconnectedCallback(): void {
+      this.cleanup();
     }
 }
 export default Pong;

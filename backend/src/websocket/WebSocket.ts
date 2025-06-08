@@ -106,8 +106,29 @@ export function startWebSocketServer(server: any) {
  * @returns The JWT token if present, or null.
  */
 function getTokenFromRequest(req: IncomingMessage): string | null {
+  // WebSocket connections don't automatically send cookies, so we primarily rely on query parameters
   const url = new URL(req.url || '', `http://${req.headers.host}`);
-  return url.searchParams.get('token');
+  const queryToken = url.searchParams.get('token');
+  
+  if (queryToken) {
+    return queryToken;
+  }
+  
+  // Fallback: try to get token from cookies (in case browser supports it)
+  const cookieHeader = req.headers.cookie;
+  if (cookieHeader) {
+    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+    
+    if (cookies.accesstoken) {
+      return cookies.accesstoken;
+    }
+  }
+  
+  return null;
 }
 
 /**

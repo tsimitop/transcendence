@@ -29,7 +29,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
         handleListTournaments(data, socket);
         break;  
 	  case 'tournament_end':
-		handleTournamentEnd(data.value); // NEW FUNCTION
+		handleTournamentEnd(data.value);
 		break;
       default:
         console.warn("Unknown message type:", data.type);
@@ -42,7 +42,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     // console.log(data);
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     if (!canvas) {
-      console.error("Canvas element not found");
+      console.warn("Canvas element not found - user may have navigated away");
       return;
     }
     // Hide all UI screens
@@ -98,7 +98,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
-      console.error("Canvas element not found");
+      console.warn("Canvas element not found - user may have navigated away");
       return;
     }
     const ctx = canvas.getContext("2d");
@@ -154,7 +154,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     // console.log("countdown data",data);
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
-      console.error("Canvas element not found");
+      console.warn("Canvas element not found - user may have navigated away");
       return;
     }
     // Hide all UI screens
@@ -200,7 +200,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 export function handleWaitingForUser() {
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
-      console.error("Canvas element not found");
+      console.warn("Canvas element not found - user may have navigated away");
       return;
     }
     // Hide all UI screens
@@ -431,7 +431,10 @@ export function handleWaitingForUser() {
 
 export function handleTournamentEnd(message: string) {
 	const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
-	if (!canvas) return;
+	if (!canvas) {
+		console.warn("Canvas element not found - user may have navigated away");
+		return;
+	}
 
 	const ctx = canvas.getContext("2d");
 	if (!ctx) return;

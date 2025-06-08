@@ -136,7 +136,7 @@ fastify.get(
       const has2Fa = await hasUserActive2Fa(user);
 
       if (!has2Fa) {
-        reply.cookie("oauthrefreshtoken", jwtRefreshToken, {
+        reply.cookie("refreshtoken", jwtRefreshToken, {
           httpOnly: true,
           secure: true,
           sameSite: "none",

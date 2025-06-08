@@ -48,7 +48,13 @@ export const sendRefreshAndAccessTokens = async function (
     expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     // expires: new Date(Date.now() + 10 * 60 * 1000),
   });
-  reply.send({ errorMessage: "", user, jwtAccessToken });
+  reply.cookie("accesstoken", jwtAccessToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    expires: new Date(Date.now() + 15 * 60 * 1000),
+  });
+  reply.send({ errorMessage: "", user, jwtAccessToken: "" });
 };
 
 export const hasUserActive2Fa = async function (user: UserStateType) {

@@ -98,7 +98,7 @@ abstract class Router {
 	       email: data.email,
 	       username: data.username,
 	       isSignedIn: true,
-	       jwtAccessToken: localStorage.getItem("access_token") || "",
+	       jwtAccessToken: "",
 	     });
 	   }
 
@@ -144,7 +144,7 @@ abstract class Router {
         email,
         username,
         isSignedIn,
-        jwtAccessToken: newJwtAccessToken,
+        jwtAccessToken: "",
       });
 
       const has2Fa = await Router.is2FaActive(userContext.state);
@@ -231,7 +231,7 @@ abstract class Router {
       console.log("getting new access token . . .");
       data = await Router.requestNewAccessToken();
       // console.log("newJwtAccessToken", newJwtAccessToken);
-      if (!data || !data.newJwtAccessToken) {
+      if (!data || data.errorMessage) {
         userContext.setState({
           ...userContext.state,
           id: "",

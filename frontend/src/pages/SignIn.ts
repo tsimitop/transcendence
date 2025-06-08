@@ -169,7 +169,7 @@ class SignIn extends Component {
         Router.handleBackAndForward();
         return;
       }
-      const { jwtAccessToken } = data;
+      const { jwtAccessToken: _ } = data;
       if (!isSignedIn) {
         throw data;
       }
@@ -179,9 +179,8 @@ class SignIn extends Component {
         email,
         username,
         isSignedIn,
-        jwtAccessToken: jwtAccessToken,
+        jwtAccessToken: "",
       });
-	  localStorage.setItem("access_token", jwtAccessToken);
       await Router.redirect("/");
     } catch (error) {
       const formAndValidationErrorContainer = document.querySelector(
