@@ -28,9 +28,9 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       case 'tournament_list':
         handleListTournaments(data, socket);
         break;  
-	  case 'tournament_end':
-		handleTournamentEnd(data.value);
-		break;
+      case 'tournament_end':
+        handleTournamentEnd(data.value);
+        break;
       default:
         console.warn("Unknown message type:", data.type);
         break;

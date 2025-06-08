@@ -1,7 +1,14 @@
 import { Pong } from "../Pong";
 
 export let gameIsRunning = false;
+
+export function logWithStack(message: string) {
+  const stack = new Error().stack;
+  console.log(`${message}\n${stack}`);
+}
+
 export function setGameRunning(value: boolean) {
+  logWithStack(`set game running: ${value}`);
   gameIsRunning = value;
 }
 
