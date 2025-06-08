@@ -1,4 +1,4 @@
-import { connectedUsers } from "../../websocket/WebSocket";
+import { connectedUsers, getPongSocket } from "../../websocket/WebSocket";
 import { currentGames, currentTournaments } from "./PongMsgHandler";
 import { PongGame } from "./PongGame";
 import { globalCountdown } from "./PongMsgHandler";
@@ -37,7 +37,7 @@ export class Tournament {
 		this.uniqueID = uniqueID;
 		// this.PlayerOneName = playerName;
 		// this.PlayerOneAlias = playerAlias;
-		const socket = connectedUsers.get(playerName);
+		const socket = getPongSocket(playerName);
 		this.addPlayer(playerName, playerAlias, socket);
 	}
 
