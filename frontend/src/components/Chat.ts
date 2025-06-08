@@ -116,9 +116,6 @@ import { CADDY_SERVER } from "../constants";
 		}
 	  }
   
-	/**
-	 * @brief Initializes a WebSocket connection using token from cookies.
-	 */
 	public async initSocket(): Promise<void> {
 	  try {
 		// Get the access token from the server
@@ -127,17 +124,18 @@ import { CADDY_SERVER } from "../constants";
 		  credentials: "include",
 		});
 		const data = await response.json();
-		
+		console.log("data after fetching ws-token:", data);
 		if (data.errorMessage || !data.token) {
 		  console.error("Failed to get WebSocket token:", data.errorMessage);
 		  this.showSystemMessage("[Chat disabled: No token found]", "text-red-500");
 		  return;
 		}
-		
+
 		// Open a WebSocket connection using the token from cookies
 		const socketUrl = `${CADDY_SERVER.replace(/^http/, "ws")}/ws?token=${data.token}&type=chat`;
+		console.log("Connecting to chat server at:", socketUrl);
 		this.socket = new WebSocket(socketUrl);
-	
+
 		// Connection established
 		this.socket.onopen = () => {
 		  console.log("Connected to chat server.");

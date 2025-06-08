@@ -80,11 +80,14 @@ export function startWebSocketServer(server: any) {
 		return;
 	  }
 
-    // Extract connection type from query parameters
     const url = new URL(req.url || '', `http://${req.headers.host}`);
-    const connectionType = url.searchParams.get('type') as 'pong' | 'chat';
 
-	  // Check if the user is already connected
+    const connectionType = (url.searchParams.get('type')) as 'pong' | 'chat';
+    if (!connectionType) {
+      socket.close(4004, 'Missing Connection Type');
+      return;
+    }
+
     console.log(`[WS] User connected: ${username} (type: ${connectionType})`);
 
     // Only delete running games for pong connections

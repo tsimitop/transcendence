@@ -13,7 +13,7 @@ export class PongInputHandler {
   }  
 
   private readonly TICKRATE = 15 // 15ms
-  private intervalId: NodeJS.Timeout | null = null;
+  private intervalId: number | null = null;
 
 /*****************************************************/
 /**************     Constructor  *********************/

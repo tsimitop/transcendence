@@ -185,7 +185,7 @@ class BackendClient:
         ssl_context.verify_mode = ssl.CERT_NONE
         connector = TCPConnector(ssl=ssl_context)
         
-        websocket_url = f'{self.url}/ws?token={self.access_token}'
+        websocket_url = f'{self.url}/ws?token={self.access_token}&type=pong'
         
         async with ClientSession(connector=connector) as session:
             async with session.ws_connect(websocket_url) as ws:
