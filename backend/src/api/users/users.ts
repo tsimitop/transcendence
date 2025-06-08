@@ -4,6 +4,7 @@ import { QueryFriend } from "../../user-database/friend-queries";
 import UserDb from "../../user-database/UserDb";
 import { connectedUsers } from '../../websocket/WebSocket';
 import { UserStateType } from "../sign-in/sign-in";
+import { fastify } from "../../server";
 
 type SearchRequestBody = {
   userState: UserStateType;
@@ -11,9 +12,7 @@ type SearchRequestBody = {
   isUserConnected: boolean | undefined;
 };
 
-export default async function usersRoutes(fastify: FastifyInstance) {
 fastify.post("/api/users", async function (request: FastifyRequest<{ Body: SearchRequestBody }>, reply: FastifyReply) {
-
   try {
    const { searchTerm } = request.body;
    const username = searchTerm?.trim();
@@ -71,5 +70,4 @@ fastify.post("/api/users", async function (request: FastifyRequest<{ Body: Searc
     } catch (err: any) {
       return reply.status(500).send({ error: "Failed to retrieve connected users", detail: err.message });
     }
-  });
-}
+});

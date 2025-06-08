@@ -19,7 +19,6 @@ type SecurityUpdate = {
   newPass: string;
 };
 
-export default async function editingRoutes(fastify: FastifyInstance) {
 fastify.post(
   "/api/editing/username",
   async function (
@@ -180,5 +179,4 @@ fastify.post(
     }
 
     reply.send({message: `Avatar uploaded: ${filename}`});
-  });
-}
+});

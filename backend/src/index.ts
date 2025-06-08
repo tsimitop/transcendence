@@ -1,5 +1,8 @@
 import "./server";
 import "./api/sign-up/sign-up";
+import "./api/users/users";
+import "./api/friends/friends";
+import "./api/editing/editing";
 import "./api/sign-in/sign-in";
 import "./api/sign-out/sign-out";
 import "./api/oauth/oauth";
