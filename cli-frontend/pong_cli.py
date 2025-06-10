@@ -530,11 +530,16 @@ class GameClient(BackendClient):
 
     def update_game_state(self, game_data: dict):
         if not game_data:
+            logger.warning("Received empty game data")
             return
+        game_id = game_data.get('id', 'unknown')
+        game_status = game_data.get('status', 'unknown')
+        logger.debug(f"Updating game state for game {game_id}, status: {game_status}")
         self.game_data = game_data
-        self.game_id = game_data.get('id')
+        self.game_id = game_id
 
     def handle_game_over(self, pong_data: dict):
+        logger.info(f"Handling game over: {pong_data}")
         self.game_data = None
         self._game_over_data = pong_data
 
@@ -546,6 +551,7 @@ class GameClient(BackendClient):
         })
 
     async def get_joinable_games(self):
+        logger.info("Requesting list of joinable games")
         get_games_request = self.to_pong_api_request(
             {
                 "type": "game_list",
@@ -562,13 +568,17 @@ class GameClient(BackendClient):
                     game = PongGame.from_dict(game_data['game'])
                     if game.is_waiting:
                         games.append(game)
+            logger.info(f"Found {len(games)} joinable games")
             return sorted(games, key=lambda x: x.lastUpdateTime, reverse=True)
         except Exception as e:
             e = traceback.format_exc()
+            logger.error(f"Failed to get joinable games: {e}")
             self._error = (str(e), 420)
             return []
-    
+
     def send_key_input(self, *, up: bool):
+        direction = "up" if up else "down"
+        logger.debug(f"Sending key input: {direction}")
         msg = self.to_pong_api_request(
             {
                 "type": "input",
@@ -581,6 +591,7 @@ class GameClient(BackendClient):
         self.outgoing_messages.put_nowait(msg)
 
     async def create_new_game(self, mode: str, max_score: int):
+        logger.info(f"Creating new game with mode: {mode}, max_score: {max_score}")
         create_game_request = self.to_pong_api_request(
             {
                 "type": "create_game",
@@ -594,6 +605,7 @@ class GameClient(BackendClient):
         await self.outgoing_messages.put(create_game_request)
 
     async def join_game(self, game_id: str):
+        logger.info(f"Joining game with ID: {game_id}")
         join_game_request = self.to_pong_api_request(
             {
                 "type": "join_game",
@@ -627,6 +639,7 @@ class PongCli:
 
     def __init__(self, game_client: GameClient):
         assert game_client.is_connected, "Backend client is not authenticated"
+        logger.info("Initializing PongCli terminal interface")
         self.client: GameClient = game_client
         self.stdscr = curses.initscr()
         curses.noecho()
@@ -638,12 +651,15 @@ class PongCli:
         self.stdscr.nodelay(True)  # Non-blocking input
         self.stdscr.clear()
         self.stdscr.refresh()
+        logger.info("PongCli terminal interface initialized successfully")
 
     async def run(self):
+        logger.info("Starting PongCli main loop")
         async def wait_for_connection():
             while True:
                 await asyncio.sleep(0.1)
                 if self.client.requires_2fa_input.is_set():
+                    logger.info("2FA input required, prompting user")
                     self.client.got_2fa_input.set_result(
                         await self.text_input(msg="Enter two-factor authentication code:")
                     )
@@ -651,14 +667,18 @@ class PongCli:
                 elif self.client.is_connected.is_set():
                     break
         await asyncio.wait_for(wait_for_connection(), timeout=60)
+        logger.info("Connection established, entering main menu loop")
         while True:
             # main menu
             game = await self.main_menu()
             if not game:
+                logger.info("User chose to quit from main menu")
                 break
             # run game
+            logger.info(f"Starting game: {game.id}")
             game_result = await self.game_screen(game)
             # show game result
+            logger.info(f"Game finished, showing results: {game_result}")
             await self.show_game_result(game_result)
         raise GracefulExit(f"gui cancelled")
 
@@ -718,6 +738,7 @@ class PongCli:
         return y - 1, x - 1
 
     async def main_menu(self) -> Optional[PongGame]:
+        logger.info("Displaying main menu")
         max_y, max_x = self.screen_size
         menu = [
             ("Create a new game", self.create_game_screen),
@@ -745,11 +766,15 @@ class PongCli:
                 await asyncio.sleep(0.05)
             elif key == curses.KEY_UP:
                 selected_item = (selected_item - 1) % len(menu)
+                logger.debug(f"Menu navigation: UP, selected item: {selected_item}")
                 draw_menu()
             elif key == curses.KEY_DOWN:
                 selected_item = (selected_item + 1) % len(menu)
+                logger.debug(f"Menu navigation: DOWN, selected item: {selected_item}")
                 draw_menu()
             elif key == curses.KEY_ENTER or key == ord('\n'):
+                menu_option = menu[selected_item][0]
+                logger.info(f"User selected menu option: {menu_option}")
                 if menu[selected_item][1]:
                     if ret_val := await menu[selected_item][1]():
                         return ret_val
@@ -758,7 +783,9 @@ class PongCli:
                 draw_menu()
 
             if self.client._error:
-                await self.show_error(error_msg=str(self.client._error))
+                error_msg = str(self.client._error)
+                logger.error(f"Displaying error to user: {error_msg}")
+                await self.show_error(error_msg=error_msg)
                 self.client._error = None
                 draw_menu()
 
@@ -930,6 +957,7 @@ class PongCli:
 
     async def game_screen(self, game: PongGame) -> dict[str, Any]:
         """Real remote gameplay implementation"""
+        logger.info(f"Starting game screen for game: {game.id}")
         max_y, max_x = self.screen_size
 
         game_width = max_x - 10
@@ -948,6 +976,7 @@ class PongCli:
         last_time = time.time()
         fps = 30
         frame_duration = 1.0 / fps
+        frame_count = 0
 
         instructions = "Press 'q' to quit, ↑/↓ to move paddle"
 
@@ -958,6 +987,8 @@ class PongCli:
         ball_y = start_y + game_height // 2
         left_paddle_y = start_y + (game_height // 2) - (paddle_height // 2)
         right_paddle_y = start_y + (game_height // 2) - (paddle_height // 2)
+
+        logger.info(f"Game screen initialized: {game_width}x{game_height}, FPS: {fps}")
         
         while running:
             current_time = time.time()
@@ -971,8 +1002,14 @@ class PongCli:
 
                 # Update ball position
                 ball_data = server_game.get('ball', {})
-                ball_x = start_x + int(ball_data.get('x', 0.5) * game_width)
-                ball_y = start_y + int(ball_data.get('y', 0.5) * game_height)
+                new_ball_x = start_x + int(ball_data.get('x', 0.5) * game_width)
+                new_ball_y = start_y + int(ball_data.get('y', 0.5) * game_height)
+
+                # Log significant ball movement
+                if abs(new_ball_x - ball_x) > 5 or abs(new_ball_y - ball_y) > 3:
+                    logger.debug(f"Ball moved significantly: ({ball_x},{ball_y}) -> ({new_ball_x},{new_ball_y})")
+
+                ball_x, ball_y = new_ball_x, new_ball_y
 
                 # Update paddle positions
                 left_paddle_data = server_game.get('leftPaddle', {}).get('topPoint', {})
@@ -984,12 +1021,19 @@ class PongCli:
                 # Update scores
                 scores = server_game.get('scores', [])
                 if len(scores) >= 2:
-                    left_score = scores[0].get('score', 0)
-                    right_score = scores[1].get('score', 0)
+                    new_left_score = scores[0].get('score', 0)
+                    new_right_score = scores[1].get('score', 0)
+
+                    # Log score changes
+                    if new_left_score != left_score or new_right_score != right_score:
+                        logger.info(f"Score update: {left_score}-{right_score} -> {new_left_score}-{new_right_score}")
+
+                    left_score, right_score = new_left_score, new_right_score
 
                 # Check game status
                 game_status = server_game.get('status', 'waiting')
                 if game_status == 'finished':
+                    logger.info("Game finished, exiting game loop")
                     running = False
 
             # Check for game over from server
@@ -1054,10 +1098,13 @@ class PongCli:
             # Handle input
             key = self.stdscr.getch()
             if key == ord('q'):
+                logger.info("User pressed 'q' to quit game")
                 running = False
             elif key == curses.KEY_UP:
+                logger.debug("User input: UP arrow (paddle up)")
                 self.client.send_key_input(up=True)
             elif key == curses.KEY_DOWN:
+                logger.debug("User input: DOWN arrow (paddle down)")
                 self.client.send_key_input(up=False)
 
             self.stdscr.refresh()
@@ -1065,6 +1112,7 @@ class PongCli:
             # Check for errors
             error = self.client.get_error()
             if error:
+                logger.error(f"Game error occurred: {error[0]} (code: {error[1]})")
                 await self.show_error(f"Game error: {error[0]}")
                 running = False
 
@@ -1091,6 +1139,7 @@ class PongCli:
         await self.wait_until_input()
 
     def cleanup(self) -> None:
+        logger.info("Cleaning up PongCli terminal interface")
         try:
             self.stdscr.clear()
             self.stdscr.refresh()
@@ -1098,22 +1147,30 @@ class PongCli:
             self.stdscr.keypad(False)
             curses.echo()
             curses.endwin()
+            logger.info("Terminal interface cleanup completed successfully")
         except Exception as e:
+            logger.error(f"Error during terminal cleanup: {e}")
             print(f"Error during cleanup: {e}", file=sys.stderr)
 
 class GracefulExit(Exception): pass
 
 async def main():
+    logger.info("=== Starting Pong CLI Application ===")
     # TODO: move network on separate thread
     cli_args = sys.argv[1:]
     if len(cli_args) != 1:
+        logger.error("Invalid command line arguments")
         print("Usage: ./pong_cli.py <backend_url>", file=sys.stderr)
         sys.exit(1)
 
     backend_url = cli_args[0]
-    game_client = GameClient.from_login(backend_url)
-    terminal_ui = PongCli(game_client)
+    logger.info(f"Backend URL: {backend_url}")
+
     try:
+        game_client = GameClient.from_login(backend_url)
+        terminal_ui = PongCli(game_client)
+        logger.info("Starting application task group")
+
         async with asyncio.TaskGroup() as tg:
             # run the game client
             _client_task = tg.create_task(game_client.start())
@@ -1124,11 +1181,16 @@ async def main():
     except* Exception as exc_group:
         for exc in exc_group.exceptions:
             if not isinstance(exc, GracefulExit):
+                logger.error(f"Unhandled exception: {exc}")
                 raise
+            else:
+                logger.info(f"Graceful exit: {exc}")
     finally:
+        logger.info("Application shutting down")
         terminal_ui.cleanup()
         await game_client.close()
         print("Exiting Pong CLI...")
+        logger.info("=== Pong CLI Application Ended ===")
 
 if __name__ == "__main__":
     asyncio.run(main())
