@@ -31,3 +31,4 @@ secrets
 .direnv
 venv
 .venv
+__pycache__
