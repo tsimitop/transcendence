@@ -311,17 +311,39 @@ class BackendClient:
                 logger.info("2FA code received, validating")
                 return await self.validate_2fa(data["user"], code_2fa)
 
-            # Store user data and token for future requests
+            # Store user data
             self.user_data = data["user"]
-            self.access_token = data["jwtAccessToken"]
-            if self.user_data["isSignedIn"]:
+
+            # Get the JWT access token from the dedicated endpoint
+            await self.retrieve_access_token()
+
+            if self.user_data["isSignedIn"] and self.access_token:
                 self.is_connected.set()
 
             if self.is_connected.is_set():
                 username = self.user_data['username']
                 pprint(f"Successfully logged in as {username}")
                 logger.info(f"Authentication successful for user: {username}")
-    
+
+    async def retrieve_access_token(self) -> None:
+        """Retrieve the JWT access token from the dedicated endpoint"""
+        logger.info("Retrieving access token from /api/ws-token")
+        assert self.session is not None
+
+        async with self.session.get(
+            f"{self.url}/api/ws-token",
+            timeout=ClientTimeout(5)
+        ) as response:
+            data: Dict[str, Any] = await response.json()
+
+            if data.get("errorMessage") or not data.get("token"):
+                error_msg = data.get("errorMessage", "Failed to retrieve access token")
+                logger.error(f"Failed to get access token: {error_msg}")
+                raise ConnectionError(f"Access token retrieval failed: {error_msg}")
+
+            self.access_token = data["token"]
+            logger.info("Successfully retrieved access token")
+
     async def validate_2fa(self, user_data: Dict[str, Any], code_2fa: str):
         """Validate a 2FA code when required"""
         # Prepare the 2FA validation request payload
@@ -329,7 +351,7 @@ class BackendClient:
             "user": user_data,
             "code2Fa": code_2fa
         }
-        
+
         # Send the 2FA validation request
         assert self.session is not None
         async with self.session.post(
@@ -338,15 +360,19 @@ class BackendClient:
             timeout=ClientTimeout(5)
         ) as response:
             data: Dict[str, Any] = await response.json()
-            
+
             if data.get("errorMessage"):
                 raise ConnectionError(f"2FA validation failed: {data['errorMessage']}")
 
             # Store the authentication info
             self.user_data = user_data
-            self.access_token = data["jwtAccessToken"]
-            self.is_connected.set()
-            
+
+            # Get the JWT access token from the dedicated endpoint
+            await self.retrieve_access_token()
+
+            if self.access_token:
+                self.is_connected.set()
+
             pprint(f"Successfully authenticated with 2FA as {user_data.get('username')}")
                     
     async def validate_auth_status(self) -> bool:
@@ -385,13 +411,11 @@ class BackendClient:
             timeout=ClientTimeout(5),
         ) as response:
             data = await response.json()
-            
-            if not data.get("newJwtAccessToken"):
-                raise ConnectionError("Failed to refresh access token")
 
-            # Update the access token
-            self.access_token = data["newJwtAccessToken"]
-            
+            if data.get("errorMessage"):
+                logger.error(f"Failed to refresh access token: {data['errorMessage']}")
+                raise ConnectionError(f"Failed to refresh access token: {data['errorMessage']}")
+
             # Update user data if available
             if all(k in data for k in ["userId", "email", "username"]):
                 if not self.user_data:
@@ -402,11 +426,14 @@ class BackendClient:
                     "username": data["username"],
                     "isSignedIn": data.get("isSignedIn", False)
                 })
-        
-            if data.get("isSignedIn", False):
+
+            # Get the new access token from the dedicated endpoint
+            await self.retrieve_access_token()
+
+            if data.get("isSignedIn", False) and self.access_token:
                 self.is_connected.set()
             else:
-                self.is_connected.clear() 
+                self.is_connected.clear()
             assert self.is_connected.is_set(), "Failed to refresh access token"
             return self.is_connected.is_set()
 
