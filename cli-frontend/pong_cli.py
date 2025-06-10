@@ -7,8 +7,9 @@ import os
 import json
 import asyncio
 import traceback
-import ssl 
-import random
+import ssl
+import logging
+from pathlib import Path
 from pprint import pprint
 from typing import Any, Dict, List, Optional, Tuple, Union, cast, Literal
 from dataclasses import dataclass, field
@@ -17,6 +18,26 @@ from datetime import datetime
 import aiohttp
 from aiohttp import ClientTimeout, TCPConnector, ClientSession
 
+
+def setup_logging() -> logging.Logger:
+    log_file = Path(__file__).parent / "pong_cli.log"
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file, mode='w'),
+        ],
+        force=True
+    )
+
+    logger = logging.getLogger('pong_cli')
+    logger.info("=== Pong CLI Application Started ===")
+    logger.info(f"Log file: {log_file}")
+    return logger
+
+
+logger = setup_logging()
 
 PING_MSG = json.dumps({"target_endpoint": "ping", "payload": ""})
 
@@ -128,44 +149,60 @@ class BackendClient:
         self.ws = None
         self.incoming_messages = asyncio.Queue()
         self.outgoing_messages = asyncio.Queue()
+        logger.info(f"BackendClient initialized for user: {username}, URL: {url}")
 
     async def __aenter__(self) -> "BackendClient":
         """Enter the context manager"""
+        logger.info("BackendClient entering context manager")
         try:
             await self.start()
         except Exception as e:
+            logger.error(f"Failed to start BackendClient: {e}")
             await self.close()
             raise e
         pprint(f"Connected to backend at {self.url}")
+        logger.info(f"Successfully connected to backend at {self.url}")
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         """Exit the context manager"""
+        logger.info("BackendClient exiting context manager")
+        if exc_type:
+            logger.error(f"Context manager exiting with exception: {exc_type.__name__}: {exc_val}")
         await self.close()
 
     async def start(self):
         """Start the backend client and authenticate"""
+        logger.info("Starting BackendClient")
         # Initialize the aiohttp session
         await self.connect()
         # Authenticate with the backend server
         await self.authenticate()
         assert self.is_connected, "Failed to authenticate with the backend server"
+        logger.info("BackendClient authentication successful, starting background tasks")
+
         async def keep_token_updated():
+            logger.info("Token validation task started")
             while True:
                 # Check if the access token is still valid
                 if not await self.validate_auth_status():
+                    logger.error("Authentication lost, token validation failed")
                     raise ConnectionError("We're not authenticated anymore")
+                logger.debug("Token validation successful")
                 await asyncio.sleep(20)
 
         async def send_messages_from_queue():
+            logger.info("Message sender task started")
             while not self.ws:
                 await asyncio.sleep(0.1)
             while True:
                 message = await self.outgoing_messages.get()
                 if message is None:
+                    logger.info("Message sender task stopping (None message received)")
                     break
+                logger.debug(f"Sending message to server: {message[:100]}...")
                 await self.send_to_server(message)
-        
+
         async with asyncio.TaskGroup() as tg:
             _update_token_task = tg.create_task(keep_token_updated())
             # Connect to the websocket server
@@ -175,60 +212,73 @@ class BackendClient:
         
     async def handle_websocket(self):
         """Receive messages from the websocket server"""
+        logger.info("Starting WebSocket handler")
         while not self.access_token:
             await asyncio.sleep(1)
         if not self.access_token:
+            logger.error("Access token is required for WebSocket connection")
             raise ConnectionError("Access token is required for WebSocket connection")
 
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
         connector = TCPConnector(ssl=ssl_context)
-        
+
         websocket_url = f'{self.url}/ws?token={self.access_token}&type=pong'
-        
+        logger.info(f"Connecting to WebSocket: {websocket_url}")
+
         async with ClientSession(connector=connector) as session:
             async with session.ws_connect(websocket_url) as ws:
                 self.ws = ws
+                logger.info("WebSocket connection established")
                 self.incoming_messages.put_nowait("init")
                 async for msg in ws:
                     if msg.type == aiohttp.WSMsgType.TEXT:
                         if msg.data == 'close':
+                            logger.info("Received close message from WebSocket")
                             await ws.close()
                             break
                         else:
+                            logger.debug(f"Received WebSocket message: {msg.data[:100]}...")
                             await self.incoming_messages.put(msg.data)
                     elif msg.type == aiohttp.WSMsgType.ERROR:
+                        logger.error(f"WebSocket error: {ws.exception()}")
                         break
         self.ws = None
+        logger.warning("WebSocket connection closed")
         raise Exception("websocket closed")
     
     async def send_to_server(self, data: str):
         if not self.ws:
+            logger.error("Attempted to send message but WebSocket not connected")
             raise ConnectionError("ws not connected")
+        logger.debug(f"Sending to server: {data[:100]}...")
         await self.ws.send_str(data)
 
     async def connect(self) -> aiohttp.ClientSession:
         """Initialize aiohttp client session with cookie support"""
+        logger.info("Initializing HTTP client session")
         if self.session is None or self.session.closed:
             # Create a client session that preserves cookies
             cookie_jar = aiohttp.CookieJar(unsafe=False)
-            
+
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
             connector = TCPConnector(ssl=ssl_context)
-                
+
             self.session = aiohttp.ClientSession(
                 cookie_jar=cookie_jar,
                 connector=connector
             )
-        
+            logger.info("HTTP client session created")
+
         return self.session
 
     async def authenticate(self) -> None:
         """Authenticate with the backend server using provided credentials"""
-        
+        logger.info(f"Attempting authentication for user: {self.username}")
+
         # Prepare the sign-in request payload
         payload: Dict[str, str] = {
             "usernameOrEmail": self.username,
@@ -237,6 +287,7 @@ class BackendClient:
 
         # Make the authentication request
         assert self.session is not None
+        logger.info(f"Sending authentication request to {self.url}/api/sign-in")
         async with self.session.post(
             f"{self.url}/api/sign-in",
             json=payload,
@@ -244,26 +295,32 @@ class BackendClient:
         ) as response:
             # Process the response
             data: Dict[str, Any] = await response.json()
-            
+            logger.info(f"Authentication response status: {response.status}")
+
             if not data.get("user"):
                 error_msg: str = data.get("errorMessage", "Authentication failed")
+                logger.error(f"Authentication failed: {error_msg}")
                 raise ConnectionError(f"{error_msg=}")
-            
+
             # Check if 2FA is required
             if data.get("errorMessage") and "2FA" in data.get("errorMessage", ""):
+                logger.info("2FA required, waiting for user input")
                 self.requires_2fa_input.set()
                 code_2fa: str = await self.got_2fa_input
                 assert code_2fa, f"Invalid 2fa code: {code_2fa}"
+                logger.info("2FA code received, validating")
                 return await self.validate_2fa(data["user"], code_2fa)
-                
+
             # Store user data and token for future requests
             self.user_data = data["user"]
             self.access_token = data["jwtAccessToken"]
             if self.user_data["isSignedIn"]:
                 self.is_connected.set()
-            
+
             if self.is_connected.is_set():
-                pprint(f"Successfully logged in as {self.user_data['username']}")
+                username = self.user_data['username']
+                pprint(f"Successfully logged in as {username}")
+                logger.info(f"Authentication successful for user: {username}")
     
     async def validate_2fa(self, user_data: Dict[str, Any], code_2fa: str):
         """Validate a 2FA code when required"""
@@ -355,11 +412,14 @@ class BackendClient:
 
     async def close(self) -> None:
         """Close the aiohttp session"""
+        logger.info("Closing BackendClient")
         if self.session and not self.session.closed:
             await self.session.close()
+            logger.info("HTTP session closed")
         self.is_connected.clear()
         self.session = None
         print("Closed backend client session")
+        logger.info("BackendClient closed successfully")
 
 
 class GameClient(BackendClient):
@@ -373,6 +433,8 @@ class GameClient(BackendClient):
         self.last_pong = time.time()
         self._error = None
         self._available_games = asyncio.Queue()
+        self._game_over_data = None
+        logger.info("GameClient initialized")
 
     @property
     def user_id(self) -> str:
@@ -419,37 +481,62 @@ class GameClient(BackendClient):
                 raise ConnectionError("Server doesn't answer, pong timeout")
 
     async def consume_backend_messages(self):
+        logger.info("Starting backend message consumer")
         await self.is_connected.wait()
         while True:
             message = await self.incoming_messages.get()
             if self.debug_mode.is_set():
+                logger.debug(f"Debug mode: queuing message: {message[:100]}...")
                 await self.debug_queue.put(message)
                 continue
             try:
                 message = json.loads(message)
             except Exception as e:
+                logger.warning(f"Failed to parse message as JSON: {e}")
                 continue
             if message.get('target_endpoint') == "pong":
                 self.last_pong = time.time()
+                logger.debug("Received pong response")
                 continue
             if not message.get('target_endpoint') == "pong-api":
+                logger.debug(f"Ignoring message with target_endpoint: {message.get('target_endpoint')}")
                 continue
-            message = message.get('payload')
-            if not message:
-                continue
-            # pong payload
-            type, pong_data = message['type'], message['pong_data']
-            if type == "error":
-                self._error = (pong_data['message'], pong_data['code'])
-            elif type == "game_states":
-                self._available_games.put_nowait(pong_data)
-            elif type == "game_state":
-                self.update_game_state(pong_data)
 
-    def update_game_state(self, pong_data_payload: dict):
-        game = pong_data_payload['game']
-        if not game:
+            # Handle the message based on type
+            msg_type = message.get('type')
+            logger.info(f"Processing pong-api message type: {msg_type}")
+            if msg_type == "error":
+                pong_data = message.get('pong_data', {})
+                error_msg = pong_data.get('message', 'Unknown error')
+                error_code = pong_data.get('code', 500)
+                logger.error(f"Received error from server: {error_msg} (code: {error_code})")
+                self._error = (error_msg, error_code)
+            elif msg_type == "game_states":
+                pong_data = message.get('pong_data', [])
+                logger.info(f"Received game states: {len(pong_data)} games")
+                self._available_games.put_nowait(pong_data)
+            elif msg_type == "game_state":
+                game_data = message.get('game', {})
+                logger.debug(f"Received game state update for game: {game_data.get('id', 'unknown')}")
+                self.update_game_state(game_data)
+            elif msg_type == "game_created":
+                game_id = message.get('gameId')
+                logger.info(f"Game created with ID: {game_id}")
+                self.game_id = game_id
+            elif msg_type == "game_over":
+                pong_data = message.get('pong_data', {})
+                logger.info(f"Game over received: {pong_data}")
+                self.handle_game_over(pong_data)
+
+    def update_game_state(self, game_data: dict):
+        if not game_data:
             return
+        self.game_data = game_data
+        self.game_id = game_data.get('id')
+
+    def handle_game_over(self, pong_data: dict):
+        self.game_data = None
+        self._game_over_data = pong_data
 
     @staticmethod
     def to_pong_api_request(payload: dict) -> str:
@@ -461,18 +548,20 @@ class GameClient(BackendClient):
     async def get_joinable_games(self):
         get_games_request = self.to_pong_api_request(
             {
-                "type": "getGames",
+                "type": "game_list",
                 "pong_data": {}
             }
         )
         await self.send_to_server(get_games_request)
         try:
-            games = await asyncio.wait_for(self._available_games.get(), timeout=3)
+            games_data = await asyncio.wait_for(self._available_games.get(), timeout=3)
             self._available_games = asyncio.Queue()
-            games = [PongGame.from_dict(game['game']) for game in games]
-            # filter out ongoing games (even though we shouldn't get them here)
-            games = [game for game in games if game.is_waiting]
-            # sort by creation date (newest first)
+            games = []
+            for game_data in games_data:
+                if isinstance(game_data, dict) and 'game' in game_data:
+                    game = PongGame.from_dict(game_data['game'])
+                    if game.is_waiting:
+                        games.append(game)
             return sorted(games, key=lambda x: x.lastUpdateTime, reverse=True)
         except Exception as e:
             e = traceback.format_exc()
@@ -482,14 +571,13 @@ class GameClient(BackendClient):
     def send_key_input(self, *, up: bool):
         msg = self.to_pong_api_request(
             {
-                "type": input,
+                "type": "input",
                 "pong_data": {
                     "userId": self.user_id,
                     "up": up
                 }
             }
         )
-        # this is supposed to be fast as lag would be annoying in gameplay
         self.outgoing_messages.put_nowait(msg)
 
     async def create_new_game(self, mode: str, max_score: int):
@@ -497,13 +585,26 @@ class GameClient(BackendClient):
             {
                 "type": "create_game",
                 "pong_data": {
-                    "userId": self.user_id,
-                    "gameMode": mode,
-                    "maxScore": max_score
+                    "playerAlias": self.user_id,
+                    "gameMode": "remote",
+                    "localOpponent": ""
                 }
             }
         )
         await self.outgoing_messages.put(create_game_request)
+
+    async def join_game(self, game_id: str):
+        join_game_request = self.to_pong_api_request(
+            {
+                "type": "join_game",
+                "pong_data": {
+                    "OpponentName": self.user_id,
+                    "OpponentAlias": self.user_id,
+                    "gameId": game_id
+                }
+            }
+        )
+        await self.outgoing_messages.put(join_game_request)
 
 
 
@@ -592,11 +693,11 @@ class PongCli:
             self.print_at([(y, x, f"{msg} {result}")])
     
     async def show_error(self, error_msg: str):
-        y, x = self.screen_size
+        max_y, max_x = self.screen_size
         self.stdscr.clear()
         self.stdscr.addstr(0, 0, "An error occured:")
         self.stdscr.addstr(3, 0, error_msg)
-        self.stdscr.addstr(y, 0, "Press q to return")
+        self.stdscr.addstr(max_y, 0, "Press q to return")
         self.stdscr.refresh()
         await self.wait_until_input("q")
 
@@ -781,8 +882,11 @@ class PongCli:
             elif key == ord('q'):
                 return None
             elif key == curses.KEY_ENTER or key == ord('\n'):
-                if menu[selected_item]:
-                    return menu[selected_item][1]  # game
+                if menu and selected_item < len(menu) and menu[selected_item]:
+                    selected_game = menu[selected_item][1]
+                    await self.client.join_game(selected_game.id)
+                    await asyncio.sleep(0.5)
+                    return selected_game
                 draw_menu()
 
     async def debug_screen(self) -> None:
@@ -825,141 +929,156 @@ class PongCli:
         self.client.debug_mode.clear()
 
     async def game_screen(self, game: PongGame) -> dict[str, Any]:
-        """just a dummy for now"""
+        """Real remote gameplay implementation"""
         max_y, max_x = self.screen_size
-        
+
         game_width = max_x - 10
         game_height = max_y - 6
         start_x = 5
         start_y = 3
-        
+
         paddle_height = 5
-        paddle_width = 1
         left_paddle_x = start_x + 1
         right_paddle_x = start_x + game_width - 2
-        
-        ball_x = start_x + game_width // 2
-        ball_y = start_y + game_height // 2
-        
-        ball_dx = 1
-        ball_dy = 0.5
-        
-        left_score = 0
-        right_score = 0
-        
+
         game_id = game.id
         max_score = game.maxScore
-        
+
         running = True
-        frame_counter = 0
         last_time = time.time()
-        fps = 60
+        fps = 30
         frame_duration = 1.0 / fps
-        
-        instructions = "Press 'q' to quit, ↑/↓ to move paddle (not implemented yet)"
+
+        instructions = "Press 'q' to quit, ↑/↓ to move paddle"
+
+        current_game_data = None
+        left_score = 0
+        right_score = 0
+        ball_x = start_x + game_width // 2
+        ball_y = start_y + game_height // 2
+        left_paddle_y = start_y + (game_height // 2) - (paddle_height // 2)
+        right_paddle_y = start_y + (game_height // 2) - (paddle_height // 2)
         
         while running:
             current_time = time.time()
             if current_time - last_time < frame_duration:
                 await asyncio.sleep(frame_duration - (current_time - last_time))
             last_time = time.time()
-            
+
+            # Update game state from server
+            if self.client.game_data and self.client.game_data.get('id') == game_id:
+                server_game = self.client.game_data
+
+                # Update ball position
+                ball_data = server_game.get('ball', {})
+                ball_x = start_x + int(ball_data.get('x', 0.5) * game_width)
+                ball_y = start_y + int(ball_data.get('y', 0.5) * game_height)
+
+                # Update paddle positions
+                left_paddle_data = server_game.get('leftPaddle', {}).get('topPoint', {})
+                right_paddle_data = server_game.get('rightPaddle', {}).get('topPoint', {})
+
+                left_paddle_y = start_y + int(left_paddle_data.get('y', 0.4) * game_height)
+                right_paddle_y = start_y + int(right_paddle_data.get('y', 0.4) * game_height)
+
+                # Update scores
+                scores = server_game.get('scores', [])
+                if len(scores) >= 2:
+                    left_score = scores[0].get('score', 0)
+                    right_score = scores[1].get('score', 0)
+
+                # Check game status
+                game_status = server_game.get('status', 'waiting')
+                if game_status == 'finished':
+                    running = False
+
+            # Check for game over from server
+            if self.client._game_over_data:
+                running = False
+
             self.stdscr.clear()
-            
+
+            # Display game info
             self.stdscr.addstr(0, 0, f"Game ID: {game_id} | Max Score: {max_score}")
             self.stdscr.addstr(1, 0, instructions)
-            
+
+            # Display game status
+            if self.client.game_data:
+                status = self.client.game_data.get('status', 'unknown')
+                self.stdscr.addstr(2, 0, f"Status: {status}")
+                if status == 'countdown':
+                    countdown = self.client.game_data.get('countdown', 0)
+                    if countdown > 0:
+                        self.stdscr.addstr(2, 20, f"Starting in: {countdown}")
+
+            # Display scores
             score_x = start_x + (game_width // 2) - 5
             self.stdscr.addstr(start_y - 2, score_x, f"{left_score}   -   {right_score}")
-            
+
+            # Draw game field borders
             for x in range(start_x, start_x + game_width + 1):
                 self.stdscr.addch(start_y, x, curses.ACS_HLINE)
                 self.stdscr.addch(start_y + game_height, x, curses.ACS_HLINE)
-            
+
             for y in range(start_y, start_y + game_height + 1):
                 self.stdscr.addch(y, start_x, curses.ACS_VLINE)
                 self.stdscr.addch(y, start_x + game_width, curses.ACS_VLINE)
-            
+
+            # Draw corners
             self.stdscr.addch(start_y, start_x, curses.ACS_ULCORNER)
             self.stdscr.addch(start_y, start_x + game_width, curses.ACS_URCORNER)
             self.stdscr.addch(start_y + game_height, start_x, curses.ACS_LLCORNER)
             self.stdscr.addch(start_y + game_height, start_x + game_width, curses.ACS_LRCORNER)
-            
+
+            # Draw center line
             center_x = start_x + (game_width // 2)
             for y in range(start_y + 1, start_y + game_height):
-                if y % 2 == 0:  # Dotted line
+                if y % 2 == 0:
                     self.stdscr.addch(y, center_x, '|')
-            
-            left_paddle_y = start_y + (game_height // 2) - (paddle_height // 2)
-            right_paddle_y = start_y + (game_height // 2) - (paddle_height // 2)
-            
-            # Left paddle
+
+            # Draw paddles
             for y in range(paddle_height):
-                self.stdscr.addch(left_paddle_y + y, left_paddle_x, '█')
-            
-            # Right paddle
-            for y in range(paddle_height):
-                self.stdscr.addch(right_paddle_y + y, right_paddle_x, '█')
-            
+                if left_paddle_y + y >= start_y + 1 and left_paddle_y + y < start_y + game_height:
+                    self.stdscr.addch(left_paddle_y + y, left_paddle_x, '█')
+                if right_paddle_y + y >= start_y + 1 and right_paddle_y + y < start_y + game_height:
+                    self.stdscr.addch(right_paddle_y + y, right_paddle_x, '█')
+
             # Draw ball
             try:
-                self.stdscr.addch(int(ball_y), int(ball_x), 'O')
+                if (ball_x >= start_x + 1 and ball_x < start_x + game_width and
+                    ball_y >= start_y + 1 and ball_y < start_y + game_height):
+                    self.stdscr.addch(int(ball_y), int(ball_x), 'O')
             except curses.error:
-                # Handle potential curses error when writing to near into corner
                 pass
-            
-            ball_x += ball_dx
-            ball_y += ball_dy
-            
-            if ball_y <= start_y + 1 or ball_y >= start_y + game_height - 1:
-                ball_dy = -ball_dy
-            
-            if (ball_x <= left_paddle_x + 1 and 
-                left_paddle_y <= ball_y <= left_paddle_y + paddle_height):
-                ball_dx = -ball_dx
-                # Randomize a bit
-                ball_dy = (ball_y - (left_paddle_y + paddle_height // 2)) / 3
-            
-            if (ball_x >= right_paddle_x - 1 and 
-                right_paddle_y <= ball_y <= right_paddle_y + paddle_height):
-                ball_dx = -ball_dx
-                ball_dy = (ball_y - (right_paddle_y + paddle_height // 2)) / 3
-            
-            if ball_x < start_x + 1:
-                right_score += 1
-                ball_x = start_x + game_width // 2
-                ball_y = start_y + game_height // 2
-                ball_dx = 1
-                ball_dy = 0.5
-            elif ball_x > start_x + game_width - 1:
-                left_score += 1
-                ball_x = start_x + game_width // 2
-                ball_y = start_y + game_height // 2
-                ball_dx = -1
-                ball_dy = -0.5
-            
+
+            # Handle input
             key = self.stdscr.getch()
             if key == ord('q'):
                 running = False
             elif key == curses.KEY_UP:
-                pass
+                self.client.send_key_input(up=True)
             elif key == curses.KEY_DOWN:
-                pass
-            
+                self.client.send_key_input(up=False)
+
             self.stdscr.refresh()
-            
-            frame_counter += 1
-            if frame_counter % 50 == 0:
-                ball_dy += (random.random() - 0.5) / 2
-            
-            if left_score >= max_score or right_score >= max_score:
+
+            # Check for errors
+            error = self.client.get_error()
+            if error:
+                await self.show_error(f"Game error: {error[0]}")
                 running = False
-        
+
+        # Determine winner
+        winner = "left" if left_score > right_score else "right"
+        if left_score == right_score:
+            winner = "tie"
+
         return {
             "left_score": left_score,
             "right_score": right_score,
-            "winner": "left" if left_score > right_score else "right",
-            "game_id": game_id
+            "winner": winner,
+            "game_id": game_id,
+            "game_over_data": self.client._game_over_data
         }
 
     async def show_game_result(self, game_result: dict[str, Any]) -> None:
