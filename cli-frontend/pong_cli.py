@@ -3,15 +3,13 @@
 import curses
 import time
 import sys
-import os
 import json
 import asyncio
 import traceback
 import ssl
 import logging
 from pathlib import Path
-from pprint import pprint
-from typing import Any, Dict, List, Optional, Tuple, Union, cast, Literal
+from typing import Any, Dict, List, Optional, Tuple, Literal
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -50,10 +48,7 @@ class Point:
     @classmethod
     def from_str_or_float(cls, x, y):
         """Create a Point from string or float values"""
-        return cls(
-            x=float(x) if isinstance(x, str) else x,
-            y=float(y) if isinstance(y, str) else y
-        )
+        return cls(x=float(x), y=float(y))
 
 @dataclass
 class Paddle:
@@ -79,10 +74,7 @@ class Ball:
     @classmethod
     def from_dict(cls, data: dict):
         """Create a Ball from a dictionary"""
-        return cls(
-            x=float(data["x"]) if isinstance(data["x"], str) else data["x"],
-            y=float(data["y"]) if isinstance(data["y"], str) else data["y"]
-        )
+        return cls(x=float(data["x"]), y=float(data["y"]))
 
 @dataclass
 class PongGame:
@@ -160,11 +152,11 @@ class BackendClient:
             logger.error(f"Failed to start BackendClient: {e}")
             await self.close()
             raise e
-        pprint(f"Connected to backend at {self.url}")
+        print(f"Connected to backend at {self.url}")
         logger.info(f"Successfully connected to backend at {self.url}")
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type, exc_val, _) -> None:
         """Exit the context manager"""
         logger.info("BackendClient exiting context manager")
         if exc_type:
@@ -204,10 +196,9 @@ class BackendClient:
                 await self.send_to_server(message)
 
         async with asyncio.TaskGroup() as tg:
-            _update_token_task = tg.create_task(keep_token_updated())
-            # Connect to the websocket server
-            _websocket_handler = tg.create_task(self.handle_websocket())
-            _outbox = tg.create_task(send_messages_from_queue())
+            tg.create_task(keep_token_updated())
+            tg.create_task(self.handle_websocket())
+            tg.create_task(send_messages_from_queue())
         raise GracefulExit("network ended")
         
     async def handle_websocket(self):
@@ -215,9 +206,6 @@ class BackendClient:
         logger.info("Starting WebSocket handler")
         while not self.access_token:
             await asyncio.sleep(1)
-        if not self.access_token:
-            logger.error("Access token is required for WebSocket connection")
-            raise ConnectionError("Access token is required for WebSocket connection")
 
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False
@@ -319,10 +307,8 @@ class BackendClient:
 
             if self.user_data["isSignedIn"] and self.access_token:
                 self.is_connected.set()
-
-            if self.is_connected.is_set():
                 username = self.user_data['username']
-                pprint(f"Successfully logged in as {username}")
+                print(f"Successfully logged in as {username}")
                 logger.info(f"Authentication successful for user: {username}")
 
     async def retrieve_access_token(self) -> None:
@@ -373,7 +359,7 @@ class BackendClient:
             if self.access_token:
                 self.is_connected.set()
 
-            pprint(f"Successfully authenticated with 2FA as {user_data.get('username')}")
+            print(f"Successfully authenticated with 2FA as {user_data.get('username')}")
                     
     async def validate_auth_status(self) -> bool:
         """Check if the current authentication is valid"""
@@ -435,7 +421,7 @@ class BackendClient:
             else:
                 self.is_connected.clear()
             assert self.is_connected.is_set(), "Failed to refresh access token"
-            return self.is_connected.is_set()
+            return True
 
     async def close(self) -> None:
         """Close the aiohttp session"""
@@ -589,18 +575,18 @@ class GameClient(BackendClient):
         try:
             games_data = await asyncio.wait_for(self._available_games.get(), timeout=3)
             self._available_games = asyncio.Queue()
-            games = []
-            for game_data in games_data:
-                if isinstance(game_data, dict) and 'game' in game_data:
-                    game = PongGame.from_dict(game_data['game'])
-                    if game.is_waiting:
-                        games.append(game)
+            games = [
+                PongGame.from_dict(game_data['game'])
+                for game_data in games_data
+                if isinstance(game_data, dict) and 'game' in game_data
+                and PongGame.from_dict(game_data['game']).is_waiting
+            ]
             logger.info(f"Found {len(games)} joinable games")
             return sorted(games, key=lambda x: x.lastUpdateTime, reverse=True)
         except Exception as e:
-            e = traceback.format_exc()
-            logger.error(f"Failed to get joinable games: {e}")
-            self._error = (str(e), 420)
+            error_msg = traceback.format_exc()
+            logger.error(f"Failed to get joinable games: {error_msg}")
+            self._error = (error_msg, 420)
             return []
 
     def send_key_input(self, *, up: bool):
@@ -644,20 +630,6 @@ class GameClient(BackendClient):
             }
         )
         await self.outgoing_messages.put(join_game_request)
-
-
-
-# curses refresh decorator, pretty useless
-def refresh(func):
-    def wrapper(self, *args, **kwargs):
-        try:
-            result = func(self, *args, **kwargs)
-            self.stdscr.refresh()
-            return result
-        except Exception as e:
-            self.cleanup()
-            raise e
-    return wrapper
 
 
 class PongCli:
@@ -740,7 +712,7 @@ class PongCli:
             self.print_at([(y, x, f"{msg} {result}")])
     
     async def show_error(self, error_msg: str):
-        max_y, max_x = self.screen_size
+        max_y, _ = self.screen_size
         self.stdscr.clear()
         self.stdscr.addstr(0, 0, "An error occured:")
         self.stdscr.addstr(3, 0, error_msg)
@@ -764,9 +736,32 @@ class PongCli:
         y, x = self.stdscr.getmaxyx()
         return y - 1, x - 1
 
+    def draw_centered_menu(self, title: str, menu_items: List[Tuple[str, Any]], selected_item: int, footer: str = ""):
+        """Helper method to draw a centered menu with consistent styling"""
+        max_y, max_x = self.screen_size
+        self.stdscr.clear()
+        self.stdscr.addstr(0, 0, title)
+        if footer:
+            self.stdscr.addstr(max_y, 0, footer)
+
+        if menu_items:
+            for index, menu_item in enumerate(menu_items):
+                y = int((max_y // 2) - ((len(menu_items)//2) - index))
+                x = int((max_x//2) - (len(menu_item[0]) // 2))
+                if index == selected_item:
+                    self.stdscr.attron(curses.color_pair(1))
+                    self.stdscr.addstr(y, x, menu_item[0])
+                    self.stdscr.attroff(curses.color_pair(1))
+                else:
+                    self.stdscr.addstr(y, x, menu_item[0])
+        else:
+            msg = "No items available."
+            self.stdscr.addstr(max_y//2, (max_x//2) - len(msg)//2, msg)
+
+        self.stdscr.refresh()
+
     async def main_menu(self) -> Optional[PongGame]:
         logger.info("Displaying main menu")
-        max_y, max_x = self.screen_size
         menu = [
             ("Create a new game", self.create_game_screen),
             ("Join an existing game", self.join_existing_game_screen),
@@ -774,19 +769,7 @@ class PongCli:
             ("Quit", None),
         ]
         selected_item = 0
-        def draw_menu():
-            self.stdscr.clear()
-            self.stdscr.addstr(0, 0, f"Welcome to Pong CLI {self.client.user_id}!")
-            for index, menu_item in enumerate(menu):
-                y, x = int((max_y // 2) - ((len(menu)//2) - index)), int((max_x//2) - (len(menu_item[0]) // 2))
-                if index == selected_item:
-                    self.stdscr.attron(curses.color_pair(1))
-                    self.stdscr.addstr(y, x, menu_item[0])
-                    self.stdscr.attroff(curses.color_pair(1))
-                else:
-                    self.stdscr.addstr(y, x, menu_item[0])
-            self.stdscr.refresh()
-        draw_menu()
+        self.draw_centered_menu(f"Welcome to Pong CLI {self.client.user_id}!", menu, selected_item)
         while True:
             key = self.stdscr.getch()
             if key == curses.ERR:
@@ -794,11 +777,11 @@ class PongCli:
             elif key == curses.KEY_UP:
                 selected_item = (selected_item - 1) % len(menu)
                 logger.debug(f"Menu navigation: UP, selected item: {selected_item}")
-                draw_menu()
+                self.draw_centered_menu(f"Welcome to Pong CLI {self.client.user_id}!", menu, selected_item)
             elif key == curses.KEY_DOWN:
                 selected_item = (selected_item + 1) % len(menu)
                 logger.debug(f"Menu navigation: DOWN, selected item: {selected_item}")
-                draw_menu()
+                self.draw_centered_menu(f"Welcome to Pong CLI {self.client.user_id}!", menu, selected_item)
             elif key == curses.KEY_ENTER or key == ord('\n'):
                 menu_option = menu[selected_item][0]
                 logger.info(f"User selected menu option: {menu_option}")
@@ -807,56 +790,40 @@ class PongCli:
                         return ret_val
                 else:
                     return None
-                draw_menu()
+                self.draw_centered_menu(f"Welcome to Pong CLI {self.client.user_id}!", menu, selected_item)
 
             if self.client._error:
                 error_msg = str(self.client._error)
                 logger.error(f"Displaying error to user: {error_msg}")
                 await self.show_error(error_msg=error_msg)
                 self.client._error = None
-                draw_menu()
+                self.draw_centered_menu(f"Welcome to Pong CLI {self.client.user_id}!", menu, selected_item)
 
     async def create_game_screen(self) -> Optional[PongGame]:
         max_y, max_x = self.screen_size
-        
+
         game_mode = self.GAME_MODES[0]
         max_score = 10
-        
+
         options = [
             (f"Game Mode: {game_mode}", "mode"),
             (f"Max Score: {max_score}", "score"),
             ("Create Game", "create"),
             ("Cancel", "cancel")
         ]
-    
+
         selected_item = 0
-        
-        def draw_menu():
-            self.stdscr.clear()
-            self.stdscr.addstr(0, 0, "Create a new game:")
-            
-            for index, menu_item in enumerate(options):
-                y, x = int((max_y // 2) - ((len(options)//2) - index)), int((max_x//2) - (len(menu_item[0]) // 2))
-                if index == selected_item:
-                    self.stdscr.attron(curses.color_pair(1))
-                    self.stdscr.addstr(y, x, menu_item[0])
-                    self.stdscr.attroff(curses.color_pair(1))
-                else:
-                    self.stdscr.addstr(y, x, menu_item[0])
-            
-            self.stdscr.refresh()
-        
-        draw_menu()
+        self.draw_centered_menu("Create a new game:", options, selected_item)
         while True:
             key = self.stdscr.getch()
             if key == curses.ERR:
                 await asyncio.sleep(0.01)
             elif key == curses.KEY_UP:
                 selected_item = (selected_item - 1) % len(options)
-                draw_menu()
+                self.draw_centered_menu("Create a new game:", options, selected_item)
             elif key == curses.KEY_DOWN:
                 selected_item = (selected_item + 1) % len(options)
-                draw_menu()
+                self.draw_centered_menu("Create a new game:", options, selected_item)
             elif key == ord('q'):
                 return None
             elif key == curses.KEY_ENTER or key == ord('\n'):
@@ -864,16 +831,16 @@ class PongCli:
                 if option == "score":
                     max_score = (max_score + 1) % self.MAX_SCORE
                     options[selected_item] = (f"Max Score: {max_score}", option)
-                    draw_menu()
+                    self.draw_centered_menu("Create a new game:", options, selected_item)
                 elif option == "mode":
                     current_index = self.GAME_MODES.index(game_mode)
                     next_index = (current_index + 1) % len(self.GAME_MODES)
                     game_mode = self.GAME_MODES[next_index]
                     options[selected_item] = (f"Game Mode: {game_mode}", option)
-                    draw_menu()
+                    self.draw_centered_menu("Create a new game:", options, selected_item)
                 elif option == "create":
                     await self.client.create_new_game(game_mode, max_score)
-                    
+
                     msg = "Creating game..."
                     self.stdscr.clear()
                     self.stdscr.addstr(max_y//2, (max_x//2) - len(msg)//2, msg)
@@ -881,12 +848,12 @@ class PongCli:
 
                     await asyncio.sleep(0.1)
                     available_games = await self.client.get_joinable_games()
-                    
+
                     if available_games:
                         return available_games[0]
                     else:
                         await self.show_error("Failed to create game")
-                        draw_menu()
+                        self.draw_centered_menu("Create a new game:", options, selected_item)
                 elif option == "cancel":
                     return None
 
@@ -894,45 +861,26 @@ class PongCli:
         max_y, max_x = self.screen_size
 
         self.stdscr.clear()
-        self.stdscr.addstr(0, 0, f"Select one of the available games to join:")
+        self.stdscr.addstr(0, 0, "Select one of the available games to join:")
         msg = "Loading games..."
         self.stdscr.addstr(max_y//2, (max_x//2) - len(msg)//2, msg)
         self.stdscr.refresh()
 
         available_games = await self.client.get_joinable_games()
-        menu = []
-        for game in available_games:
-            menu.append((f"ID: {game.id} | MAX SCORE: {game.maxScore}", game))
+        menu = [(f"ID: {game.id} | MAX SCORE: {game.maxScore}", game) for game in available_games]
 
         selected_item = 0
-        def draw_menu():
-            self.stdscr.clear()
-            self.stdscr.addstr(0, 0, f"Select one of the available games to join:")
-            self.stdscr.addstr(max_y, 0, f"Press q to go back")
-            if menu:
-                for index, menu_item in enumerate(menu):
-                    y, x = int((max_y // 2) - ((len(menu)//2) - index)), int((max_x//2) - (len(menu_item[0]) // 2))
-                    if index == selected_item:
-                        self.stdscr.attron(curses.color_pair(1))
-                        self.stdscr.addstr(y, x, menu_item[0])
-                        self.stdscr.attroff(curses.color_pair(1))
-                    else:
-                        self.stdscr.addstr(y, x, menu_item[0])
-            else:
-                msg = "No games found."
-                self.stdscr.addstr(max_y//2, (max_x//2) - len(msg)//2, msg)
-            self.stdscr.refresh()
-        draw_menu()
+        self.draw_centered_menu("Select one of the available games to join:", menu, selected_item, "Press q to go back")
         while True:
             key = self.stdscr.getch()
             if key == curses.ERR:
                 await asyncio.sleep(0.05)
             elif key == curses.KEY_UP:
                 selected_item = (selected_item - 1) % len(menu)
-                draw_menu()
+                self.draw_centered_menu("Select one of the available games to join:", menu, selected_item, "Press q to go back")
             elif key == curses.KEY_DOWN:
                 selected_item = (selected_item + 1) % len(menu)
-                draw_menu()
+                self.draw_centered_menu("Select one of the available games to join:", menu, selected_item, "Press q to go back")
             elif key == ord('q'):
                 return None
             elif key == curses.KEY_ENTER or key == ord('\n'):
@@ -941,7 +889,6 @@ class PongCli:
                     await self.client.join_game(selected_game.id)
                     await asyncio.sleep(0.5)
                     return selected_game
-                draw_menu()
 
     async def debug_screen(self) -> None:
         """print websocket messages"""
@@ -1003,11 +950,9 @@ class PongCli:
         last_time = time.time()
         fps = 30
         frame_duration = 1.0 / fps
-        frame_count = 0
 
         instructions = "Press 'q' to quit, ↑/↓ to move paddle"
 
-        current_game_data = None
         left_score = 0
         right_score = 0
         ball_x = start_x + game_width // 2
@@ -1144,9 +1089,10 @@ class PongCli:
                 running = False
 
         # Determine winner
-        winner = "left" if left_score > right_score else "right"
         if left_score == right_score:
             winner = "tie"
+        else:
+            winner = "left" if left_score > right_score else "right"
 
         return {
             "left_score": left_score,
@@ -1199,12 +1145,10 @@ async def main():
         logger.info("Starting application task group")
 
         async with asyncio.TaskGroup() as tg:
-            # run the game client
-            _client_task = tg.create_task(game_client.start())
-            _ping_server = tg.create_task(game_client.ping_server())
-            _handle_messages = tg.create_task(game_client.consume_backend_messages())
-            # run the terminal UI
-            _ui_task = tg.create_task(terminal_ui.run())
+            tg.create_task(game_client.start())
+            tg.create_task(game_client.ping_server())
+            tg.create_task(game_client.consume_backend_messages())
+            tg.create_task(terminal_ui.run())
     except* Exception as exc_group:
         for exc in exc_group.exceptions:
             if not isinstance(exc, GracefulExit):
