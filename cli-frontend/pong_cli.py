@@ -46,7 +46,7 @@ class Point:
     y: float
 
     @classmethod
-    def from_str_or_float(cls, x, y):
+    def from_str_or_float(cls, x: Any, y: Any) -> "Point":
         """Create a Point from string or float values"""
         return cls(x=float(x), y=float(y))
 
@@ -56,7 +56,7 @@ class Paddle:
     height: float
     
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: Dict[str, Any]) -> "Paddle":
         """Create a Paddle from a dictionary"""
         return cls(
             topPoint=Point.from_str_or_float(
@@ -72,7 +72,7 @@ class Ball:
     y: float
     
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: Dict[str, Any]) -> "Ball":
         """Create a Ball from a dictionary"""
         return cls(x=float(data["x"]), y=float(data["y"]))
 
@@ -90,7 +90,7 @@ class PongGame:
     countdown: Optional[int] = None
     
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: Dict[str, Any]) -> "PongGame":
         """Create a PongGame from a dictionary"""
         return cls(
             id=data["id"],
@@ -136,11 +136,11 @@ class BackendClient:
         self.user_data: Optional[Dict[str, Any]] = None
         self.websocket_client = None
         self.is_connected: asyncio.Event = asyncio.Event()
-        self.requires_2fa_input = asyncio.Event()
-        self.got_2fa_input = asyncio.Future()
-        self.ws = None
-        self.incoming_messages = asyncio.Queue()
-        self.outgoing_messages = asyncio.Queue()
+        self.requires_2fa_input: asyncio.Event = asyncio.Event()
+        self.got_2fa_input: asyncio.Future[str] = asyncio.Future()
+        self.ws: Optional[aiohttp.ClientWebSocketResponse] = None
+        self.incoming_messages: asyncio.Queue[str] = asyncio.Queue()
+        self.outgoing_messages: asyncio.Queue[str] = asyncio.Queue()
         logger.info(f"BackendClient initialized for user: {username}, URL: {url}")
 
     async def __aenter__(self) -> "BackendClient":
@@ -156,14 +156,14 @@ class BackendClient:
         logger.info(f"Successfully connected to backend at {self.url}")
         return self
 
-    async def __aexit__(self, exc_type, exc_val, _) -> None:
+    async def __aexit__(self, exc_type: Optional[type], exc_val: Optional[Exception], _: Any) -> None:
         """Exit the context manager"""
         logger.info("BackendClient exiting context manager")
         if exc_type:
             logger.error(f"Context manager exiting with exception: {exc_type.__name__}: {exc_val}")
         await self.close()
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the backend client and authenticate"""
         logger.info("Starting BackendClient")
         # Initialize the aiohttp session
@@ -173,7 +173,7 @@ class BackendClient:
         assert self.is_connected, "Failed to authenticate with the backend server"
         logger.info("BackendClient authentication successful, starting background tasks")
 
-        async def keep_token_updated():
+        async def keep_token_updated() -> None:
             logger.info("Token validation task started")
             while True:
                 # Check if the access token is still valid
@@ -183,7 +183,7 @@ class BackendClient:
                 logger.debug("Token validation successful")
                 await asyncio.sleep(20)
 
-        async def send_messages_from_queue():
+        async def send_messages_from_queue() -> None:
             logger.info("Message sender task started")
             while not self.ws:
                 await asyncio.sleep(0.1)
@@ -201,7 +201,7 @@ class BackendClient:
             tg.create_task(send_messages_from_queue())
         raise GracefulExit("network ended")
         
-    async def handle_websocket(self):
+    async def handle_websocket(self) -> None:
         """Receive messages from the websocket server"""
         logger.info("Starting WebSocket handler")
         while not self.access_token:
@@ -236,7 +236,7 @@ class BackendClient:
         logger.warning("WebSocket connection closed")
         raise Exception("websocket closed")
     
-    async def send_to_server(self, data: str):
+    async def send_to_server(self, data: str) -> None:
         if not self.ws:
             logger.error("Attempted to send message but WebSocket not connected")
             raise ConnectionError("ws not connected")
@@ -330,7 +330,7 @@ class BackendClient:
             self.access_token = data["token"]
             logger.info("Successfully retrieved access token")
 
-    async def validate_2fa(self, user_data: Dict[str, Any], code_2fa: str):
+    async def validate_2fa(self, user_data: Dict[str, Any], code_2fa: str) -> None:
         """Validate a 2FA code when required"""
         # Prepare the 2FA validation request payload
         payload: Dict[str, Any] = {
@@ -441,12 +441,12 @@ class GameClient(BackendClient):
         super().__init__(username, password, url)
         self.game_id: Optional[str] = None
         self.game_data: Optional[Dict[str, Any]] = None
-        self.debug_mode = asyncio.Event()
-        self.debug_queue = asyncio.Queue()
-        self.last_pong = time.time()
-        self._error = None
-        self._available_games = asyncio.Queue()
-        self._game_over_data = None
+        self.debug_mode: asyncio.Event = asyncio.Event()
+        self.debug_queue: asyncio.Queue[str] = asyncio.Queue()
+        self.last_pong: float = time.time()
+        self._error: Optional[Tuple[str, int]] = None
+        self._available_games: asyncio.Queue[List[Dict[str, Any]]] = asyncio.Queue()
+        self._game_over_data: Optional[Dict[str, Any]] = None
         logger.info("GameClient initialized")
 
     @property
@@ -474,7 +474,7 @@ class GameClient(BackendClient):
         await super().__aenter__()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Any) -> None:
         await super().__aexit__(exc_type, exc_val, exc_tb)
 
     def get_error(self) -> Optional[Tuple[str, int]]:
@@ -484,7 +484,7 @@ class GameClient(BackendClient):
             return error_msg, error_code
         return None
 
-    async def ping_server(self):
+    async def ping_server(self) -> None:
         await self.is_connected.wait()
         while True:
             await asyncio.sleep(30)
@@ -493,7 +493,7 @@ class GameClient(BackendClient):
             if not self.last_pong > time.time() - 15 and not self.debug_mode.is_set():
                 raise ConnectionError("Server doesn't answer, pong timeout")
 
-    async def consume_backend_messages(self):
+    async def consume_backend_messages(self) -> None:
         logger.info("Starting backend message consumer")
         await self.is_connected.wait()
         while True:
@@ -503,10 +503,11 @@ class GameClient(BackendClient):
                 await self.debug_queue.put(message)
                 continue
             try:
-                message = json.loads(message)
+                message_data: Dict[str, Any] = json.loads(message)
             except Exception as e:
                 logger.warning(f"Failed to parse message as JSON: {e}")
                 continue
+            message = message_data
             if message.get('target_endpoint') == "pong":
                 self.last_pong = time.time()
                 logger.debug("Received pong response")
@@ -541,7 +542,7 @@ class GameClient(BackendClient):
                 logger.info(f"Game over received: {pong_data}")
                 self.handle_game_over(pong_data)
 
-    def update_game_state(self, game_data: dict):
+    def update_game_state(self, game_data: Dict[str, Any]) -> None:
         if not game_data:
             logger.warning("Received empty game data")
             return
@@ -551,19 +552,19 @@ class GameClient(BackendClient):
         self.game_data = game_data
         self.game_id = game_id
 
-    def handle_game_over(self, pong_data: dict):
+    def handle_game_over(self, pong_data: Dict[str, Any]) -> None:
         logger.info(f"Handling game over: {pong_data}")
         self.game_data = None
         self._game_over_data = pong_data
 
     @staticmethod
-    def to_pong_api_request(payload: dict) -> str:
+    def to_pong_api_request(payload: Dict[str, Any]) -> str:
         return json.dumps({
             "target_endpoint": "pong-api",
             "payload": payload
         })
 
-    async def get_joinable_games(self):
+    async def get_joinable_games(self) -> List[PongGame]:
         logger.info("Requesting list of joinable games")
         get_games_request = self.to_pong_api_request(
             {
@@ -575,7 +576,7 @@ class GameClient(BackendClient):
         try:
             games_data = await asyncio.wait_for(self._available_games.get(), timeout=3)
             self._available_games = asyncio.Queue()
-            games = [
+            games: List[PongGame] = [
                 PongGame.from_dict(game_data['game'])
                 for game_data in games_data
                 if isinstance(game_data, dict) and 'game' in game_data
@@ -589,7 +590,7 @@ class GameClient(BackendClient):
             self._error = (error_msg, 420)
             return []
 
-    def send_key_input(self, *, up: bool):
+    def send_key_input(self, *, up: bool) -> None:
         direction = "up" if up else "down"
         logger.debug(f"Sending key input: {direction}")
         msg = self.to_pong_api_request(
@@ -603,7 +604,7 @@ class GameClient(BackendClient):
         )
         self.outgoing_messages.put_nowait(msg)
 
-    async def create_new_game(self, mode: str, max_score: int):
+    async def create_new_game(self, mode: str, max_score: int) -> None:
         logger.info(f"Creating new game with mode: {mode}, max_score: {max_score}")
         create_game_request = self.to_pong_api_request(
             {
@@ -617,7 +618,7 @@ class GameClient(BackendClient):
         )
         await self.outgoing_messages.put(create_game_request)
 
-    async def join_game(self, game_id: str):
+    async def join_game(self, game_id: str) -> None:
         logger.info(f"Joining game with ID: {game_id}")
         join_game_request = self.to_pong_api_request(
             {
@@ -633,10 +634,10 @@ class GameClient(BackendClient):
 
 
 class PongCli:
-    MAX_SCORE = 30
-    GAME_MODES = ["classic"]
+    MAX_SCORE: int = 30
+    GAME_MODES: List[str] = ["classic"]
 
-    def __init__(self, game_client: GameClient):
+    def __init__(self, game_client: GameClient) -> None:
         assert game_client.is_connected, "Backend client is not authenticated"
         logger.info("Initializing PongCli terminal interface")
         self.client: GameClient = game_client
@@ -652,9 +653,9 @@ class PongCli:
         self.stdscr.refresh()
         logger.info("PongCli terminal interface initialized successfully")
 
-    async def run(self):
+    async def run(self) -> None:
         logger.info("Starting PongCli main loop")
-        async def wait_for_connection():
+        async def wait_for_connection() -> None:
             while True:
                 await asyncio.sleep(0.1)
                 if self.client.requires_2fa_input.is_set():
@@ -695,7 +696,7 @@ class PongCli:
         if refresh:
             self.stdscr.refresh()
 
-    async def text_input(self, y = 0, x = 0, msg = "Enter text:") -> str:
+    async def text_input(self, y: int = 0, x: int = 0, msg: str = "Enter text:") -> str:
         self.print_at([(y, x, msg)])
         result = ""
         while True:
@@ -710,8 +711,8 @@ class PongCli:
             else:
                 result += chr(key)
             self.print_at([(y, x, f"{msg} {result}")])
-    
-    async def show_error(self, error_msg: str):
+
+    async def show_error(self, error_msg: str) -> None:
         max_y, _ = self.screen_size
         self.stdscr.clear()
         self.stdscr.addstr(0, 0, "An error occured:")
@@ -736,7 +737,7 @@ class PongCli:
         y, x = self.stdscr.getmaxyx()
         return y - 1, x - 1
 
-    def draw_centered_menu(self, title: str, menu_items: List[Tuple[str, Any]], selected_item: int, footer: str = ""):
+    def draw_centered_menu(self, title: str, menu_items: List[Tuple[str, Any]], selected_item: int, footer: str = "") -> None:
         """Helper method to draw a centered menu with consistent styling"""
         max_y, max_x = self.screen_size
         self.stdscr.clear()
@@ -762,7 +763,7 @@ class PongCli:
 
     async def main_menu(self) -> Optional[PongGame]:
         logger.info("Displaying main menu")
-        menu = [
+        menu: List[Tuple[str, Optional[Any]]] = [
             ("Create a new game", self.create_game_screen),
             ("Join an existing game", self.join_existing_game_screen),
             ("Debug mode", self.debug_screen),
@@ -805,7 +806,7 @@ class PongCli:
         game_mode = self.GAME_MODES[0]
         max_score = 10
 
-        options = [
+        options: List[Tuple[str, str]] = [
             (f"Game Mode: {game_mode}", "mode"),
             (f"Max Score: {max_score}", "score"),
             ("Create Game", "create"),
@@ -867,7 +868,7 @@ class PongCli:
         self.stdscr.refresh()
 
         available_games = await self.client.get_joinable_games()
-        menu = [(f"ID: {game.id} | MAX SCORE: {game.maxScore}", game) for game in available_games]
+        menu: List[Tuple[str, PongGame]] = [(f"ID: {game.id} | MAX SCORE: {game.maxScore}", game) for game in available_games]
 
         selected_item = 0
         self.draw_centered_menu("Select one of the available games to join:", menu, selected_item, "Press q to go back")
@@ -895,7 +896,7 @@ class PongCli:
         self.client.debug_mode.set()
         await self.client.outgoing_messages.put(PING_MSG)
         await asyncio.sleep(0.3)
-        messages = []
+        messages: List[str] = []
         self.print_at([(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")])
         while True:
             # get messages from the queue
@@ -929,36 +930,36 @@ class PongCli:
 
         self.client.debug_mode.clear()
 
-    async def game_screen(self, game: PongGame) -> dict[str, Any]:
+    async def game_screen(self, game: PongGame) -> Dict[str, Any]:
         """Real remote gameplay implementation"""
         logger.info(f"Starting game screen for game: {game.id}")
         max_y, max_x = self.screen_size
 
-        game_width = max_x - 10
-        game_height = max_y - 6
-        start_x = 5
-        start_y = 3
+        game_width: int = max_x - 10
+        game_height: int = max_y - 6
+        start_x: int = 5
+        start_y: int = 3
 
-        paddle_height = 5
-        left_paddle_x = start_x + 1
-        right_paddle_x = start_x + game_width - 2
+        paddle_height: int = 5
+        left_paddle_x: int = start_x + 1
+        right_paddle_x: int = start_x + game_width - 2
 
-        game_id = game.id
-        max_score = game.maxScore
+        game_id: str = game.id
+        max_score: int = game.maxScore
 
-        running = True
-        last_time = time.time()
-        fps = 30
-        frame_duration = 1.0 / fps
+        running: bool = True
+        last_time: float = time.time()
+        fps: int = 30
+        frame_duration: float = 1.0 / fps
 
-        instructions = "Press 'q' to quit, ↑/↓ to move paddle"
+        instructions: str = "Press 'q' to quit, ↑/↓ to move paddle"
 
-        left_score = 0
-        right_score = 0
-        ball_x = start_x + game_width // 2
-        ball_y = start_y + game_height // 2
-        left_paddle_y = start_y + (game_height // 2) - (paddle_height // 2)
-        right_paddle_y = start_y + (game_height // 2) - (paddle_height // 2)
+        left_score: int = 0
+        right_score: int = 0
+        ball_x: int = start_x + game_width // 2
+        ball_y: int = start_y + game_height // 2
+        left_paddle_y: int = start_y + (game_height // 2) - (paddle_height // 2)
+        right_paddle_y: int = start_y + (game_height // 2) - (paddle_height // 2)
 
         logger.info(f"Game screen initialized: {game_width}x{game_height}, FPS: {fps}")
         
@@ -970,12 +971,12 @@ class PongCli:
 
             # Update game state from server
             if self.client.game_data and self.client.game_data.get('id') == game_id:
-                server_game = self.client.game_data
+                server_game: Dict[str, Any] = self.client.game_data
 
                 # Update ball position
-                ball_data = server_game.get('ball', {})
-                new_ball_x = start_x + int(ball_data.get('x', 0.5) * game_width)
-                new_ball_y = start_y + int(ball_data.get('y', 0.5) * game_height)
+                ball_data: Dict[str, Any] = server_game.get('ball', {})
+                new_ball_x: int = start_x + int(ball_data.get('x', 0.5) * game_width)
+                new_ball_y: int = start_y + int(ball_data.get('y', 0.5) * game_height)
 
                 # Log significant ball movement
                 if abs(new_ball_x - ball_x) > 5 or abs(new_ball_y - ball_y) > 3:
@@ -984,17 +985,17 @@ class PongCli:
                 ball_x, ball_y = new_ball_x, new_ball_y
 
                 # Update paddle positions
-                left_paddle_data = server_game.get('leftPaddle', {}).get('topPoint', {})
-                right_paddle_data = server_game.get('rightPaddle', {}).get('topPoint', {})
+                left_paddle_data: Dict[str, Any] = server_game.get('leftPaddle', {}).get('topPoint', {})
+                right_paddle_data: Dict[str, Any] = server_game.get('rightPaddle', {}).get('topPoint', {})
 
                 left_paddle_y = start_y + int(left_paddle_data.get('y', 0.4) * game_height)
                 right_paddle_y = start_y + int(right_paddle_data.get('y', 0.4) * game_height)
 
                 # Update scores
-                scores = server_game.get('scores', [])
+                scores: List[Dict[str, Any]] = server_game.get('scores', [])
                 if len(scores) >= 2:
-                    new_left_score = scores[0].get('score', 0)
-                    new_right_score = scores[1].get('score', 0)
+                    new_left_score: int = scores[0].get('score', 0)
+                    new_right_score: int = scores[1].get('score', 0)
 
                     # Log score changes
                     if new_left_score != left_score or new_right_score != right_score:
@@ -1003,7 +1004,7 @@ class PongCli:
                     left_score, right_score = new_left_score, new_right_score
 
                 # Check game status
-                game_status = server_game.get('status', 'waiting')
+                game_status: str = server_game.get('status', 'waiting')
                 if game_status == 'finished':
                     logger.info("Game finished, exiting game loop")
                     running = False
@@ -1102,7 +1103,7 @@ class PongCli:
             "game_over_data": self.client._game_over_data
         }
 
-    async def show_game_result(self, game_result: dict[str, Any]) -> None:
+    async def show_game_result(self, game_result: Dict[str, Any]) -> None:
         """
         Show the game result.
         """
@@ -1127,21 +1128,21 @@ class PongCli:
 
 class GracefulExit(Exception): pass
 
-async def main():
+async def main() -> None:
     logger.info("=== Starting Pong CLI Application ===")
     # TODO: move network on separate thread
-    cli_args = sys.argv[1:]
+    cli_args: List[str] = sys.argv[1:]
     if len(cli_args) != 1:
         logger.error("Invalid command line arguments")
         print("Usage: ./pong_cli.py <backend_url>", file=sys.stderr)
         sys.exit(1)
 
-    backend_url = cli_args[0]
+    backend_url: str = cli_args[0]
     logger.info(f"Backend URL: {backend_url}")
 
     try:
-        game_client = GameClient.from_login(backend_url)
-        terminal_ui = PongCli(game_client)
+        game_client: GameClient = GameClient.from_login(backend_url)
+        terminal_ui: PongCli = PongCli(game_client)
         logger.info("Starting application task group")
 
         async with asyncio.TaskGroup() as tg:
