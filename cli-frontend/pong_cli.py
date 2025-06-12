@@ -18,7 +18,7 @@ from aiohttp import ClientTimeout, TCPConnector, ClientSession
 
 
 def setup_logging() -> logging.Logger:
-    log_file = Path(__file__).parent / "pong_cli.log"
+    log_file = Path(__file__).parent / "log_pong_cli.log"
 
     logging.basicConfig(
         level=logging.INFO,
@@ -36,8 +36,6 @@ def setup_logging() -> logging.Logger:
 
 
 logger = setup_logging()
-
-PING_MSG = json.dumps({"target_endpoint": "ping", "payload": ""})
 
 
 @dataclass
@@ -443,7 +441,6 @@ class GameClient(BackendClient):
         self.game_data: Optional[Dict[str, Any]] = None
         self.debug_mode: asyncio.Event = asyncio.Event()
         self.debug_queue: asyncio.Queue[str] = asyncio.Queue()
-        self.last_pong: float = time.time()
         self._error: Optional[Tuple[str, int]] = None
         self._available_games: asyncio.Queue[List[Dict[str, Any]]] = asyncio.Queue()
         self._game_over_data: Optional[Dict[str, Any]] = None
@@ -484,14 +481,7 @@ class GameClient(BackendClient):
             return error_msg, error_code
         return None
 
-    async def ping_server(self) -> None:
-        await self.is_connected.wait()
-        while True:
-            await asyncio.sleep(30)
-            await self.send_to_server(PING_MSG)
-            await asyncio.sleep(0.2)
-            if not self.last_pong > time.time() - 15 and not self.debug_mode.is_set():
-                raise ConnectionError("Server doesn't answer, pong timeout")
+
 
     async def consume_backend_messages(self) -> None:
         logger.info("Starting backend message consumer")
@@ -508,10 +498,6 @@ class GameClient(BackendClient):
                 logger.warning(f"Failed to parse message as JSON:, {message=}", exc_info=True)
                 continue
             message = message_data
-            if message.get('target_endpoint') == "pong":
-                self.last_pong = time.time()
-                logger.debug("Received pong response")
-                continue
             if not message.get('target_endpoint') == "pong-api":
                 logger.debug(f"Ignoring message with target_endpoint: {message.get('target_endpoint')}")
                 continue
@@ -894,8 +880,6 @@ class PongCli:
     async def debug_screen(self) -> None:
         """print websocket messages"""
         self.client.debug_mode.set()
-        await self.client.outgoing_messages.put(PING_MSG)
-        await asyncio.sleep(0.3)
         messages: List[str] = []
         self.print_at([(0, 0, "Debug mode: Press 'q' to quit, 'i' to dump a msg on the ws")])
         while True:
@@ -1147,7 +1131,6 @@ async def main() -> None:
 
         async with asyncio.TaskGroup() as tg:
             tg.create_task(game_client.start())
-            tg.create_task(game_client.ping_server())
             tg.create_task(game_client.consume_backend_messages())
             tg.create_task(terminal_ui.run())
     except* Exception as exc_group:
