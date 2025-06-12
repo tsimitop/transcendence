@@ -504,8 +504,8 @@ class GameClient(BackendClient):
                 continue
             try:
                 message_data: Dict[str, Any] = json.loads(message)
-            except Exception as e:
-                logger.warning(f"Failed to parse message as JSON: {e}")
+            except Exception:
+                logger.warning(f"Failed to parse message as JSON:, {message=}", exc_info=True)
                 continue
             message = message_data
             if message.get('target_endpoint') == "pong":
