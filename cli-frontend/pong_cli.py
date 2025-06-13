@@ -511,6 +511,10 @@ class GameClient(BackendClient):
                 error_code = pong_data.get('code', 500)
                 logger.error(f"Received error from server: {error_msg} (code: {error_code})")
                 self._error = (error_msg, error_code)
+            elif msg_type == "game_list":
+                games_data = message.get('games', [])
+                logger.info(f"Received game list: {len(games_data)} games")
+                self._available_games.put_nowait(games_data)
             elif msg_type == "game_states":
                 pong_data = message.get('pong_data', [])
                 logger.info(f"Received game states: {len(pong_data)} games")
@@ -562,12 +566,23 @@ class GameClient(BackendClient):
         try:
             games_data = await asyncio.wait_for(self._available_games.get(), timeout=3)
             self._available_games = asyncio.Queue()
-            games: List[PongGame] = [
-                PongGame.from_dict(game_data['game'])
-                for game_data in games_data
-                if isinstance(game_data, dict) and 'game' in game_data
-                and PongGame.from_dict(game_data['game']).is_waiting
-            ]
+            games: List[PongGame] = []
+            for game_data in games_data:
+                if isinstance(game_data, dict) and game_data.get('state') == 'waiting':
+                    # Convert backend game list format to PongGame format
+                    pong_game_data = {
+                        'id': game_data.get('id', ''),
+                        'status': game_data.get('state', 'waiting'),
+                        'ball': {'x': 0.5, 'y': 0.5},
+                        'leftPaddle': {'topPoint': {'x': 0.0, 'y': 0.4}, 'height': 0.2},
+                        'rightPaddle': {'topPoint': {'x': 0.99, 'y': 0.4}, 'height': 0.2},
+                        'lastUpdateTime': int(time.time() * 1000),
+                        'gameMode': 'classic',
+                        'maxScore': 10,
+                        'scores': {},
+                        'countdown': None
+                    }
+                    games.append(PongGame.from_dict(pong_game_data))
             logger.info(f"Found {len(games)} joinable games")
             return sorted(games, key=lambda x: x.lastUpdateTime, reverse=True)
         except Exception as e:
