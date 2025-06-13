@@ -539,12 +539,23 @@ class GameClient(BackendClient):
         game_id = game_data.get('id', 'unknown')
         game_status = game_data.get('status', 'unknown')
         logger.debug(f"Updating game state for game {game_id}, status: {game_status}")
+
+        if game_status == 'finished':
+            logger.info(f"Ignoring finished game state update for game {game_id}")
+            return
+
+        if self.game_id and self.game_id != game_id:
+            logger.debug(f"Ignoring game state update for different game {game_id}, current game: {self.game_id}")
+            return
+
         self.game_data = game_data
-        self.game_id = game_id
+        if not self.game_id:
+            self.game_id = game_id
 
     def handle_game_over(self, pong_data: Dict[str, Any]) -> None:
         logger.info(f"Handling game over: {pong_data}")
         self.game_data = None
+        self.game_id = None
         self._game_over_data = pong_data
 
     @staticmethod
@@ -633,6 +644,48 @@ class GameClient(BackendClient):
         )
         await self.outgoing_messages.put(join_game_request)
 
+    def clear_game_state(self) -> None:
+        logger.info("Clearing game state")
+        self.game_data = None
+        self.game_id = None
+        self._game_over_data = None
+
+    async def create_and_wait_for_game(self, mode: str, max_score: int) -> Optional[PongGame]:
+        logger.info(f"Creating and waiting for new game with mode: {mode}, max_score: {max_score}")
+
+        old_game_id = self.game_id
+        self.game_id = None
+
+        await self.create_new_game(mode, max_score)
+
+        try:
+            timeout = 5.0
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                if self.game_id and self.game_id != old_game_id:
+                    logger.info(f"New game created with ID: {self.game_id}")
+                    pong_game_data = {
+                        'id': self.game_id,
+                        'status': 'waiting',
+                        'ball': {'x': 0.5, 'y': 0.5},
+                        'leftPaddle': {'topPoint': {'x': 0.0, 'y': 0.4}, 'height': 0.2},
+                        'rightPaddle': {'topPoint': {'x': 0.99, 'y': 0.4}, 'height': 0.2},
+                        'lastUpdateTime': int(time.time() * 1000),
+                        'gameMode': 'classic',
+                        'maxScore': max_score,
+                        'scores': {},
+                        'countdown': None
+                    }
+                    return PongGame.from_dict(pong_game_data)
+                await asyncio.sleep(0.1)
+
+            logger.error("Timeout waiting for game creation confirmation")
+            return None
+
+        except Exception as e:
+            logger.error(f"Error creating game: {e}")
+            return None
+
 
 class PongCli:
     MAX_SCORE: int = 30
@@ -670,6 +723,8 @@ class PongCli:
         await asyncio.wait_for(wait_for_connection(), timeout=60)
         logger.info("Connection established, entering main menu loop")
         while True:
+            # clear any previous game state before showing main menu
+            self.client.clear_game_state()
             # main menu
             game = await self.main_menu()
             if not game:
@@ -802,8 +857,6 @@ class PongCli:
                 self.draw_centered_menu(f"Welcome to Pong CLI {self.client.user_id}!", menu, selected_item)
 
     async def create_game_screen(self) -> Optional[PongGame]:
-        max_y, max_x = self.screen_size
-
         game_mode = self.GAME_MODES[0]
         max_score = 10
 
@@ -841,18 +894,9 @@ class PongCli:
                     options[selected_item] = (f"Game Mode: {game_mode}", option)
                     self.draw_centered_menu("Create a new game:", options, selected_item)
                 elif option == "create":
-                    await self.client.create_new_game(game_mode, max_score)
-
-                    msg = "Creating game..."
-                    self.stdscr.clear()
-                    self.stdscr.addstr(max_y//2, (max_x//2) - len(msg)//2, msg)
-                    self.stdscr.refresh()
-
-                    await asyncio.sleep(0.1)
-                    available_games = await self.client.get_joinable_games()
-
-                    if available_games:
-                        return available_games[0]
+                    created_game = await self.client.create_and_wait_for_game(game_mode, max_score)
+                    if created_game:
+                        return created_game
                     else:
                         await self.show_error("Failed to create game")
                         self.draw_centered_menu("Create a new game:", options, selected_item)
