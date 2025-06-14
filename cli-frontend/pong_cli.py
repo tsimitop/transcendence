@@ -616,13 +616,13 @@ class GameClient(BackendClient):
         )
         self.outgoing_messages.put_nowait(msg)
 
-    async def create_new_game(self, mode: str, max_score: int) -> None:
-        logger.info(f"Creating new game with mode: {mode}, max_score: {max_score}")
+    async def create_new_game(self, mode: str, max_score: int, player_alias: str) -> None:
+        logger.info(f"Creating new game with mode: {mode}, max_score: {max_score}, alias: {player_alias}")
         create_game_request = self.to_pong_api_request(
             {
                 "type": "create_game",
                 "pong_data": {
-                    "playerAlias": self.user_id,
+                    "playerAlias": player_alias,
                     "gameMode": "remote",
                     "localOpponent": ""
                 }
@@ -630,14 +630,14 @@ class GameClient(BackendClient):
         )
         await self.outgoing_messages.put(create_game_request)
 
-    async def join_game(self, game_id: str) -> None:
-        logger.info(f"Joining game with ID: {game_id}")
+    async def join_game(self, game_id: str, player_alias: str) -> None:
+        logger.info(f"Joining game with ID: {game_id}, alias: {player_alias}")
         join_game_request = self.to_pong_api_request(
             {
                 "type": "join_game",
                 "pong_data": {
                     "OpponentName": self.user_id,
-                    "OpponentAlias": self.user_id,
+                    "OpponentAlias": player_alias,
                     "gameId": game_id
                 }
             }
@@ -650,13 +650,13 @@ class GameClient(BackendClient):
         self.game_id = None
         self._game_over_data = None
 
-    async def create_and_wait_for_game(self, mode: str, max_score: int) -> Optional[PongGame]:
-        logger.info(f"Creating and waiting for new game with mode: {mode}, max_score: {max_score}")
+    async def create_and_wait_for_game(self, mode: str, max_score: int, player_alias: str) -> Optional[PongGame]:
+        logger.info(f"Creating and waiting for new game with mode: {mode}, max_score: {max_score}, alias: {player_alias}")
 
         old_game_id = self.game_id
         self.game_id = None
 
-        await self.create_new_game(mode, max_score)
+        await self.create_new_game(mode, max_score, player_alias)
 
         try:
             timeout = 5.0
@@ -859,8 +859,10 @@ class PongCli:
     async def create_game_screen(self) -> Optional[PongGame]:
         game_mode = self.GAME_MODES[0]
         max_score = 10
+        player_alias = ""
 
         options: List[Tuple[str, str]] = [
+            (f"Player Alias: {player_alias or '[Not Set]'}", "alias"),
             (f"Game Mode: {game_mode}", "mode"),
             (f"Max Score: {max_score}", "score"),
             ("Create Game", "create"),
@@ -883,7 +885,14 @@ class PongCli:
                 return None
             elif key == curses.KEY_ENTER or key == ord('\n'):
                 option = options[selected_item][1]
-                if option == "score":
+                if option == "alias":
+                    max_y, _ = self.screen_size
+                    alias_input = await self.text_input(max_y//2, 0, "Enter your alias:")
+                    if alias_input.strip():
+                        player_alias = alias_input.strip()
+                        options[selected_item] = (f"Player Alias: {player_alias}", option)
+                    self.draw_centered_menu("Create a new game:", options, selected_item)
+                elif option == "score":
                     max_score = (max_score + 1) % self.MAX_SCORE
                     options[selected_item] = (f"Max Score: {max_score}", option)
                     self.draw_centered_menu("Create a new game:", options, selected_item)
@@ -894,7 +903,11 @@ class PongCli:
                     options[selected_item] = (f"Game Mode: {game_mode}", option)
                     self.draw_centered_menu("Create a new game:", options, selected_item)
                 elif option == "create":
-                    created_game = await self.client.create_and_wait_for_game(game_mode, max_score)
+                    if not player_alias.strip():
+                        await self.show_error("Please enter your alias before creating a game")
+                        self.draw_centered_menu("Create a new game:", options, selected_item)
+                        continue
+                    created_game = await self.client.create_and_wait_for_game(game_mode, max_score, player_alias)
                     if created_game:
                         return created_game
                     else:
@@ -904,10 +917,19 @@ class PongCli:
                     return None
 
     async def join_existing_game_screen(self) -> Optional[PongGame]:
-        max_y, max_x = self.screen_size
+        # First, get the player alias
+        max_y, _ = self.screen_size
+        player_alias = await self.text_input(max_y//2, 0, "Enter your alias:")
+        if not player_alias.strip():
+            await self.show_error("Alias is required to join a game")
+            return None
 
+        player_alias = player_alias.strip()
+
+        # Then show available games
+        max_y, max_x = self.screen_size
         self.stdscr.clear()
-        self.stdscr.addstr(0, 0, "Select one of the available games to join:")
+        self.stdscr.addstr(0, 0, f"Select one of the available games to join (Alias: {player_alias}):")
         msg = "Loading games..."
         self.stdscr.addstr(max_y//2, (max_x//2) - len(msg)//2, msg)
         self.stdscr.refresh()
@@ -916,23 +938,23 @@ class PongCli:
         menu: List[Tuple[str, PongGame]] = [(f"ID: {game.id} | MAX SCORE: {game.maxScore}", game) for game in available_games]
 
         selected_item = 0
-        self.draw_centered_menu("Select one of the available games to join:", menu, selected_item, "Press q to go back")
+        self.draw_centered_menu(f"Select one of the available games to join (Alias: {player_alias}):", menu, selected_item, "Press q to go back")
         while True:
             key = self.stdscr.getch()
             if key == curses.ERR:
                 await asyncio.sleep(0.05)
             elif key == curses.KEY_UP:
                 selected_item = (selected_item - 1) % len(menu)
-                self.draw_centered_menu("Select one of the available games to join:", menu, selected_item, "Press q to go back")
+                self.draw_centered_menu(f"Select one of the available games to join (Alias: {player_alias}):", menu, selected_item, "Press q to go back")
             elif key == curses.KEY_DOWN:
                 selected_item = (selected_item + 1) % len(menu)
-                self.draw_centered_menu("Select one of the available games to join:", menu, selected_item, "Press q to go back")
+                self.draw_centered_menu(f"Select one of the available games to join (Alias: {player_alias}):", menu, selected_item, "Press q to go back")
             elif key == ord('q'):
                 return None
             elif key == curses.KEY_ENTER or key == ord('\n'):
                 if menu and selected_item < len(menu) and menu[selected_item]:
                     selected_game = menu[selected_item][1]
-                    await self.client.join_game(selected_game.id)
+                    await self.client.join_game(selected_game.id, player_alias)
                     await asyncio.sleep(0.5)
                     return selected_game
 
