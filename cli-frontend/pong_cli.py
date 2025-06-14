@@ -97,7 +97,7 @@ class PongGame:
             leftPaddle=Paddle.from_dict(data["leftPaddle"]),
             rightPaddle=Paddle.from_dict(data["rightPaddle"]),
             lastUpdateTime=data["lastUpdateTime"],
-            gameMode=data["gameMode"],
+            gameMode=data.get("gameMode", "classic"),
             maxScore=data["maxScore"],
             scores=data.get("scores", {}),
             countdown=data.get("countdown")
@@ -502,6 +502,7 @@ class GameClient(BackendClient):
         self._available_tournaments: asyncio.Queue[List[Dict[str, Any]]] = asyncio.Queue()
         self._tournament_end_message: Optional[str] = None
         self._in_tournament: bool = False
+        self._tournament_countdown: Optional[int] = None
 
         # Input handling for continuous paddle movement
         self.input_state: Dict[str, bool] = {"up": False, "down": False}
@@ -612,7 +613,9 @@ class GameClient(BackendClient):
             elif msg_type == "countdown":
                 countdown_value = message.get('value', 0)
                 logger.info(f"Tournament countdown: {countdown_value}")
-                # Tournament countdown is handled by the game screen
+                # Store countdown value for tournament progression detection
+                if self._in_tournament:
+                    self._tournament_countdown = countdown_value
 
     def update_game_state(self, game_data: Dict[str, Any]) -> None:
         if not game_data:
@@ -626,9 +629,17 @@ class GameClient(BackendClient):
             logger.info(f"Ignoring finished game state update for game {game_id}")
             return
 
+        # In tournament mode, accept new game IDs (for next tournament level)
         if self.game_id and self.game_id != game_id:
-            logger.debug(f"Ignoring game state update for different game {game_id}, current game: {self.game_id}")
-            return
+            if self._in_tournament:
+                logger.info(f"Tournament mode: accepting new game {game_id}, previous game: {self.game_id}")
+                # Update to the new tournament game
+                self.game_data = game_data
+                self.game_id = game_id
+                return
+            else:
+                logger.debug(f"Ignoring game state update for different game {game_id}, current game: {self.game_id}")
+                return
 
         self.game_data = game_data
         if not self.game_id:
@@ -636,8 +647,10 @@ class GameClient(BackendClient):
 
     def handle_game_over(self, pong_data: Dict[str, Any]) -> None:
         logger.info(f"Handling game over: {pong_data}")
-        self.game_data = None
-        self.game_id = None
+        # In tournament mode, don't clear game state immediately to allow detection of next game
+        if not self._in_tournament:
+            self.game_data = None
+            self.game_id = None
         self._game_over_data = pong_data
 
     @staticmethod
@@ -929,6 +942,11 @@ class GameClient(BackendClient):
         self.tournament_id = None
         self._tournament_end_message = None
         self._in_tournament = False
+        self._tournament_countdown = None
+        # Also clear game state when tournament ends
+        self.game_data = None
+        self.game_id = None
+        self._game_over_data = None
 
 
 class PongCli:
@@ -1375,6 +1393,13 @@ class PongCli:
     async def wait_for_next_tournament_game(self) -> Optional[PongGame]:
         logger.info("Waiting for next tournament game or tournament end")
 
+        # Store the current finished game ID to detect when a new game starts
+        finished_game_id = self.client.game_id
+        logger.info(f"Finished game ID: {finished_game_id}")
+
+        # Clear any previous countdown
+        self.client._tournament_countdown = None
+
         while self.client._in_tournament:
             self.stdscr.clear()
             self.stdscr.addstr(0, 0, "Tournament in progress...")
@@ -1386,9 +1411,30 @@ class PongCli:
             if self.client._tournament_end_message:
                 return None
 
-            # Check for new game
-            if self.client.game_data and self.client.game_id:
-                logger.info("Next tournament game available")
+            # CRITICAL FIX: Check for tournament countdown (indicates new game starting)
+            # This matches the web frontend behavior - countdown message = immediate transition to game
+            if self.client._tournament_countdown is not None:
+                logger.info(f"Tournament countdown received: {self.client._tournament_countdown} - transitioning to game immediately!")
+                # Create a placeholder game object for the countdown phase
+                # This matches exactly what the web frontend does - transition immediately on countdown
+                placeholder_game_data = {
+                    'id': f"tournament-final-{int(time.time() * 1000)}",  # Temporary ID for final
+                    'status': 'countdown',
+                    'ball': {'x': 0.5, 'y': 0.5},
+                    'leftPaddle': {'topPoint': {'x': 0.0, 'y': 0.4}, 'height': 0.2},
+                    'rightPaddle': {'topPoint': {'x': 0.99, 'y': 0.4}, 'height': 0.2},
+                    'lastUpdateTime': int(time.time() * 1000),
+                    'gameMode': 'classic',
+                    'maxScore': 10,
+                    'scores': [],
+                    'countdown': self.client._tournament_countdown
+                }
+                return PongGame.from_dict(placeholder_game_data)
+
+            # Check for new game - must be different from the finished game
+            if (self.client.game_data and self.client.game_id and
+                self.client.game_id != finished_game_id):
+                logger.info(f"Next tournament game available: {self.client.game_id}")
                 return PongGame.from_dict(self.client.game_data)
 
             # Handle input
@@ -1524,8 +1570,16 @@ class PongCli:
                 should_render = current_time - last_render_time >= frame_duration
 
                 # Update game state from server
-                if self.client.game_data and self.client.game_data.get('id') == game_id:
+                # In tournament mode, accept any game data (game ID may change between rounds)
+                if self.client.game_data and (
+                    self.client.game_data.get('id') == game_id or
+                    (self.client._in_tournament and game_id.startswith('tournament-final-'))
+                ):
                     server_game: Dict[str, Any] = self.client.game_data
+                    # Update game_id if it changed (tournament progression)
+                    if self.client._in_tournament and self.client.game_data.get('id') != game_id:
+                        logger.info(f"Tournament game ID updated: {game_id} -> {self.client.game_data.get('id')}")
+                        game_id = self.client.game_data.get('id', game_id)
 
                     # Update ball position
                     ball_data: Dict[str, Any] = server_game.get('ball', {})
