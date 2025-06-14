@@ -4,6 +4,7 @@ import { QueryUser } from "../../user-database/queries";
 import UserDb from "../../user-database/UserDb";
 import { UserStateType } from "../sign-in/sign-in";
 import { fastify } from "../../server";
+import { getUserSocket, blockedUsers } from "../../websocket/WebSocket";
 
 const STATUS = {
   PENDING: 'pending',
@@ -147,14 +148,91 @@ fastify.post('/api/friends/accept', async function (
   }
 
   try {
-	const userDbInstance = new UserDb("/app/database/test.db");
-	let userDb;
-	userDb = userDbInstance.openDb();
-	const bidirectional_friendship = userDb.prepare(QueryFriend.SET_BIDIRECTIONAL_STATUS);
-	bidirectional_friendship.run(STATUS.ACCEPTED, currentUserId, targetUser, targetUser, currentUserId);userDb.close();
+    const userDbInstance = new UserDb("/app/database/test.db");
+    const userDb = userDbInstance.openDb();
+    const bidirectional_friendship = userDb.prepare(QueryFriend.SET_BIDIRECTIONAL_STATUS);
+    bidirectional_friendship.run(
+      STATUS.ACCEPTED,
+      currentUserId,
+      targetUser,
+      targetUser,
+      currentUserId
+    );
+
+    const getUsernameStmt = userDb.prepare(QueryUser.MATCH_EACH_ID_TO_USERNAME);
+    const toUserRow = getUsernameStmt.get(targetUser) as { username: string } | undefined;
+    const toUsername = toUserRow?.username;
+
+    userDb.close();
+
+	if (toUsername && user.username) {
+	const usernamesToNotify = [toUsername, user.username];
+	
+	usernamesToNotify.forEach(username => {
+		const ws = getUserSocket(username);
+		if (ws && ws.readyState === WebSocket.OPEN) {
+		const systemMsg = {
+			type: "SYSTEM",
+			message: "Friendship accepted"
+		};
+		ws.send(JSON.stringify(systemMsg));
+		console.log(`[WS] Sent SYSTEM msg to ${username}`);
+		}
+	});
+	}
+
     return reply.status(200).send({ success: true });
   } catch (error) {
     console.error("Friend request error:", error);
-    return reply.status(500).send({ success: false, message: "Server error"});
+    return reply.status(500).send({ success: false, message: "Server error" });
   }
+});
+
+fastify.post('/api/friends/list', async function (
+  request: FastifyRequest<{ Body: { userState: UserStateType } }>,
+  reply: FastifyReply
+) {
+  const user = request.body.userState;
+  const currentUserId = Number(user.id);
+
+  if (!currentUserId) {
+    return reply.status(401).send({ success: false, message: "Not authenticated" });
+  }
+
+  try {
+    const userDbInstance = new UserDb("/app/database/test.db");
+    const userDb = userDbInstance.openDb();
+
+    const stmt = userDb.prepare(QueryFriend.LIST_OF_ACCEPTED);
+    const friendRows = stmt.all(currentUserId, currentUserId) as { friend_id: number }[];
+
+    const friendIds = friendRows.map(r => r.friend_id);
+
+    const getUsernames = userDb.prepare(QueryUser.MATCH_EACH_ID_TO_USERNAME);
+    const friends = friendIds.map((id: number) => {
+      const row = getUsernames.get(id) as { username: string } | undefined;
+      return row?.username;
+    }).filter(Boolean);
+
+    userDb.close();
+    return reply.status(200).send({ success: true, friends });
+  } catch (err) {
+    console.error("Error fetching accepted friends:", err);
+    return reply.status(500).send({ success: false, message: "Server error" });
+  }
+});
+
+fastify.post('/api/friends/blocked', async function (
+  request: FastifyRequest<{ Body: { userState: UserStateType } }>,
+  reply: FastifyReply
+) {
+  const username = request.body.userState?.username;
+  if (!username) {
+    return reply.status(400).send({ success: false, message: "Missing user" });
+  }
+
+  const blocked = blockedUsers.get(username);
+  const blockedUsernames = blocked ? Array.from(blocked) : [];
+
+  return reply.status(200).send({ success: true, blockedUsernames });
 });

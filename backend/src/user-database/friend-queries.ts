@@ -16,4 +16,16 @@ export enum QueryFriend {
 	SET_BIDIRECTIONAL_STATUS = `UPDATE ${table} SET status = ? WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?);`,
 	SET_ONEDIRECTIONAL_STATUS = `UPDATE ${table} SET status = ? WHERE user_id = ? AND friend_id = ?;`,
 	LIST_OF_PENDING = `SELECT user_id FROM friends_users WHERE friend_id = ? AND status = 'pending'`,
+	LIST_OF_ACCEPTED = `
+	SELECT user_id AS friend_id FROM friends_users WHERE friend_id = ? AND status = 'accepted'
+	UNION
+	SELECT friend_id FROM friends_users WHERE user_id = ? AND status = 'accepted'
+	`,
+	LIST_OF_BLOCKED_BY_ME = `SELECT friend_id FROM friends_users WHERE user_id = ? AND status = 'blocked'`,
+	LIST_ALL_BLOCKED = `
+	SELECT user_id, friend_id AS blocked_user_id
+	FROM ${table}
+	WHERE status = 'blocked';
+	`,
+
 }
