@@ -4,9 +4,9 @@ import dotenv from 'dotenv';
 import { IncomingMessage } from 'http';
 import UserDb from "../user-database/UserDb";
 import { handleWebsocketPayload } from './MessageHandler';
-
 import { endOfGame } from '../api/pong/PongMsgHandler';
 import { deleteGameBecauseUserReconnected } from '../api/pong/PongMsgHandler';
+import { QueryFriend } from '../user-database/friend-queries';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -46,6 +46,41 @@ export function getPongSocket(username: string): WebSocket | undefined {
 
 
 export const blockedUsers = new Map<string, Set<string>>();
+
+/**
+ * @brief Loads blocked users from the database into memory
+ * @description This function retrieves all blocked user relationships from the database
+ * and stores them in a Map where the key is the blocker username and the value is a Set of blocked usernames.
+ */
+export function loadBlockedUsersFromDatabase() {
+  const userDbInstance = new UserDb("database/test.db");
+  const db = userDbInstance.openDb();
+
+  const stmt = db.prepare(QueryFriend.LIST_ALL_BLOCKED);
+
+  const rows = stmt.all() as { user_id: number, blocked_user_id: number }[];
+
+  const getUsername = db.prepare(`SELECT username FROM test_users WHERE id = ?`);
+
+  for (const { user_id, blocked_user_id } of rows) {
+	const blockerRow = getUsername.get(user_id) as { username: string } | undefined;
+	const blockedRow = getUsername.get(blocked_user_id) as { username: string } | undefined;
+
+	const blocker = blockerRow?.username;
+	const blocked = blockedRow?.username;
+
+    if (!blocker || !blocked) continue;
+
+    if (!blockedUsers.has(blocker)) {
+      blockedUsers.set(blocker, new Set());
+    }
+    blockedUsers.get(blocker)!.add(blocked);
+  }
+
+  db.close();
+//   console.log(`[INIT] Loaded blocked users into memory`);
+}
+
 
 
 export function startWebSocketServer(server: any) {

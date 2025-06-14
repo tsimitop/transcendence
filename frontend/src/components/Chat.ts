@@ -4,7 +4,8 @@ import Component, {
 	ChildrenStringType,
   } from "../models/Component";
 import { CADDY_SERVER } from "../constants";
-  
+import DOMPurify from 'dompurify';
+
   /**
    * Chat component class.
    * @brief Handles UI rendering and WebSocket communication for live chat.
@@ -13,6 +14,7 @@ import { CADDY_SERVER } from "../constants";
 	private socket: WebSocket | null = null;
 	private reconnectAttempts = 0;
 	private readonly maxReconnectAttempts = 5;
+	private blockedUsers = new Set<string>();
 	static isInitialized = false;
 
 	constructor(
@@ -27,11 +29,35 @@ import { CADDY_SERVER } from "../constants";
 	 * Sets up event listeners for sending messages.
 	 */
 	connectedCallback(): void {
+		this.fetchBlocked().then(blockedList => {
+			this.blockedUsers = new Set(blockedList);
+		});
 		const sendBtn = this.querySelector("#send-btn") as HTMLButtonElement;
 		const input = this.querySelector("#chat-input") as HTMLInputElement;
 		const toggleBtn = this.querySelector("#chat-toggle") as HTMLButtonElement;
 		const chatContent = this.querySelector("#chat-content") as HTMLDivElement;
-	  
+
+	    const recipientSelect = this.querySelector("#recipient-select") as HTMLSelectElement;
+
+		if (recipientSelect) {
+		this.fetchFriends().then(friends => {
+			if (!Array.isArray(friends)) return;
+
+			// Duplikate entfernen
+			const uniqueFriends = Array.from(new Set(friends));
+
+			uniqueFriends.forEach(friend => {
+			// Skip if this friend already exists in dropdown (defensiv)
+			if ([...recipientSelect.options].some(opt => opt.value === friend)) return;
+
+			const option = document.createElement("option");
+			option.value = friend;
+			option.textContent = friend;
+			recipientSelect.appendChild(option);
+			});
+		});
+		}
+
 		if (sendBtn && input) {
 		  // Send message when button clicked
 		  sendBtn.addEventListener("click", () => this.sendMessage(input));
@@ -49,7 +75,35 @@ import { CADDY_SERVER } from "../constants";
 		  });
 		}
 	  }
-  
+
+	/**
+	 * @brief Fetches the list of users blocked by the current user.
+	 * @returns An array of usernames that the current user has blocked.
+	 * @note Used to filter out unwanted messages and prevent interaction
+	 *       with blocked users in the chat interface.
+	 */
+	private async fetchBlocked(): Promise<string[]> {
+		try {
+			const response = await fetch(`${CADDY_SERVER}/api/friends/blocked`, {
+			method: "POST",
+			credentials: "include",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({
+				userState: userContext.state
+			})
+			});
+
+			const data = await response.json();
+			return data.blockedUsernames || [];
+		} catch (error) {
+			console.error("Error fetching blocked users:", error);
+			return [];
+		}
+	  }
+
+
 	/**
 	 * @brief Factory method to create and attach a Chat component to the DOM.
 	 * @return the Chat instance.
@@ -71,22 +125,25 @@ import { CADDY_SERVER } from "../constants";
   
 	  // HTML structure of the chat box
 	  const html = `
-	  <div id="chat-wrapper" class="fixed bottom-4 right-4 w-80 z-50 shadow-lg">
-		<div class="bg-white rounded shadow p-2 flex flex-col space-y-2">
-		  <div class="flex justify-between items-center">
-			<span class="font-bold">Chat</span>
-			<button id="chat-toggle" class="text-xs text-blue-500 underline">Minimize</button>
-		  </div>
-		  <div id="chat-content">
-			<div id="chat-messages" class="flex-1 overflow-y-auto h-64 border p-2 rounded bg-gray-100 text-sm space-y-1"></div>
-			<div class="flex mt-2">
-			  <input type="text" id="chat-input" class="flex-1 p-2 border rounded-l" placeholder="Type a message..." />
-			  <button id="send-btn" class="p-2 bg-blue-500 text-white rounded-r">Send</button>
+		<div id="chat-wrapper" class="fixed bottom-4 right-4 w-80 z-50 shadow-lg">
+			<div class="bg-white rounded shadow p-2 flex flex-col space-y-2">
+			<div class="flex justify-between items-center">
+				<span class="font-bold">Chat</span>
+				<button id="chat-toggle" class="text-xs text-blue-500 underline">Expand</button>
 			</div>
-		  </div>
+			<div id="chat-content" class="hidden">
+				<select id="recipient-select" class="w-full p-1 border rounded mb-1">
+				<option value="">🌐 Global Chat</option>
+				</select>
+				<div id="chat-messages" class="flex-1 overflow-y-auto h-64 border p-2 rounded bg-gray-100 text-sm space-y-1"></div>
+				<div class="flex mt-2">
+				<input type="text" id="chat-input" class="flex-1 p-2 border rounded-l" placeholder="Type a message..." />
+				<button id="send-btn" class="p-2 bg-blue-500 text-white rounded-r">Send</button>
+				</div>
+			</div>
+			</div>
 		</div>
-	  </div>
-	`;
+	  `;
   
 	  // Create and insert the chat component
 	  const chatInstance = new Chat({ html, position: "beforeend" });
@@ -100,21 +157,54 @@ import { CADDY_SERVER } from "../constants";
 	private sendMessage(input: HTMLInputElement): void {
 		const trimmedMessage = input.value.trim();
 		const username = userContext.state.username;
-	  
+		const recipientSelect = this.querySelector("#recipient-select") as HTMLSelectElement;
+		const selectedRecipient = recipientSelect?.value || "";
+
 		if (trimmedMessage && this.socket?.readyState === WebSocket.OPEN && username) {
 			// console.log("Sending message as:", username); // debug Chat print 
-			const messagePayload = {
-				target_endpoint: "chat-api",
-				payload: {
-				  type: "CHAT",
-				  from: username,
-				  message: trimmedMessage,
-				}
-			  };
-			  this.socket.send(JSON.stringify(messagePayload));
+			const messagePayload: any = {
+			target_endpoint: "chat-api",
+			payload: {
+				type: "CHAT",
+				from: username,
+				message: trimmedMessage,
+			}
+		  };
+
+		  if (selectedRecipient) {
+		  messagePayload.payload.to = selectedRecipient;
+		  }
+		  this.socket.send(JSON.stringify(messagePayload));
 		  input.value = ""; // Clear input field
 		}
 	  }
+
+	/**
+	 * @brief Loads Friendslist of the current user from the server.
+	 * @returns Lists Usernames of friends as an array.
+	 */
+	private async fetchFriends(): Promise<string[]> {
+	  try {
+		const response = await fetch(`${CADDY_SERVER}/api/friends/list`, {
+		  method: "POST",
+		  credentials: "include",
+		  headers: {
+			"Content-Type": "application/json"
+		},
+		  body: JSON.stringify({
+			userState: userContext.state
+		})
+	  });
+
+		if (!response.ok) throw new Error("Server responded with error");
+
+		const data = await response.json();
+		return data.friends || [];
+	  } catch (error) {
+		console.error("Error fetching friends:", error);
+		return [];
+	  }
+	}
   
 	public async initSocket(): Promise<void> {
 	  try {
@@ -161,26 +251,53 @@ import { CADDY_SERVER } from "../constants";
 		  return;
 		}
 	  
+		// skip messages from blocked users
+		if (parsed.from && this.blockedUsers.has(parsed.from)) return;
+
+		// Sanitize all user-controlled input
+		const safeFrom = DOMPurify.sanitize(parsed.from || "");
+		// const safeTo = DOMPurify.sanitize(parsed.to || "");
+		const safeMessage = DOMPurify.sanitize(parsed.message || "");
 		const message = document.createElement("div");
 	  
 		switch (parsed.type) {
 		  case "SYSTEM":
-			message.textContent = `[${parsed.message}]`;
+			// SYSTEM messages typically contain no user input, but we still sanitize for safety
+			message.textContent = `[${safeMessage}]`;
 			message.classList.add("text-gray-500", "italic");
+
+			if (safeMessage === "Friendship accepted") {
+				console.log("[WS] Friendship accepted – refreshing dropdown.");
+				this.refreshFriendsDropdown();
+			}
 			break;
-	  
+
 		  case "CHAT":
-			message.textContent = `${parsed.from}: ${parsed.message}`;
+			const currentUser = userContext.state.username;
+
+			if (parsed.to) {
+				const isInbound = parsed.to === currentUser;
+				const isOutbound = parsed.from === currentUser;
+
+				if (!(isInbound || isOutbound)) return;
+
+				console.log("[Chat] Rendering DM message:", safeFrom, "→", parsed.to);
+				message.innerHTML = `<strong>[DM]</strong> <b>${safeFrom}</b>: ${safeMessage}`;
+			} else {
+				message.innerHTML = `<b>${safeFrom}</b>: ${safeMessage}`;
+			}
+
 			message.classList.add("text-black");
-			break;
-	  
+		    break;
+
 		  case "INVITE":
-			message.textContent = `[Invite from ${parsed.from}]`;
+			message.textContent = `[Invite from ${safeFrom}]`;
 			message.classList.add("text-blue-500");
 			break;
-	  
+
+
 		  default:
-			message.textContent = `[Unknown message type]: ${parsed.type}`;
+			message.textContent = `[Unknown message type]: ${DOMPurify.sanitize(parsed.type)}`;
 			message.classList.add("text-red-500");
 		}
 	  
@@ -237,6 +354,36 @@ import { CADDY_SERVER } from "../constants";
 		msgBox.appendChild(message);
 		msgBox.scrollTop = msgBox.scrollHeight;
 	  }
+	}
+
+	private lastDropdownUpdate = 0;
+
+	/**
+	 * @brief Refreshes the friends dropdown after updates (e.g. friend accepted).
+	 */
+	public async refreshFriendsDropdown(): Promise<void> {
+		const now = Date.now();
+
+		// Verhindert mehrfachen Aufruf innerhalb von 2 Sekunden
+		if (now - this.lastDropdownUpdate < 2000) {
+			console.log("[Dropdown] Skipping redundant refresh.");
+			return;
+		}
+		this.lastDropdownUpdate = now;
+
+		const recipientSelect = this.querySelector("#recipient-select") as HTMLSelectElement;
+		if (!recipientSelect) return;
+
+		recipientSelect.innerHTML = `<option value="">🌐 Global Chat</option>`;
+		const friends = await this.fetchFriends();
+		console.log("[Dropdown] Friends fetched from server:", friends);
+
+		friends.forEach(friend => {
+			const option = document.createElement("option");
+			option.value = friend;
+			option.textContent = friend;
+			recipientSelect.appendChild(option);
+		});
 	}
   }
   

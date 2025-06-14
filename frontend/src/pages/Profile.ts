@@ -375,7 +375,15 @@ static fetchAndRenderFriendRequests() {
         return;
       }
 
-      Profile.fetchAndRenderFriendRequests();
+	  Profile.fetchAndRenderFriendRequests();
+	  // Refresh the friends dropdown
+	  if (action === "accept") {
+	  const chatComponent = document.querySelector("chat-component");
+	  if (chatComponent && typeof (chatComponent as any).refreshFriendsDropdown === "function") {
+		(chatComponent as any).refreshFriendsDropdown();
+	  }
+	}
+
     } catch (error) {
       console.error(`Error performing ${action}:`, error);
     }

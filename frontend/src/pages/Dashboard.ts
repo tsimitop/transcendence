@@ -1,7 +1,6 @@
 // Import UI components
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import Chat from "../components/Chat";
 
 // Import base Component class and types for structured child handling
 import Component, {
@@ -44,7 +43,6 @@ class Dashboard extends Component
 			{ html, position: "beforeend" }, // Insert this HTML at the end of the component
 			{ element: Header.create(), position: "afterbegin" }, // Add Header at the top
 			{ element: Footer.create(), position: "beforeend" },   // Add Footer at the bottom
-			{ element: Chat.create(), position: "beforeend" } // Add chat feature below main content
 		);
 
 		// Insert child elements at their specified positions

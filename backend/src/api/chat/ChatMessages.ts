@@ -16,14 +16,43 @@ export interface ChatMessage {
  * @param sender - The username of the sender
  * @param messagePayload - Contains the message to broadcast
  */
-export function handleChatMessage(sender: string, { message }: ChatMessage): void {
+export function handleChatMessage(sender: string, { to, message }: ChatMessage): void {
   if (!message) return;
 
-  for (const [username, userConnections] of connectedUsers.entries()) {
-    // Send to chat connections only
-    const chatConnection = userConnections.get('chat');
-    if (chatConnection && chatConnection.socket.readyState === WebSocket.OPEN) {
-      chatConnection.socket.send(JSON.stringify({
+  // Private Message
+  if (to) {
+    const recipientConn = connectedUsers.get(to)?.get('chat');
+    const senderConn = connectedUsers.get(sender)?.get('chat');
+
+    // Prevent sending if recipient blocked sender
+    if (blockedUsers.get(to)?.has(sender)) {
+      console.log(`[CHAT] ${to} has blocked ${sender}. Message not delivered.`);
+      return;
+    }
+
+    const payload = JSON.stringify({
+      type: 'CHAT',
+      from: sender,
+      to,
+      message,
+    });
+
+    if (recipientConn?.socket.readyState === WebSocket.OPEN) {
+      recipientConn.socket.send(payload);
+    }
+
+    if (senderConn?.socket.readyState === WebSocket.OPEN) {
+      senderConn.socket.send(payload);
+    }
+
+    return;
+  }
+
+  // Global Broadcast
+  for (const userConnections of connectedUsers.values()) {
+    const chatConn = userConnections.get('chat');
+    if (chatConn?.socket.readyState === WebSocket.OPEN) {
+      chatConn.socket.send(JSON.stringify({
         type: 'CHAT',
         from: sender,
         message,
@@ -31,6 +60,7 @@ export function handleChatMessage(sender: string, { message }: ChatMessage): voi
     }
   }
 }
+
 
 /**
  * @brief Adds a user to the block list of another user
