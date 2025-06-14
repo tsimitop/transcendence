@@ -444,6 +444,13 @@ class GameClient(BackendClient):
         self._error: Optional[Tuple[str, int]] = None
         self._available_games: asyncio.Queue[List[Dict[str, Any]]] = asyncio.Queue()
         self._game_over_data: Optional[Dict[str, Any]] = None
+
+        # Input handling for continuous paddle movement
+        self.input_state: Dict[str, bool] = {"up": False, "down": False}
+        self.input_sender_task: Optional[asyncio.Task] = None
+        self.input_active: bool = False
+        self.last_key_time: Dict[str, float] = {"up": 0.0, "down": 0.0}
+        self.key_timeout: float = 0.2  # Stop sending after 200ms of no key repeat
         logger.info("GameClient initialized")
 
     @property
@@ -456,7 +463,7 @@ class GameClient(BackendClient):
     @classmethod
     def from_login(cls, url: Optional[str] = None) -> "GameClient":
         # show login screen to enter username and password
-        username = input("Enter email/username: ")
+        username = input("Enter username: ")
         password = input("Enter password: ")
         if not password or not username:
             # dummy login for development
@@ -602,19 +609,91 @@ class GameClient(BackendClient):
             self._error = (error_msg, 420)
             return []
 
-    def send_key_input(self, *, up: bool) -> None:
-        direction = "up" if up else "down"
-        logger.debug(f"Sending key input: {direction}")
-        msg = self.to_pong_api_request(
-            {
-                "type": "input",
-                "pong_data": {
-                    "userId": self.user_id,
-                    "up": up
-                }
-            }
-        )
-        self.outgoing_messages.put_nowait(msg)
+    def set_input_state(self, *, up: Optional[bool] = None, down: Optional[bool] = None) -> None:
+        """Set the continuous input state for paddle movement"""
+        import time
+        current_time = time.time()
+
+        if up is not None:
+            self.input_state["up"] = up
+            if up:
+                self.last_key_time["up"] = current_time
+            logger.debug(f"Input state UP: {up}")
+        if down is not None:
+            self.input_state["down"] = down
+            if down:
+                self.last_key_time["down"] = current_time
+            logger.debug(f"Input state DOWN: {down}")
+
+    async def start_continuous_input(self) -> None:
+        """Start the continuous input sender task"""
+        if self.input_sender_task and not self.input_sender_task.done():
+            return
+
+        self.input_active = True
+        self.input_sender_task = asyncio.create_task(self._continuous_input_sender())
+        logger.info("Started continuous input sender")
+
+    async def stop_continuous_input(self) -> None:
+        """Stop the continuous input sender task"""
+        self.input_active = False
+        # Clear all input states
+        self.input_state = {"up": False, "down": False}
+        if self.input_sender_task and not self.input_sender_task.done():
+            self.input_sender_task.cancel()
+            try:
+                await self.input_sender_task
+            except asyncio.CancelledError:
+                pass
+        logger.info("Stopped continuous input sender")
+
+    async def _continuous_input_sender(self) -> None:
+        """Continuously send input messages while keys are pressed (like web frontend)"""
+        import time
+
+        # Match web frontend TICKRATE (approximately 60 FPS for smooth movement)
+        tick_rate = 60  # Hz
+        interval = 1.0 / tick_rate
+
+        logger.info(f"Continuous input sender started at {tick_rate} Hz")
+
+        while self.input_active:
+            try:
+                current_time = time.time()
+
+                # Check for key timeouts and auto-release
+                for key in ["up", "down"]:
+                    if self.input_state[key] and (current_time - self.last_key_time[key]) > self.key_timeout:
+                        self.input_state[key] = False
+                        logger.debug(f"Auto-released {key} key due to timeout")
+
+                # Send input for any currently pressed keys
+                if self.input_state["up"]:
+                    msg = self.to_pong_api_request({
+                        "type": "input",
+                        "pong_data": {
+                            "userId": self.user_id,
+                            "up": True
+                        }
+                    })
+                    self.outgoing_messages.put_nowait(msg)
+
+                if self.input_state["down"]:
+                    msg = self.to_pong_api_request({
+                        "type": "input",
+                        "pong_data": {
+                            "userId": self.user_id,
+                            "up": False
+                        }
+                    })
+                    self.outgoing_messages.put_nowait(msg)
+
+                await asyncio.sleep(interval)
+            except Exception as e:
+                logger.error(f"Error in continuous input sender: {e}")
+                break
+
+        logger.info("Continuous input sender stopped")
 
     async def create_new_game(self, mode: str, max_score: int, player_alias: str) -> None:
         logger.info(f"Creating new game with mode: {mode}, max_score: {max_score}, alias: {player_alias}")
@@ -703,6 +782,7 @@ class PongCli:
         curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
         self.stdscr.keypad(True)
         self.stdscr.nodelay(True)  # Non-blocking input
+        self.stdscr.timeout(0)  # Ensure immediate return from getch()
         self.stdscr.clear()
         self.stdscr.refresh()
         logger.info("PongCli terminal interface initialized successfully")
@@ -1013,7 +1093,7 @@ class PongCli:
         max_score: int = game.maxScore
 
         running: bool = True
-        last_time: float = time.time()
+        last_render_time: float = time.time()
         fps: int = 30
         frame_duration: float = 1.0 / fps
 
@@ -1027,132 +1107,161 @@ class PongCli:
         right_paddle_y: int = start_y + (game_height // 2) - (paddle_height // 2)
 
         logger.info(f"Game screen initialized: {game_width}x{game_height}, FPS: {fps}")
-        
-        while running:
-            current_time = time.time()
-            if current_time - last_time < frame_duration:
-                await asyncio.sleep(frame_duration - (current_time - last_time))
-            last_time = time.time()
 
-            # Update game state from server
-            if self.client.game_data and self.client.game_data.get('id') == game_id:
-                server_game: Dict[str, Any] = self.client.game_data
+        # Wait for game to be in playing state before starting continuous input
+        continuous_input_started = False
 
-                # Update ball position
-                ball_data: Dict[str, Any] = server_game.get('ball', {})
-                new_ball_x: int = start_x + int(ball_data.get('x', 0.5) * game_width)
-                new_ball_y: int = start_y + int(ball_data.get('y', 0.5) * game_height)
+        try:
+            while running:
+                # Handle input first and process all available input
+                while True:
+                    key = self.stdscr.getch()
+                    if key == curses.ERR:
+                        break
+                    elif key == ord('q'):
+                        logger.info("User pressed 'q' to quit game")
+                        running = False
+                        break
+                    elif key == curses.KEY_UP:
+                        logger.debug("User input: UP arrow pressed (continuous up movement)")
+                        if continuous_input_started:
+                            self.client.set_input_state(up=True, down=False)
+                    elif key == curses.KEY_DOWN:
+                        logger.debug("User input: DOWN arrow pressed (continuous down movement)")
+                        if continuous_input_started:
+                            self.client.set_input_state(down=True, up=False)
 
-                # Log significant ball movement
-                if abs(new_ball_x - ball_x) > 5 or abs(new_ball_y - ball_y) > 3:
-                    logger.debug(f"Ball moved significantly: ({ball_x},{ball_y}) -> ({new_ball_x},{new_ball_y})")
+                if not running:
+                    break
 
-                ball_x, ball_y = new_ball_x, new_ball_y
+                current_time = time.time()
+                should_render = current_time - last_render_time >= frame_duration
 
-                # Update paddle positions
-                left_paddle_data: Dict[str, Any] = server_game.get('leftPaddle', {}).get('topPoint', {})
-                right_paddle_data: Dict[str, Any] = server_game.get('rightPaddle', {}).get('topPoint', {})
+                # Update game state from server
+                if self.client.game_data and self.client.game_data.get('id') == game_id:
+                    server_game: Dict[str, Any] = self.client.game_data
 
-                left_paddle_y = start_y + int(left_paddle_data.get('y', 0.4) * game_height)
-                right_paddle_y = start_y + int(right_paddle_data.get('y', 0.4) * game_height)
+                    # Update ball position
+                    ball_data: Dict[str, Any] = server_game.get('ball', {})
+                    new_ball_x: int = start_x + int(ball_data.get('x', 0.5) * game_width)
+                    new_ball_y: int = start_y + int(ball_data.get('y', 0.5) * game_height)
 
-                # Update scores
-                scores: List[Dict[str, Any]] = server_game.get('scores', [])
-                if len(scores) >= 2:
-                    new_left_score: int = scores[0].get('score', 0)
-                    new_right_score: int = scores[1].get('score', 0)
+                    # Log significant ball movement
+                    if abs(new_ball_x - ball_x) > 5 or abs(new_ball_y - ball_y) > 3:
+                        logger.debug(f"Ball moved significantly: ({ball_x},{ball_y}) -> ({new_ball_x},{new_ball_y})")
 
-                    # Log score changes
-                    if new_left_score != left_score or new_right_score != right_score:
-                        logger.info(f"Score update: {left_score}-{right_score} -> {new_left_score}-{new_right_score}")
+                    ball_x, ball_y = new_ball_x, new_ball_y
 
-                    left_score, right_score = new_left_score, new_right_score
+                    # Update paddle positions
+                    left_paddle_data: Dict[str, Any] = server_game.get('leftPaddle', {}).get('topPoint', {})
+                    right_paddle_data: Dict[str, Any] = server_game.get('rightPaddle', {}).get('topPoint', {})
 
-                # Check game status
-                game_status: str = server_game.get('status', 'waiting')
-                if game_status == 'finished':
-                    logger.info("Game finished, exiting game loop")
+                    left_paddle_y = start_y + int(left_paddle_data.get('y', 0.4) * game_height)
+                    right_paddle_y = start_y + int(right_paddle_data.get('y', 0.4) * game_height)
+
+                    # Update scores
+                    scores: List[Dict[str, Any]] = server_game.get('scores', [])
+                    if len(scores) >= 2:
+                        new_left_score: int = scores[0].get('score', 0)
+                        new_right_score: int = scores[1].get('score', 0)
+
+                        # Log score changes
+                        if new_left_score != left_score or new_right_score != right_score:
+                            logger.info(f"Score update: {left_score}-{right_score} -> {new_left_score}-{new_right_score}")
+
+                        left_score, right_score = new_left_score, new_right_score
+
+                    # Check game status and start continuous input when playing
+                    game_status: str = server_game.get('status', 'waiting')
+                    if game_status == 'playing' and not continuous_input_started:
+                        logger.info("Game is now playing, starting continuous input system")
+                        await self.client.start_continuous_input()
+                        continuous_input_started = True
+                    elif game_status == 'finished':
+                        logger.info("Game finished, exiting game loop")
+                        running = False
+
+                # Check for game over from server
+                if self.client._game_over_data:
                     running = False
 
-            # Check for game over from server
-            if self.client._game_over_data:
-                running = False
+                # Only render if enough time has passed or if this is the first frame
+                if should_render:
+                    last_render_time = current_time
+                    self.stdscr.clear()
 
-            self.stdscr.clear()
+                    # Display game info
+                    self.stdscr.addstr(0, 0, f"Game ID: {game_id} | Max Score: {max_score}")
+                    self.stdscr.addstr(1, 0, instructions)
 
-            # Display game info
-            self.stdscr.addstr(0, 0, f"Game ID: {game_id} | Max Score: {max_score}")
-            self.stdscr.addstr(1, 0, instructions)
+                    # Display game status
+                    if self.client.game_data:
+                        status = self.client.game_data.get('status', 'unknown')
+                        self.stdscr.addstr(2, 0, f"Status: {status}")
+                        if status == 'countdown':
+                            countdown = self.client.game_data.get('countdown', 0)
+                            if countdown > 0:
+                                self.stdscr.addstr(2, 20, f"Starting in: {countdown}")
 
-            # Display game status
-            if self.client.game_data:
-                status = self.client.game_data.get('status', 'unknown')
-                self.stdscr.addstr(2, 0, f"Status: {status}")
-                if status == 'countdown':
-                    countdown = self.client.game_data.get('countdown', 0)
-                    if countdown > 0:
-                        self.stdscr.addstr(2, 20, f"Starting in: {countdown}")
+                    # Display scores
+                    score_x = start_x + (game_width // 2) - 5
+                    self.stdscr.addstr(start_y - 2, score_x, f"{left_score}   -   {right_score}")
 
-            # Display scores
-            score_x = start_x + (game_width // 2) - 5
-            self.stdscr.addstr(start_y - 2, score_x, f"{left_score}   -   {right_score}")
+                    # Draw game field borders
+                    for x in range(start_x, start_x + game_width + 1):
+                        self.stdscr.addch(start_y, x, curses.ACS_HLINE)
+                        self.stdscr.addch(start_y + game_height, x, curses.ACS_HLINE)
 
-            # Draw game field borders
-            for x in range(start_x, start_x + game_width + 1):
-                self.stdscr.addch(start_y, x, curses.ACS_HLINE)
-                self.stdscr.addch(start_y + game_height, x, curses.ACS_HLINE)
+                    for y in range(start_y, start_y + game_height + 1):
+                        self.stdscr.addch(y, start_x, curses.ACS_VLINE)
+                        self.stdscr.addch(y, start_x + game_width, curses.ACS_VLINE)
 
-            for y in range(start_y, start_y + game_height + 1):
-                self.stdscr.addch(y, start_x, curses.ACS_VLINE)
-                self.stdscr.addch(y, start_x + game_width, curses.ACS_VLINE)
+                    # Draw corners
+                    self.stdscr.addch(start_y, start_x, curses.ACS_ULCORNER)
+                    self.stdscr.addch(start_y, start_x + game_width, curses.ACS_URCORNER)
+                    self.stdscr.addch(start_y + game_height, start_x, curses.ACS_LLCORNER)
+                    self.stdscr.addch(start_y + game_height, start_x + game_width, curses.ACS_LRCORNER)
 
-            # Draw corners
-            self.stdscr.addch(start_y, start_x, curses.ACS_ULCORNER)
-            self.stdscr.addch(start_y, start_x + game_width, curses.ACS_URCORNER)
-            self.stdscr.addch(start_y + game_height, start_x, curses.ACS_LLCORNER)
-            self.stdscr.addch(start_y + game_height, start_x + game_width, curses.ACS_LRCORNER)
+                    # Draw center line
+                    center_x = start_x + (game_width // 2)
+                    for y in range(start_y + 1, start_y + game_height):
+                        if y % 2 == 0:
+                            self.stdscr.addch(y, center_x, '|')
 
-            # Draw center line
-            center_x = start_x + (game_width // 2)
-            for y in range(start_y + 1, start_y + game_height):
-                if y % 2 == 0:
-                    self.stdscr.addch(y, center_x, '|')
+                    # Draw paddles
+                    for y in range(paddle_height):
+                        if left_paddle_y + y >= start_y + 1 and left_paddle_y + y < start_y + game_height:
+                            self.stdscr.addch(left_paddle_y + y, left_paddle_x, '█')
+                        if right_paddle_y + y >= start_y + 1 and right_paddle_y + y < start_y + game_height:
+                            self.stdscr.addch(right_paddle_y + y, right_paddle_x, '█')
 
-            # Draw paddles
-            for y in range(paddle_height):
-                if left_paddle_y + y >= start_y + 1 and left_paddle_y + y < start_y + game_height:
-                    self.stdscr.addch(left_paddle_y + y, left_paddle_x, '█')
-                if right_paddle_y + y >= start_y + 1 and right_paddle_y + y < start_y + game_height:
-                    self.stdscr.addch(right_paddle_y + y, right_paddle_x, '█')
+                    # Draw ball
+                    try:
+                        if (ball_x >= start_x + 1 and ball_x < start_x + game_width and
+                            ball_y >= start_y + 1 and ball_y < start_y + game_height):
+                            self.stdscr.addch(int(ball_y), int(ball_x), 'O')
+                    except curses.error:
+                        pass
 
-            # Draw ball
-            try:
-                if (ball_x >= start_x + 1 and ball_x < start_x + game_width and
-                    ball_y >= start_y + 1 and ball_y < start_y + game_height):
-                    self.stdscr.addch(int(ball_y), int(ball_x), 'O')
-            except curses.error:
-                pass
+                    self.stdscr.refresh()
 
-            # Handle input
-            key = self.stdscr.getch()
-            if key == ord('q'):
-                logger.info("User pressed 'q' to quit game")
-                running = False
-            elif key == curses.KEY_UP:
-                logger.debug("User input: UP arrow (paddle up)")
-                self.client.send_key_input(up=True)
-            elif key == curses.KEY_DOWN:
-                logger.debug("User input: DOWN arrow (paddle down)")
-                self.client.send_key_input(up=False)
+                # Check for errors
+                error = self.client.get_error()
+                if error:
+                    logger.error(f"Game error occurred: {error[0]} (code: {error[1]})")
+                    await self.show_error(f"Game error: {error[0]}")
+                    running = False
 
-            self.stdscr.refresh()
+                # Small sleep to prevent excessive CPU usage while still being responsive
+                await asyncio.sleep(0.01)
 
-            # Check for errors
-            error = self.client.get_error()
-            if error:
-                logger.error(f"Game error occurred: {error[0]} (code: {error[1]})")
-                await self.show_error(f"Game error: {error[0]}")
-                running = False
+        finally:
+            # Clean up continuous input system if it was started
+            if continuous_input_started:
+                await self.client.stop_continuous_input()
+                logger.info("Game loop ended, continuous input stopped")
+            else:
+                logger.info("Game loop ended, continuous input was never started")
 
         # Determine winner
         if left_score == right_score:
