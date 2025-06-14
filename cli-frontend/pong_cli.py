@@ -86,7 +86,7 @@ class PongGame:
     maxScore: int
     scores: Dict[str, int] = field(default_factory=dict)
     countdown: Optional[int] = None
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "PongGame":
         """Create a PongGame from a dictionary"""
@@ -112,16 +112,68 @@ class PongGame:
     def is_finished(self) -> bool:
         """Check if the game is finished"""
         return self.status == "finished"
-    
+
     @property
     def is_waiting(self) -> bool:
         """Check if the game is waiting for players"""
         return self.status == "waiting"
-    
+
     @property
     def last_update_datetime(self) -> datetime:
         """Convert lastUpdateTime to datetime"""
         return datetime.fromtimestamp(self.lastUpdateTime / 1000)
+
+@dataclass
+class TournamentPlayer:
+    name: str
+    alias: str
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "TournamentPlayer":
+        """Create a TournamentPlayer from a dictionary"""
+        return cls(
+            name=data["name"],
+            alias=data["alias"]
+        )
+
+@dataclass
+class Tournament:
+    id: str
+    owner: str
+    owner_alias: str
+    state: Literal["waiting", "countdown", "playing", "finished"]
+    players: List[TournamentPlayer] = field(default_factory=list)
+    max_players: int = 4
+    current_round: str = "waiting"
+    tournament_winner: Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Tournament":
+        """Create a Tournament from a dictionary"""
+        return cls(
+            id=data["id"],
+            owner=data["owner"],
+            owner_alias=data["alias"],
+            state=data["state"],
+            players=[],
+            max_players=4,
+            current_round="waiting"
+        )
+
+    @property
+    def is_waiting(self) -> bool:
+        """Check if the tournament is waiting for players"""
+        return self.state == "waiting"
+
+    @property
+    def is_full(self) -> bool:
+        """Check if the tournament has reached max players"""
+        return len(self.players) >= self.max_players
+
+    @property
+    def can_start(self) -> bool:
+        """Check if the tournament can start"""
+        return len(self.players) == self.max_players and self.state == "waiting"
 
 
 class BackendClient:
@@ -445,6 +497,12 @@ class GameClient(BackendClient):
         self._available_games: asyncio.Queue[List[Dict[str, Any]]] = asyncio.Queue()
         self._game_over_data: Optional[Dict[str, Any]] = None
 
+        # Tournament-specific properties
+        self.tournament_id: Optional[str] = None
+        self._available_tournaments: asyncio.Queue[List[Dict[str, Any]]] = asyncio.Queue()
+        self._tournament_end_message: Optional[str] = None
+        self._in_tournament: bool = False
+
         # Input handling for continuous paddle movement
         self.input_state: Dict[str, bool] = {"up": False, "down": False}
         self.input_sender_task: Optional[asyncio.Task] = None
@@ -533,11 +591,28 @@ class GameClient(BackendClient):
             elif msg_type == "game_created":
                 game_id = message.get('gameId')
                 logger.info(f"Game created with ID: {game_id}")
-                self.game_id = game_id
+                if self._in_tournament or "Tournament" in game_id:
+                    self.tournament_id = game_id
+                    logger.info(f"Tournament ID set: {game_id}")
+                else:
+                    self.game_id = game_id
             elif msg_type == "game_over":
                 pong_data = message.get('pong_data', {})
                 logger.info(f"Game over received: {pong_data}")
                 self.handle_game_over(pong_data)
+            elif msg_type == "tournament_list":
+                tournaments_data = message.get('games', [])
+                logger.info(f"Received tournament list: {len(tournaments_data)} tournaments")
+                self._available_tournaments.put_nowait(tournaments_data)
+            elif msg_type == "tournament_end":
+                tournament_message = message.get('value', '')
+                logger.info(f"Tournament ended: {tournament_message}")
+                self._tournament_end_message = tournament_message
+                self._in_tournament = False
+            elif msg_type == "countdown":
+                countdown_value = message.get('value', 0)
+                logger.info(f"Tournament countdown: {countdown_value}")
+                # Tournament countdown is handled by the game screen
 
     def update_game_state(self, game_data: Dict[str, Any]) -> None:
         if not game_data:
@@ -765,6 +840,96 @@ class GameClient(BackendClient):
             logger.error(f"Error creating game: {e}")
             return None
 
+    async def get_joinable_tournaments(self) -> List[Tournament]:
+        logger.info("Requesting list of joinable tournaments")
+        get_tournaments_request = self.to_pong_api_request(
+            {
+                "type": "tournament_list",
+                "pong_data": {}
+            }
+        )
+        await self.send_to_server(get_tournaments_request)
+        try:
+            tournaments_data = await asyncio.wait_for(self._available_tournaments.get(), timeout=3)
+            self._available_tournaments = asyncio.Queue()
+            tournaments: List[Tournament] = []
+            for tournament_data in tournaments_data:
+                if isinstance(tournament_data, dict) and tournament_data.get('state') == 'waiting':
+                    tournaments.append(Tournament.from_dict(tournament_data))
+            logger.info(f"Found {len(tournaments)} joinable tournaments")
+            return tournaments
+        except Exception as e:
+            error_msg = traceback.format_exc()
+            logger.error(f"Failed to get joinable tournaments: {error_msg}")
+            self._error = (error_msg, 420)
+            return []
+
+    async def create_tournament(self, player_alias: str) -> None:
+        logger.info(f"Creating new tournament with alias: {player_alias}")
+        create_tournament_request = self.to_pong_api_request(
+            {
+                "type": "create_tournament",
+                "pong_data": {
+                    "playerAlias": player_alias,
+                    "gameMode": "remote",
+                    "localOpponent": "",
+                    "amountPlayers": 4,
+                    "tournament": True
+                }
+            }
+        )
+        await self.outgoing_messages.put(create_tournament_request)
+
+    async def join_tournament(self, tournament_id: str, player_alias: str) -> None:
+        logger.info(f"Joining tournament with ID: {tournament_id}, alias: {player_alias}")
+        join_tournament_request = self.to_pong_api_request(
+            {
+                "type": "join_tournament",
+                "pong_data": {
+                    "OpponentAlias": player_alias,
+                    "gameId": tournament_id
+                }
+            }
+        )
+        await self.outgoing_messages.put(join_tournament_request)
+
+    async def create_and_wait_for_tournament(self, player_alias: str) -> Optional[Tournament]:
+        logger.info(f"Creating and waiting for new tournament with alias: {player_alias}")
+
+        old_tournament_id = self.tournament_id
+        self.tournament_id = None
+        self._in_tournament = True
+
+        await self.create_tournament(player_alias)
+
+        try:
+            timeout = 5.0
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                if self.tournament_id and self.tournament_id != old_tournament_id:
+                    logger.info(f"New tournament created with ID: {self.tournament_id}")
+                    tournament = Tournament(
+                        id=self.tournament_id,
+                        owner=self.user_id,
+                        owner_alias=player_alias,
+                        state="waiting"
+                    )
+                    return tournament
+                await asyncio.sleep(0.1)
+
+            logger.error("Timeout waiting for tournament creation confirmation")
+            return None
+
+        except Exception as e:
+            logger.error(f"Error creating tournament: {e}")
+            return None
+
+    def clear_tournament_state(self) -> None:
+        logger.info("Clearing tournament state")
+        self.tournament_id = None
+        self._tournament_end_message = None
+        self._in_tournament = False
+
 
 class PongCli:
     MAX_SCORE: int = 30
@@ -805,17 +970,24 @@ class PongCli:
         while True:
             # clear any previous game state before showing main menu
             self.client.clear_game_state()
+            self.client.clear_tournament_state()
             # main menu
             game = await self.main_menu()
             if not game:
                 logger.info("User chose to quit from main menu")
                 break
-            # run game
-            logger.info(f"Starting game: {game.id}")
-            game_result = await self.game_screen(game)
-            # show game result
-            logger.info(f"Game finished, showing results: {game_result}")
-            await self.show_game_result(game_result)
+
+            # Handle tournament vs regular game flow
+            if self.client._in_tournament:
+                logger.info(f"Starting tournament game flow for game: {game.id}")
+                await self.tournament_game_flow(game)
+            else:
+                # run regular game
+                logger.info(f"Starting regular game: {game.id}")
+                game_result = await self.game_screen(game)
+                # show game result
+                logger.info(f"Game finished, showing results: {game_result}")
+                await self.show_game_result(game_result)
         raise GracefulExit(f"gui cancelled")
 
     def print_at(self, lines: List[Tuple[int, int, str]], refresh: bool = True) -> None:
@@ -902,6 +1074,8 @@ class PongCli:
         menu: List[Tuple[str, Optional[Any]]] = [
             ("Create a new game", self.create_game_screen),
             ("Join an existing game", self.join_existing_game_screen),
+            ("Create a tournament", self.create_tournament_screen),
+            ("Join a tournament", self.join_tournament_screen),
             ("Debug mode", self.debug_screen),
             ("Quit", None),
         ]
@@ -1037,6 +1211,218 @@ class PongCli:
                     await self.client.join_game(selected_game.id, player_alias)
                     await asyncio.sleep(0.5)
                     return selected_game
+
+    async def create_tournament_screen(self) -> Optional[PongGame]:
+        player_alias = ""
+
+        options: List[Tuple[str, str]] = [
+            (f"Player Alias: {player_alias or '[Not Set]'}", "alias"),
+            ("Create Tournament", "create"),
+            ("Cancel", "cancel")
+        ]
+
+        selected_item = 0
+        self.draw_centered_menu("Create a new tournament (4 players):", options, selected_item)
+        while True:
+            key = self.stdscr.getch()
+            if key == curses.ERR:
+                await asyncio.sleep(0.01)
+            elif key == curses.KEY_UP:
+                selected_item = (selected_item - 1) % len(options)
+                self.draw_centered_menu("Create a new tournament (4 players):", options, selected_item)
+            elif key == curses.KEY_DOWN:
+                selected_item = (selected_item + 1) % len(options)
+                self.draw_centered_menu("Create a new tournament (4 players):", options, selected_item)
+            elif key == ord('q'):
+                return None
+            elif key == curses.KEY_ENTER or key == ord('\n'):
+                option = options[selected_item][1]
+                if option == "alias":
+                    max_y, _ = self.screen_size
+                    alias_input = await self.text_input(max_y//2, 0, "Enter your alias:")
+                    if alias_input.strip():
+                        player_alias = alias_input.strip()
+                        options[selected_item] = (f"Player Alias: {player_alias}", option)
+                    self.draw_centered_menu("Create a new tournament (4 players):", options, selected_item)
+                elif option == "create":
+                    if not player_alias.strip():
+                        await self.show_error("Please enter your alias before creating a tournament")
+                        self.draw_centered_menu("Create a new tournament (4 players):", options, selected_item)
+                        continue
+                    created_tournament = await self.client.create_and_wait_for_tournament(player_alias)
+                    if created_tournament:
+                        return await self.tournament_waiting_screen(created_tournament, player_alias)
+                    else:
+                        await self.show_error("Failed to create tournament")
+                        self.draw_centered_menu("Create a new tournament (4 players):", options, selected_item)
+                elif option == "cancel":
+                    return None
+
+    async def join_tournament_screen(self) -> Optional[PongGame]:
+        # First, get the player alias
+        max_y, _ = self.screen_size
+        player_alias = await self.text_input(max_y//2, 0, "Enter your alias:")
+        if not player_alias.strip():
+            await self.show_error("Alias is required to join a tournament")
+            return None
+
+        player_alias = player_alias.strip()
+
+        # Then show available tournaments
+        max_y, max_x = self.screen_size
+        self.stdscr.clear()
+        self.stdscr.addstr(0, 0, f"Select one of the available tournaments to join (Alias: {player_alias}):")
+        msg = "Loading tournaments..."
+        self.stdscr.addstr(max_y//2, (max_x//2) - len(msg)//2, msg)
+        self.stdscr.refresh()
+
+        available_tournaments = await self.client.get_joinable_tournaments()
+        menu: List[Tuple[str, Tournament]] = [(f"ID: {tournament.id} | Owner: {tournament.owner_alias}", tournament) for tournament in available_tournaments]
+
+        selected_item = 0
+        self.draw_centered_menu(f"Select one of the available tournaments to join (Alias: {player_alias}):", menu, selected_item, "Press q to go back")
+        while True:
+            key = self.stdscr.getch()
+            if key == curses.ERR:
+                await asyncio.sleep(0.05)
+            elif key == curses.KEY_UP:
+                selected_item = (selected_item - 1) % len(menu)
+                self.draw_centered_menu(f"Select one of the available tournaments to join (Alias: {player_alias}):", menu, selected_item, "Press q to go back")
+            elif key == curses.KEY_DOWN:
+                selected_item = (selected_item + 1) % len(menu)
+                self.draw_centered_menu(f"Select one of the available tournaments to join (Alias: {player_alias}):", menu, selected_item, "Press q to go back")
+            elif key == ord('q'):
+                return None
+            elif key == curses.KEY_ENTER or key == ord('\n'):
+                if menu and selected_item < len(menu) and menu[selected_item]:
+                    selected_tournament = menu[selected_item][1]
+                    await self.client.join_tournament(selected_tournament.id, player_alias)
+                    await asyncio.sleep(0.5)
+                    return await self.tournament_waiting_screen(selected_tournament, player_alias)
+
+    async def tournament_waiting_screen(self, tournament: Tournament, player_alias: str) -> Optional[PongGame]:
+        logger.info(f"Entering tournament waiting screen for tournament: {tournament.id}")
+
+        while True:
+            self.stdscr.clear()
+            self.stdscr.addstr(0, 0, f"Tournament: {tournament.id}")
+            self.stdscr.addstr(1, 0, f"Your alias: {player_alias}")
+            self.stdscr.addstr(2, 0, "Waiting for players to join...")
+            self.stdscr.addstr(4, 0, "Tournament will start when 4 players have joined.")
+            self.stdscr.addstr(6, 0, "Press 'q' to leave tournament")
+            self.stdscr.refresh()
+
+            # Check for tournament end message
+            if self.client._tournament_end_message:
+                await self.show_tournament_result(self.client._tournament_end_message)
+                self.client._tournament_end_message = None
+                return None
+
+            # Check if we have a game (tournament started)
+            if self.client.game_data and self.client.game_id:
+                logger.info("Tournament game started, transitioning to game screen")
+                # Create a PongGame object from the current game data
+                game = PongGame.from_dict(self.client.game_data)
+                return game
+
+            # Handle input
+            key = self.stdscr.getch()
+            if key == ord('q'):
+                logger.info("User chose to leave tournament")
+                self.client.clear_tournament_state()
+                return None
+            elif key != curses.ERR:
+                # Any other key, just continue waiting
+                pass
+
+            await asyncio.sleep(0.1)
+
+    async def show_tournament_result(self, message: str) -> None:
+        max_y, _ = self.screen_size
+        self.stdscr.clear()
+        self.stdscr.addstr(0, 0, "Tournament Finished!")
+        self.stdscr.addstr(2, 0, message)
+        self.stdscr.addstr(max_y, 0, "Press any key to continue")
+        self.stdscr.refresh()
+        await self.wait_until_input()
+
+    async def tournament_game_flow(self, initial_game: PongGame) -> None:
+        logger.info(f"Starting tournament game flow with initial game: {initial_game.id}")
+        current_game = initial_game
+
+        while self.client._in_tournament:
+            # Play the current game
+            logger.info(f"Playing tournament game: {current_game.id}")
+            game_result = await self.game_screen(current_game)
+
+            # Show game result
+            await self.show_tournament_game_result(game_result)
+
+            # Check if tournament ended
+            if self.client._tournament_end_message:
+                await self.show_tournament_result(self.client._tournament_end_message)
+                self.client._tournament_end_message = None
+                break
+
+            # Wait for next game or tournament end
+            next_game = await self.wait_for_next_tournament_game()
+            if not next_game:
+                # Tournament ended or user quit
+                break
+
+            current_game = next_game
+
+    async def wait_for_next_tournament_game(self) -> Optional[PongGame]:
+        logger.info("Waiting for next tournament game or tournament end")
+
+        while self.client._in_tournament:
+            self.stdscr.clear()
+            self.stdscr.addstr(0, 0, "Tournament in progress...")
+            self.stdscr.addstr(2, 0, "Waiting for next match or tournament results...")
+            self.stdscr.addstr(4, 0, "Press 'q' to quit tournament")
+            self.stdscr.refresh()
+
+            # Check for tournament end
+            if self.client._tournament_end_message:
+                return None
+
+            # Check for new game
+            if self.client.game_data and self.client.game_id:
+                logger.info("Next tournament game available")
+                return PongGame.from_dict(self.client.game_data)
+
+            # Handle input
+            key = self.stdscr.getch()
+            if key == ord('q'):
+                logger.info("User chose to quit tournament")
+                self.client.clear_tournament_state()
+                return None
+
+            await asyncio.sleep(0.1)
+
+        return None
+
+    async def show_tournament_game_result(self, game_result: Dict[str, Any]) -> None:
+        if not game_result:
+            return
+
+        max_y, _ = self.screen_size
+        self.stdscr.clear()
+        self.stdscr.addstr(0, 0, "Tournament Match Result")
+        self.stdscr.addstr(2, 0, f"Final Score: {game_result['left_score']} - {game_result['right_score']}")
+
+        winner = game_result.get('winner', 'unknown')
+        if winner == 'tie':
+            self.stdscr.addstr(3, 0, "Match ended in a tie!")
+        elif winner == 'left':
+            self.stdscr.addstr(3, 0, "Left player won!")
+        elif winner == 'right':
+            self.stdscr.addstr(3, 0, "Right player won!")
+
+        self.stdscr.addstr(5, 0, "Waiting for tournament to continue...")
+        self.stdscr.addstr(max_y, 0, "Press any key to continue")
+        self.stdscr.refresh()
+        await self.wait_until_input()
 
     async def debug_screen(self) -> None:
         """print websocket messages"""
@@ -1253,15 +1639,12 @@ class PongCli:
                     running = False
 
                 # Small sleep to prevent excessive CPU usage while still being responsive
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(0.005)
 
         finally:
-            # Clean up continuous input system if it was started
-            if continuous_input_started:
-                await self.client.stop_continuous_input()
-                logger.info("Game loop ended, continuous input stopped")
-            else:
-                logger.info("Game loop ended, continuous input was never started")
+            # Clean up continuous input system
+            await self.client.stop_continuous_input()
+            logger.info("Game loop ended, continuous input stopped")
 
         # Determine winner
         if left_score == right_score:
