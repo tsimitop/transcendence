@@ -1,4 +1,5 @@
 import { Pong } from "../Pong";
+import { resetTournamentState } from "./PongMessageHandler";
 
 export let gameIsRunning = false;
 
@@ -210,23 +211,28 @@ export function setupMenu(pong: Pong) {
 
   // Back buttons
   backFromRemoteOptionsBtn.onclick = () => {
+    resetTournamentState();
     showOnly(menu);
   };
-  
+
   backFromJoinOptionsBtn.onclick = () => {
+    resetTournamentState();
     showOnly(menu);
   };
 
   backFromGameListBtn.onclick = () => {
+    resetTournamentState();
     showOnly(remoteOptions);
     if (gameListInterval) clearInterval(gameListInterval);
   };
 
   backFromTournamentRemoteOptionsBtn.onclick = () => {
+    resetTournamentState();
     showOnly(menu);
   };
 
   backFromJoinTournamentOptionsBtn.onclick = () => {
+    resetTournamentState();
     showOnly(menu);
   };
 
@@ -236,6 +242,7 @@ export function setupMenu(pong: Pong) {
   };
 
   backLocalGameSettingsBtn.onclick = () => {
+    resetTournamentState();
     showOnly(menu);
   };
 

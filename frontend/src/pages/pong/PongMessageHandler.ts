@@ -3,7 +3,12 @@ import { setGameRunning } from "./PongMenu";
 import { GameStateData } from "./PongGame";
 import { GameOverData } from "./PongGame";
 import DOMPurify from 'dompurify';
-  
+
+let isInTournament = false;
+
+export function resetTournamentState() {
+  isInTournament = false;
+}
 
 export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     if (!data.type) {
@@ -21,7 +26,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
         handleCountdownGame(data);
         break;
       case 'game_created':
-        handleWaitingForUser();
+        handleGameCreated(data);
         break;
       case 'game_list':
         handleListGames(data, socket);
@@ -36,6 +41,13 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
         console.warn("Unknown message type:", data.type);
         break;
     }
+  }
+
+  export function handleGameCreated(data: any) {
+    if (data.gameId && data.gameId.includes('Tournament')) {
+      isInTournament = true;
+    }
+    handleWaitingForUser();
   }
 
   export function handleGameOver(data: GameOverData) {
@@ -72,15 +84,19 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     ctx.fillText(data.message, canvas.width / 2, canvas.height / 2 + 20);
   
     setTimeout(() => {
-      const menu = document.getElementById('menuScreen');
-      const gameCanvas = document.getElementById('gameCanvas');
-    
-      if (gameCanvas) {
-        gameCanvas.style.display = 'none'; // Hide the game canvas
-      }
-    
-      if (menu) {
-        menu.style.display = 'flex'; // Show menu screen
+      if (isInTournament) {
+        handleTournamentWaiting();
+      } else {
+        const menu = document.getElementById('menuScreen');
+        const gameCanvas = document.getElementById('gameCanvas');
+
+        if (gameCanvas) {
+          gameCanvas.style.display = 'none'; // Hide the game canvas
+        }
+
+        if (menu) {
+          menu.style.display = 'flex'; // Show menu screen
+        }
       }
     }, 5000);
     
@@ -232,7 +248,42 @@ export function handleWaitingForUser() {
       ctx.textBaseline = "middle"
       ctx.fillText("Waiting for players...", canvas.width / 2, canvas.height / 2);
     };
-  
+
+    drawWaiting();
+  }
+
+  export function handleTournamentWaiting() {
+    const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+    if (!canvas) {
+      console.warn("Canvas element not found - user may have navigated away");
+      return;
+    }
+    // Hide all UI screens
+    document.querySelectorAll(".screen").forEach((el) => {
+      (el as HTMLElement).style.display = "none";
+    });
+
+    canvas.style.display = "block";
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      console.error("Failed to get 2D context");
+      return;
+    }
+
+    const drawWaiting = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "24px Arial";
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Tournament in progress...", canvas.width / 2, canvas.height / 2 - 30);
+      ctx.font = "18px Arial";
+      ctx.fillText("Waiting for other match to complete", canvas.width / 2, canvas.height / 2 + 10);
+    };
+
     drawWaiting();
   }
 
@@ -436,6 +487,7 @@ export function handleWaitingForUser() {
   }
 
 export function handleTournamentEnd(message: string) {
+	isInTournament = false;
 	const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
 	if (!canvas) {
 		console.warn("Canvas element not found - user may have navigated away");
