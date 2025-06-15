@@ -70,21 +70,19 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error("Canvas context not available");
-  
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
     ctx.font = "30px Arial";
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
-  
     const scoreText = `${data.finalScore.left} : ${data.finalScore.right}`;
     ctx.fillText(scoreText, canvas.width / 2, canvas.height / 2 - 20);
-  
     ctx.font = "20px Arial";
     ctx.fillText(data.message, canvas.width / 2, canvas.height / 2 + 20);
-  
+
     setTimeout(() => {
-      if (isInTournament) {
+      const isTournamentGame = data.gameId && (data.gameId.includes('Tournament') || data.gameId.includes('Final'));
+      if (isTournamentGame) {
+        isInTournament = true;
         handleTournamentWaiting();
       } else {
         const menu = document.getElementById('menuScreen');
@@ -112,6 +110,11 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     const game = gameStateData.game;
 
     if(game.status === "finished") { return; }
+
+    const isTournamentGame = game.id && (game.id.includes('Tournament') || game.id.includes('Final'));
+    if (isTournamentGame) {
+      isInTournament = true;
+    }
 
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
