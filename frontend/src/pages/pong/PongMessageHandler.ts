@@ -107,9 +107,14 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       console.error("Failed to get 2D context");
       return;
     }
+
+    document.querySelectorAll(".screen").forEach((el) => {
+      (el as HTMLElement).style.display = "none";
+    });
+
+    canvas.style.display = "block";
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    canvas.style.display = "block";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 
