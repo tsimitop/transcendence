@@ -7,6 +7,7 @@ import Component, {
   ChildElementType,
   ChildrenStringType,
 } from "../models/Component";
+import DOMPurify from 'dompurify';
 
 class Home extends Component {
   constructor(
@@ -34,6 +35,8 @@ class Home extends Component {
     // 	</main>
     // `;
 
+    const safeUsername = DOMPurify.sanitize(userContext.state.username || "");
+    const safeEmail = DOMPurify.sanitize(userContext.state.email || "");
     const html = `
     	<div class="bg-[linear-gradient(to_right,rgba(0,0,0,0.6),rgba(255,255,255,0.6)),url('/hero.jpg')] bg-cover bg-top h-screen opacity-50 relative">
 				<h1 class="absolute bottom-[30%] left-[50%] transform -translate-x-1/2 text-5xl">
@@ -44,11 +47,11 @@ class Home extends Component {
 								Welcome
 							</span>
 							<span class="font-bold">
-								${userContext.state.username || userContext.state.email}
+								${safeUsername || safeEmail}
 							</span>
 							`
               : `<span class='font-["Press_Start_2P"]'><a class="${ROUTER_CLASS_NAME} hover:border-b-5" href="/pong">Press Start</a></span>`
-          }	
+          }
 				</h1>
     	</div>
     	<main class="theme-primary-${

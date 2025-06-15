@@ -7,6 +7,7 @@ import Component, {
 } from "../models/Component";
 import { CADDY_SERVER } from "../constants";
 import { userContext } from "../context/UserContext";
+import DOMPurify from 'dompurify';
 
 interface UserProfile {
   id: number;
@@ -49,36 +50,43 @@ class Users extends Component {
 	const user = await Users.search(searchLink, isUserConnected);
     let html: string;
     if (!user) {
+      const safeSearchTerm = DOMPurify.sanitize(searchTerm || "");
       html = `
-        <h1>User ${searchTerm} not found</h1>
+        <h1>User ${safeSearchTerm} not found</h1>
       `;
     } else if (user.id == Number(userContext.state.id)) { // view yourslef
+      const safeEmail = DOMPurify.sanitize(user.email || "");
+      const safeAvatar = DOMPurify.sanitize(user.avatar || "");
       html = `
         <div class="user-profile">
           <h2>Your public profile</h2>
 		  <img
-	        src=${CADDY_SERVER}/avatars/${user.avatar}
+	        src=${CADDY_SERVER}/avatars/${safeAvatar}
 		    class="w-24 h-24 object-cover rounded-full"
 		  />
-          <p>Email: ${user.email}</p>
+          <p>Email: ${safeEmail}</p>
 		  </div>
 		  `;
     } else if (user.is_friend)  { // be able to see online status / BLOCK
+		const safeUsername = DOMPurify.sanitize(user.username || "");
+		const safeEmail = DOMPurify.sanitize(user.email || "");
+		const safeAvatar = DOMPurify.sanitize(user.avatar || "");
+		const safeOnlineStatus = DOMPurify.sanitize(user.onlineStatus || "");
 		html = `
         <div class="flex items-center justify-between mt-12 mb-6">
           <h1 class="text-5xl font-bold">
-		    ${user.username}
-		    <span class="text-base font-normal">(${user.onlineStatus})</span>
+		    ${safeUsername}
+		    <span class="text-base font-normal">(${safeOnlineStatus})</span>
 		  </h1>
 		</div>
-			
+
 	<div class="flex flex-col gap-1 mb-20">
 	  <img
-	    src=${CADDY_SERVER}/avatars/${user.avatar}
+	    src=${CADDY_SERVER}/avatars/${safeAvatar}
 	    alt="User's avatar"
 		class="w-24 h-24 object-cover rounded-full"
 		/>
-	  <p>Email: ${user.email}</p>
+	  <p>Email: ${safeEmail}</p>
 	</div>
 
 	<div class="flex justify-between items-start mb-12">
@@ -93,18 +101,21 @@ class Users extends Component {
 	</div>
 	`;
     } else {// be able to add friend / BLOCK
+		const safeUsername = DOMPurify.sanitize(user.username || "");
+		const safeEmail = DOMPurify.sanitize(user.email || "");
+		const safeAvatar = DOMPurify.sanitize(user.avatar || "");
 		html = `
         <div class="flex items-center justify-between mt-12 mb-6">
-          <h1 class="text-5xl font-bold">${user.username}</h1>
+          <h1 class="text-5xl font-bold">${safeUsername}</h1>
 		</div>
-			
+
 	<div class="flex flex-col gap-1 mb-20">
 	  <img
-	    src=${CADDY_SERVER}/avatars/${user.avatar}
+	    src=${CADDY_SERVER}/avatars/${safeAvatar}
 	    alt="User's avatar"
 		class="w-24 h-24 object-cover rounded-full"
 		/>
-	  <p>Email: ${user.email}</p>
+	  <p>Email: ${safeEmail}</p>
 	</div>
 
 	<div class="flex justify-between items-start mb-12">

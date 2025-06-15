@@ -2,6 +2,7 @@
 import { setGameRunning } from "./PongMenu";
 import { GameStateData } from "./PongGame";
 import { GameOverData } from "./PongGame";
+import DOMPurify from 'dompurify';
   
 
 export function     handlePongMessage(data: any, socket: WebSocket | null ) {
@@ -141,9 +142,9 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     );
     
     const scoreText = game.scores
-    .map(({ alias, score }) => `${alias}: ${score}`)
+    .map(({ alias, score }) => `${DOMPurify.sanitize(alias || "")}: ${score}`)
     .join("   ");
-    
+
     ctx.fillText(`${scoreText}`, canvas.width / 2, 30);
 
   }
@@ -263,13 +264,13 @@ export function handleWaitingForUser() {
     idSpan.textContent = `Game ID: ${game.id}`;
 
     const ownerSpan = document.createElement('span');
-    ownerSpan.textContent = `Creator: ${game.owner}`;
+    ownerSpan.textContent = `Creator: ${DOMPurify.sanitize(game.owner || "")}`;
 
     const aliasSpan = document.createElement('span');
-    aliasSpan.textContent = `Alias: ${game.alias}`;
+    aliasSpan.textContent = `Alias: ${DOMPurify.sanitize(game.alias || "")}`;
 
     const stateSpan = document.createElement('span');
-    stateSpan.textContent = `State: ${game.state}`;
+    stateSpan.textContent = `State: ${DOMPurify.sanitize(game.state || "")}`;
 
     // Append spans to infoDiv
     infoDiv.appendChild(idSpan);
@@ -348,24 +349,24 @@ export function handleWaitingForUser() {
     data.games.forEach((game: { id: string; owner: string; alias: string; state: string }) => {
       const li = document.createElement('li');
       li.className = 'flex justify-between items-center mb-2';
-  
+
       // Container for game info text
       const infoDiv = document.createElement('div');
       // Add flex container for info spans
       infoDiv.className = 'flex space-x-4';
-  
+
       // Create spans for each game property
       const idSpan = document.createElement('span');
       idSpan.textContent = `Game ID: ${game.id}`;
-  
+
       const ownerSpan = document.createElement('span');
-      ownerSpan.textContent = `Creator: ${game.owner}`;
-  
+      ownerSpan.textContent = `Creator: ${DOMPurify.sanitize(game.owner || "")}`;
+
       const aliasSpan = document.createElement('span');
-      aliasSpan.textContent = `Alias: ${game.alias}`;
-  
+      aliasSpan.textContent = `Alias: ${DOMPurify.sanitize(game.alias || "")}`;
+
       const stateSpan = document.createElement('span');
-      stateSpan.textContent = `State: ${game.state}`;
+      stateSpan.textContent = `State: ${DOMPurify.sanitize(game.state || "")}`;
   
       // Append spans to infoDiv
       infoDiv.appendChild(idSpan);
@@ -448,7 +449,8 @@ export function handleTournamentEnd(message: string) {
 
 	ctx.font = "22px Arial";
 	ctx.fillStyle = "white";
-	ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 10);
+	const safeMessage = DOMPurify.sanitize(message || "");
+	ctx.fillText(safeMessage, canvas.width / 2, canvas.height / 2 + 10);
 
   setTimeout(() => {
 	  const menu = document.getElementById("menuScreen");

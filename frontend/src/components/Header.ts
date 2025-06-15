@@ -7,6 +7,7 @@ import Component, {
 import { StateListener } from "../models/StateManager";
 import { NO_HIGHLIGHT_LINKS, PAGES, ROUTER_CLASS_NAME, ValidUrlPathsType } from "../constants";
 import { userContext } from "../context/UserContext";
+import DOMPurify from 'dompurify';
 
 class Header extends Component {
   constructor(
@@ -155,11 +156,12 @@ class Header extends Component {
         //   themeState.dispatchChangeTheme();
         // }
         if (previousTheme !== newTheme) {
+          const safeTheme = DOMPurify.sanitize(previousTheme || "");
           if (target.classList.contains("theme-icon")) {
-            (target as HTMLImageElement).src = `/theme-${previousTheme}.png`;
-            (target as HTMLImageElement).alt = `${previousTheme}-theme`;
+            (target as HTMLImageElement).src = `/theme-${safeTheme}.png`;
+            (target as HTMLImageElement).alt = `${safeTheme}-theme`;
           } else {
-            target.innerHTML = `<img src=/theme-${previousTheme}.png alt=${previousTheme}-theme />`;
+            target.innerHTML = `<img src=/theme-${safeTheme}.png alt=${safeTheme}-theme />`;
           }
           themeState.dispatchChangeTheme();
         }

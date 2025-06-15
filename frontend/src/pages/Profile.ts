@@ -10,6 +10,7 @@ import Component, {
 } from "../models/Component";
 import Router from "../models/Router";
 import { removeElementsWithSimilarClassName } from "../utils/remove-elements-with-similar-class-name";
+import DOMPurify from 'dompurify';
 
 type Activate2FaResponseType = {
   dataUrl: string;
@@ -247,6 +248,9 @@ class Profile extends Component {
 	//   <img src=${CADDY_SERVER}/avatars/${userContext.state.avatar} alt="Avatar as user's profile picture"/>
 
 	//MAIN HTML
+	const safeUsername = DOMPurify.sanitize(userContext.state.username || "");
+	const safeEmail = DOMPurify.sanitize(userContext.state.email || "");
+	const safeAvatar = DOMPurify.sanitize(userContext.state.avatar || "");
 	const html = `
 	<div class="flex items-center justify-between mt-12 mb-6">
 	  <h1 class="text-5xl font-bold">Profile</h1>
@@ -257,14 +261,14 @@ class Profile extends Component {
 
 	<div class="flex flex-col gap-1 mb-20">
 	  <p>id: ${userContext.state.id}</p>
-	  <p>avatar: ${userContext.state.avatar}</p>
+	  <p>avatar: ${safeAvatar}</p>
 	  <img
-	    src=${CADDY_SERVER}/avatars/${userContext.state.avatar}
+	    src=${CADDY_SERVER}/avatars/${safeAvatar}
 	    alt="User's avatar"
 		class="w-24 h-24 object-cover rounded-full"
 		/>
-	  <p>email: ${userContext.state.email}</p>
-	  <p>username: ${userContext.state.username}</p>
+	  <p>email: ${safeEmail}</p>
+	  <p>username: ${safeUsername}</p>
 	</div>
 
 	<div class="flex justify-between items-start mb-12">
@@ -324,17 +328,18 @@ static fetchAndRenderFriendRequests() {
 	  //DYNAMIC HTML per pending user
       let requestsHtml = `<h2>Pending Friend Requests</h2><ul>`;
 	  data.pendingUsers.forEach(request => {
+        const safeUsername = DOMPurify.sanitize(request.username || "");
         requestsHtml += `
           <li class="mb-4 flex items-center justify-between">
-            <span>${request.username}</span>
+            <span>${safeUsername}</span>
             <div class="flex gap-2">
-              <button 
-                class="accept-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" 
+              <button
+                class="accept-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer"
                 data-userid="${request.id}">
                 Accept
               </button>
-              <button 
-                class="block-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer" 
+              <button
+                class="block-btn theme-btn-${themeState.state} py-2 px-3 rounded cursor-pointer"
                 data-userid="${request.id}">
                 Block
               </button>
