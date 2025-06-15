@@ -9,7 +9,8 @@ export function logWithStack(message: string) {
 }
 
 export function setGameRunning(value: boolean) {
-  logWithStack(`set game running: ${value}`);
+  // logWithStack(`set game running: ${value}`);
+  console.debug(`set game running: ${value}`);
   gameIsRunning = value;
 }
 
