@@ -184,10 +184,9 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
     }
 
     checkEndOfGame(): string{
-      if(this.gameState === "finished"){
-        endOfGame(this.lPlayerName, "Opponent left game")
-        endOfGame(this.rPlayerName, "Opponent left game")
-      }
+      if(this.gameState === "finished") {
+		return "";
+	  }
       if(this.lPlayerScore >= this.maxScore){
         this.gameState = "finished";
         console.log("checkEndOfGame left player");
@@ -222,14 +221,25 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
         // this.adjustBallAngleAfterPaddleBounce();
         this.ball.setSpeed(0.3) }
 
-        if(this.outOfFieldCheck()){ this.setToRestart(); }
-
+		if (this.outOfFieldCheck()) {
+		  const result = this.checkEndOfGame();
+		  winner = result;
+		  if (winner) {
+		    console.log(`The winner is ${winner}`);
+		    UserDb.updateMatchTable(this, winner);
+		  }
+		  else
+		    console.log(`The winner is empty`);
+		  if (!result) this.setToRestart();
+		}
         this.updateGameStatData();
         winner = this.checkEndOfGame();
 		if (winner) {
+		  console.log(`The winner is ${winner}`);
 		  UserDb.updateMatchTable(this, winner);
 		}
-        // this.checkEndOfGame();
+		else
+		  console.log(`The winner is empty`);
     }
     getGameStatePayload(): GameStateData { return this.gameStateData; }
 

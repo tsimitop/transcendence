@@ -1,7 +1,14 @@
 import { Pong } from "../Pong";
 
 export let gameIsRunning = false;
+
+export function logWithStack(message: string) {
+  const stack = new Error().stack;
+  console.log(`${message}\n${stack}`);
+}
+
 export function setGameRunning(value: boolean) {
+  logWithStack(`set game running: ${value}`);
   gameIsRunning = value;
 }
 
@@ -158,7 +165,7 @@ export function setupMenu(pong: Pong) {
     if (gameListInterval) clearInterval(gameListInterval);
     gameListInterval = window.setInterval(() => {
       pong.socket?.send(JSON.stringify({ target_endpoint: 'pong-api', payload: { type: 'game_list' } }));
-    }, 5000);
+    }, 1000);
   };
 
   joinRemoteTournamentGamePageBtn.onclick = () => {
@@ -172,7 +179,7 @@ export function setupMenu(pong: Pong) {
     if (gameListInterval) clearInterval(gameListInterval);
     gameListInterval = window.setInterval(() => {
       pong.socket?.send(JSON.stringify({ target_endpoint: 'pong-api', payload: { type: 'tournament_list' } }));
-    }, 5000);
+    }, 1000);
   };
 
   // Start local game button

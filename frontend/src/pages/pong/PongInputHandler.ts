@@ -41,13 +41,18 @@ public start(): void {
       }
     }
   }
-  setInterval(() => {
+  this.intervalId = setInterval(() => {
+    if (this.socket.readyState !== WebSocket.OPEN) {
+      console.log("Socket is not open in interval");
+      return;
+    }
+
     if(this.keys.up.pressed) {
       response.payload.pong_data.userId = this.userId;
       response.payload.pong_data.up = true;
       response.payload.pong_data.paddle = "right";
       this.socket.send(JSON.stringify(response));
-      
+
     }
     if(this.keys.down.pressed) {
       response.payload.pong_data.userId = this.userId;
@@ -67,7 +72,7 @@ public start(): void {
       response.payload.pong_data.paddle = "left";
       this.socket.send(JSON.stringify(response));
     }
-  }, this.TICKRATE); 
+  }, this.TICKRATE);
 }
 
 public stop(): void {
@@ -75,6 +80,8 @@ public stop(): void {
     clearInterval(this.intervalId);
     this.intervalId = null;
   }
+  window.removeEventListener("keydown", this.handleKeyDown);
+  window.removeEventListener("keyup", this.handleKeyUp);
 }
 
 private handleKeyDown = (event: KeyboardEvent): void => {

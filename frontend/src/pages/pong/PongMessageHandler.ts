@@ -28,6 +28,9 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       case 'tournament_list':
         handleListTournaments(data, socket);
         break;  
+      case 'tournament_end':
+        handleTournamentEnd(data.value);
+        break;
       default:
         console.warn("Unknown message type:", data.type);
         break;
@@ -39,7 +42,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     // console.log(data);
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     if (!canvas) {
-      console.error("Canvas element not found");
+      console.warn("Canvas element not found - user may have navigated away");
       return;
     }
     // Hide all UI screens
@@ -84,6 +87,8 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
   
   export function   handleGameState(data: any) {
+	// fixes window for tournament = Viewport reset
+	window.scrollTo(0, 0);
 
     // console.log(data);
     const gameStateData = data as GameStateData;
@@ -93,7 +98,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
-      console.error("Canvas element not found");
+      console.warn("Canvas element not found - user may have navigated away");
       return;
     }
     const ctx = canvas.getContext("2d");
@@ -149,7 +154,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     // console.log("countdown data",data);
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
-      console.error("Canvas element not found");
+      console.warn("Canvas element not found - user may have navigated away");
       return;
     }
     // Hide all UI screens
@@ -195,7 +200,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 export function handleWaitingForUser() {
     const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
     if (!canvas) {
-      console.error("Canvas element not found");
+      console.warn("Canvas element not found - user may have navigated away");
       return;
     }
     // Hide all UI screens
@@ -386,8 +391,20 @@ export function handleWaitingForUser() {
       `.replace(/\s+/g, ' ').trim();
   
       //join after game started -> game list - maybe delay response after clicking
-      const storedAlias = localStorage.getItem('pong_alias');
       joinBtn.addEventListener('click', () => {
+		const storedAlias = localStorage.getItem('pong_alias');
+		  if (!storedAlias) {
+			alert("Alias not found. Please enter a valid alias.");
+			return;
+		  }
+		const aliases = Array.from(document.querySelectorAll('#availableTournamentList span'))
+		  .filter(span => span.textContent?.startsWith('Alias:'))
+		  .map(span => span.textContent?.replace('Alias:', '').trim());
+
+		if (aliases.includes(storedAlias)) {
+		  alert("This alias is already taken. Please choose another one.");
+		  return;
+		}
         const joinRequest = {
           target_endpoint: 'pong-api',
           payload: {
@@ -411,4 +428,31 @@ export function handleWaitingForUser() {
     });
     container.appendChild(ul);
   }
-  
+
+export function handleTournamentEnd(message: string) {
+	const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+	if (!canvas) {
+		console.warn("Canvas element not found - user may have navigated away");
+		return;
+	}
+
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return;
+
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+	ctx.font = "28px Arial";
+	ctx.fillStyle = "gold";
+	ctx.textAlign = "center";
+	ctx.fillText("Tournament Over!", canvas.width / 2, canvas.height / 2 - 30);
+
+	ctx.font = "22px Arial";
+	ctx.fillStyle = "white";
+	ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 10);
+
+  setTimeout(() => {
+	  const menu = document.getElementById("menuScreen");
+	  if (menu) menu.style.display = "flex";
+	  canvas.style.display = "none";
+	}, 6000);
+}

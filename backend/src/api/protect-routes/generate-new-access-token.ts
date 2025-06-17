@@ -17,13 +17,11 @@ fastify.post(
   "/api/generate-new-access-token",
   // (request: FastifyRequest<{ Body: RequestNewAccessTokenType }>, reply) => {
   async (request, reply) => {
-    const cookieRefreshToken =
-      request.cookies.refreshtoken || request.cookies.oauthrefreshtoken;
+    const cookieRefreshToken = request.cookies.refreshtoken;
     if (!cookieRefreshToken) {
       reply.send({
         errorMessage:
           "No cookie refresh token. User is not signed in. Redirecting to homepage ...",
-        newJwtAccessToken: "",
         userId: "",
         email: "",
         username: "",
@@ -45,7 +43,6 @@ fastify.post(
       reply.send({
         errorMessage:
           "No hashed refresh token. User is not signed in. Redirecting to homepage ...",
-        newJwtAccessToken: "",
         userId: "",
         email: "",
         username: "",
@@ -64,7 +61,6 @@ fastify.post(
       reply.send({
         errorMessage:
           "Refresh token is expired. User must sign in again. Redirecting to homepage ...",
-        newJwtAccessToken: "",
         userId: "",
         email: "",
         username: "",
@@ -73,18 +69,7 @@ fastify.post(
       });
 	  return;
     }
-    // if (!encoded) {
-    //   reply.send({
-    //     errorMessage:
-    //       "Refresh token is expired. User must sign in again. Redirecting to homepage ...",
-    //     newJwtAccessToken: "",
-    //     userId: "",
-    //     email: "",
-    //     username: "",
-    //     isSignedIn: false,
-    //   });
-    //   return;
-    // }
+
 
     const doesRefreshTokenMatch = await bcrypt.compare(
       cookieRefreshToken,
@@ -95,7 +80,6 @@ fastify.post(
       reply.send({
         errorMessage:
           "Hashed refresh token and cookie refresh token do not match. User is not signed in. Redirecting to homepage ...",
-        newJwtAccessToken: "",
         userId: "",
         email: "",
         username: "",
@@ -113,7 +97,6 @@ fastify.post(
       reply.send({
         errorMessage:
           "Hashed refresh token / cookie refresh token does not belong to any user!!! Redirecting to homepage ...",
-        newJwtAccessToken: "",
         userId: "",
         email: "",
         username: "",
@@ -136,9 +119,14 @@ fastify.post(
     );
     const newJwtAccessToken = signJwtAccessToken(userId);
     // console.log("*******************", newJwtAccessToken);
+    reply.cookie("accesstoken", newJwtAccessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      expires: new Date(Date.now() + 15 * 60 * 1000),
+    });
     reply.send({
       errorMessage: "",
-      newJwtAccessToken,
       userId,
       email,
       username,

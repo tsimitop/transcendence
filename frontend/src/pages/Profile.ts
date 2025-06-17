@@ -71,7 +71,6 @@ class Profile extends Component {
           email: "",
           username: "",
           isSignedIn: false,
-          jwtAccessToken: "",
 		  avatar: "",
         });
         const routeToGo = "/";
@@ -257,15 +256,13 @@ class Profile extends Component {
 	</div>
 
 	<div class="flex flex-col gap-1 mb-20">
-	  <p>id: ${userContext.state.id}</p>
-	  <p>avatar: ${userContext.state.avatar}</p>
 	  <img
 	    src=${CADDY_SERVER}/avatars/${userContext.state.avatar}
-	    alt="User's avatar"
+	    alt="User's avatar: ${userContext.state.avatar}"
 		class="w-24 h-24 object-cover rounded-full"
 		/>
+		<p>username: ${userContext.state.username}</p>
 	  <p>email: ${userContext.state.email}</p>
-	  <p>username: ${userContext.state.username}</p>
 	</div>
 
 	<div class="flex justify-between items-start mb-12">

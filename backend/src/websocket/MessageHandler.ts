@@ -1,7 +1,7 @@
 // receives the messages from the websocket handler and calls the appropriate functions (chat or pong game)
 import { handleChatPayload } from "../api/chat/ChatMsgHandler";
 import { handlePongPayload } from "../api/pong/PongMsgHandler";
-import { connectedUsers } from "./WebSocket";
+import { connectedUsers, getUserSocket } from "./WebSocket";
 
 
 export interface WebsocketApiRequest {
@@ -23,7 +23,7 @@ export function handleWebsocketPayload(senderUsername: string, rawData: any): vo
         handlePongPayload(senderUsername, parsed.payload);
         break;
       case 'ping':
-          const socket = connectedUsers.get(senderUsername);
+          const socket = getUserSocket(senderUsername);
           if (socket) {
               const pong_msg: WebsocketApiRequest = {
                 target_endpoint: "pong",

@@ -1,5 +1,5 @@
 import {PongMessage, PongErrorData, KeyboardInputData, LocalGame, CreateGameData} from './PongMessages';
-import { connectedUsers } from '../../websocket/WebSocket';
+import { connectedUsers, getPongSocket } from '../../websocket/WebSocket';
 import { PongGame } from './PongGame';
 import { JoinGameData } from './PongMessages';
 import { Tournament } from './PongTournament';
@@ -72,7 +72,6 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
         handleCreateTournament(senderUsername, message.pong_data);
         break;
       default:
-        sendErrorMessage(senderUsername, `Unknown message type: ${message.type}`, 4001);
         console.warn(`[PONG WS] Unknown message: ${message}`);
     }
   } catch (err) {
@@ -126,38 +125,52 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
 }
 
 export function endOfGame(user: string, message: string) {
-  // console.log("user dissssssssconected");
   for (const [username, game] of currentGames.entries()) {
-    if(user === game.getlPlayerName() || user === game.getrPlayerName()) {
-      game.setGameState("finished");
+    const lPlayer = game.getlPlayerName();
+    const rPlayer = game.getrPlayerName();
 
-      const response = {
-        target_endpoint: 'pong-api',
-        type: 'game_over',
-        pong_data: {
-          gameId: game.getUniqeID(),
-          winnerId: user,
-          message: message,
-          finalScore: {
-            left: game.getlPlayerScore(),
-            right: game.getrPlayerScore()
-            }
+    if (user !== lPlayer && user !== rPlayer) continue;
+
+    game.setGameState("finished");
+
+    const winnerId = user;
+    const response = {
+      target_endpoint: 'pong-api',
+      type: 'game_over',
+      pong_data: {
+        gameId: game.getUniqeID(),
+        winnerId: winnerId,
+        message: message,
+        finalScore: {
+          left: game.getlPlayerScore(),
+          right: game.getrPlayerScore(),
         }
       }
-      const lsocket = game.getlPlayerSocket();
-      const rsocket = game.getrPlayerSocket();
-      currentGames.delete(username);
-      if (lsocket && lsocket.readyState === WebSocket.OPEN){
-        lsocket.send(JSON.stringify(response));
-      }
-      if (rsocket && rsocket.readyState === WebSocket.OPEN){
-        rsocket.send(JSON.stringify(response));
+    };
+    const lsocket = game.getlPlayerSocket();
+    const rsocket = game.getrPlayerSocket();
+    if (lsocket?.readyState === WebSocket.OPEN) {
+      lsocket.send(JSON.stringify(response));
+    }
+    if (rsocket?.readyState === WebSocket.OPEN) {
+      rsocket.send(JSON.stringify(response));
+    }
+
+    // Remove game from all player keys (both left and right player)
+    currentGames.delete(lPlayer);
+    currentGames.delete(rPlayer);
+
+    for (const [_, tournament] of currentTournaments.entries()) {
+      if (tournament.hasPlayer(user)) {
+        console.log("notifyMatchEnd called with:", user);
+        tournament.notifyMatchEnd(user);
+        break;
       }
     }
-    // console.log(`Game with key ${username} removed from currentGames`);
     break;
   }
 }
+
   
 
 export function deleteGameBecauseUserReconnected(user: string): void {
@@ -185,37 +198,4 @@ export function deleteGameBecauseUserReconnected(user: string): void {
       tournament.removePlayer(user);
     } 
   }
-}
-
-
-/**********************************************************************************/
-
-function sendMessage(senderUsername: string, type: string, pong_data: any): void {
-  // used to send messages to the client
-  const message: PongMessage = {
-      type: type,
-      pong_data: pong_data,
-  };
-  // const wrapped_msg: WebsocketApiRequest = {
-  //   target_endpoint: "pong-api",
-  //   payload: message
-  // }
-
-  // const socket = connectedUsers.get(senderUsername);
-  // if (socket) {
-  //     socket.send(JSON.stringify(wrapped_msg));
-  // } else {
-  //     console.debug(`[PONG WS] User ${senderUsername} not connected, cant send message`);
-  // }
-}
-
-function sendErrorMessage(senderUsername: string, errorMessage: string, errorCode: number = 69420): void {
-  // used to send error messages to the client
-
-  const errorData: PongErrorData = {
-      message: errorMessage,
-      code: errorCode,  // do we really need this?
-  };
-  sendMessage(senderUsername, 'error', errorData);
-  console.debug(`[PONG WS] Error message sent to ${senderUsername}: ${errorMessage} (code: ${errorCode})`);
 }

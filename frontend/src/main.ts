@@ -7,32 +7,17 @@ import { userContext } from "./context/UserContext";
 let chatStartInProgress = false;
 
 /**
- * @brief Initializes the chat component if the user is signed in and has a valid JWT token.
- * Waits for userContext to be fully populated if necessary.
+ * @brief Initializes the chat component if the user is signed in.
+ * Now that tokens are in cookies, we don't need to wait for localStorage.
  */
 async function maybeStartChat(): Promise<void> {
   console.log("Try UserContext on maybeStartChat start:", userContext.state);
   if (chatStartInProgress) return;
   chatStartInProgress = true;
 
-  let tries = 0;
-
-  // Wait until userContext is fully populated or max retries reached
-  while (
-    (!userContext.state.isSignedIn || !userContext.state.jwtAccessToken) &&
-    tries < 10
-  ) {
-    console.log(`Waiting for userContext to be ready... (attempt ${tries + 1})`, userContext.state);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    tries++;
-  }
-
-  // If user is signed in and token is ready, start the chat
-  if (userContext.state.isSignedIn && userContext.state.jwtAccessToken) {
+  // If user is signed in, start the chat
+  if (userContext.state.isSignedIn) {
     console.log("Starting Chat now! Final UserContext:", userContext.state);
-
-    // Save token for WebSocket authentication
-    localStorage.setItem("access_token", userContext.state.jwtAccessToken);
 
     // Prevent duplicate chat instances
     if (!document.querySelector("chat-component")) {
@@ -42,8 +27,8 @@ async function maybeStartChat(): Promise<void> {
         document.body.appendChild(chat);
 
 		// Initialize the WebSocket connection in the next animation frame
-		requestAnimationFrame(() => {
-          chat.initSocket();
+		requestAnimationFrame(async () => {
+          await chat.initSocket();
         });
       } else {
         console.warn("Chat.create() returned invalid instance:", chat);
@@ -51,7 +36,7 @@ async function maybeStartChat(): Promise<void> {
     }
 
   } else {
-    console.error("User still not signed in after waiting, final state:", userContext.state);
+    console.error("User not signed in, cannot start chat:", userContext.state);
   }
   chatStartInProgress = false;
 }
@@ -70,7 +55,7 @@ const renderApp = async function (): Promise<void> {
 };
 
 /**
- * @brief Removes the chat component and clears the access token if it exists.
+ * @brief Removes the chat component if it exists.
  */
 function maybeStopChat(): void {
 	const chat = document.querySelector("chat-component");
@@ -79,8 +64,6 @@ function maybeStopChat(): void {
 	  Chat.isInitialized = false;
 	  console.log("Chat stopped and removed from DOM.");
 	}
-  
-	localStorage.removeItem("access_token");
 }
 
 // Execute application setup once the DOM is ready

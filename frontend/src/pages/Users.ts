@@ -126,16 +126,19 @@ class Users extends Component {
 		      }
 			  const baseClass = match.source === 'local' ? "bg-purple-300" : `theme-bg-${themeState.state}`;
 		      const matchClass = match.source === 'remote' && userInMatch ? remoteClass : baseClass;
-		      return `
-		        <div class="p-4 border rounded-lg shadow-sm ${matchClass}">
-		          <p>
-		            <strong>${match.alias_first} [${match.first_score ?? 0}]</strong> vs 
-		            <strong>${match.alias_second} [${match.second_score ?? 0}]</strong> — 
-		            ${match.winner_alias ? `<strong>${match.winner_alias}</strong> WON the match` : "TBD"}
-		            <span class="text-sm text-gray-500">(${new Date(match.date).toLocaleString()})</span>
-		          </p>
-		        </div>
-		      `;
+		      if (match.winner_alias)
+			    return `
+		          <div class="p-4 border rounded-lg shadow-sm ${matchClass}">
+		            <p>
+		              <strong>${match.alias_first} [${match.first_score ?? 0}]</strong> vs 
+		              <strong>${match.alias_second} [${match.second_score ?? 0}]</strong> — 
+		              ${match.winner_alias ? `<strong>${match.winner_alias}</strong> WON the match` : "TBD"}
+		              <span class="text-sm text-gray-500">(${new Date(match.date).toLocaleString()})</span>
+		            </p>
+		          </div>
+		        `;
+			  else
+			    return "";
 		    }).join('')}
 		  </div>
 		</section>

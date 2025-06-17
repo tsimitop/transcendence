@@ -19,14 +19,16 @@ export interface ChatMessage {
 export function handleChatMessage(sender: string, { message }: ChatMessage): void {
   if (!message) return;
 
-  for (const [username, socket] of connectedUsers.entries()) {
-    if (socket.readyState !== WebSocket.OPEN) continue;
-
-    socket.send(JSON.stringify({
-      type: 'CHAT',
-      from: sender,
-      message,
-    }));
+  for (const [username, userConnections] of connectedUsers.entries()) {
+    // Send to chat connections only
+    const chatConnection = userConnections.get('chat');
+    if (chatConnection && chatConnection.socket.readyState === WebSocket.OPEN) {
+      chatConnection.socket.send(JSON.stringify({
+        type: 'CHAT',
+        from: sender,
+        message,
+      }));
+    }
   }
 }
 
@@ -54,14 +56,20 @@ export function handleBlockUser(blocker: string, { to }: ChatMessage): void {
 export function handleInvite(sender: string, { to }: ChatMessage): void {
   if (!to) return;
 
-  const recipientSocket = connectedUsers.get(to);
-  if (!recipientSocket) {
+  const userConnections = connectedUsers.get(to);
+  if (!userConnections) {
     console.warn(`[CHAT] Cannot invite ${to}, not connected`);
     return;
   }
 
-  recipientSocket.send(JSON.stringify({
-    type: 'INVITE',
-    from: sender,
-  }));
+  // Send invite to chat connection if available
+  const chatConnection = userConnections.get('chat');
+  if (chatConnection && chatConnection.socket.readyState === WebSocket.OPEN) {
+    chatConnection.socket.send(JSON.stringify({
+      type: 'INVITE',
+      from: sender,
+    }));
+  } else {
+    console.warn(`[CHAT] Cannot invite ${to}, no active chat connection`);
+  }
 }

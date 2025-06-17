@@ -1,10 +1,11 @@
 
-import { connectedUsers } from '../../websocket/WebSocket';
+import { connectedUsers, getPongSocket } from '../../websocket/WebSocket';
 import { currentGames } from './PongMsgHandler';
 import { CreateGameData } from './PongMessages';
 import { PongGame } from './PongGame';
 import { globalCountdown } from './PongMsgHandler';
 import { JoinGameData } from './PongMessages';
+import { endOfGame } from './PongMsgHandler';
 import UserDb from '../../user-database/UserDb';
 import { QueryMatch } from '../../user-database/matches';
 import { QueryTournament } from '../../user-database/tournaments';
@@ -13,19 +14,21 @@ import { QueryUser } from '../../user-database/queries';
 type UserRow = { id: number };
 
 export function handleListGames(senderUsername: string): void {
-  const senderSocket = connectedUsers.get(senderUsername);
+  const senderSocket = getPongSocket(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
   const gameList = [];
 
   for (const [username, game] of currentGames.entries()) {
-    gameList.push({
-      id: game.getUniqeID(),
-      owner: username,
-      alias: game.getlPlayerAlias(),
-      state: game.getGameState(),
-      // optionally include player names, number of players, etc. tournament?
-    });
+    if (game.getGameState() === "waiting") {
+      gameList.push({
+        id: game.getUniqeID(),
+        owner: username,
+        alias: game.getlPlayerAlias(),
+        state: game.getGameState(),
+        // optionally include player names, number of players, etc. tournament?
+      });
+    }
   }
   
   const response = {
@@ -71,7 +74,7 @@ export function handleCreateGame(senderUsername: string, pong_data: CreateGameDa
   const uniqueGameID = `${senderUsername}-Game-${Date.now()}`;
   const newGame = new PongGame(uniqueGameID, senderUsername, pong_data.playerAlias, pong_data.gameMode);
   currentGames.set(senderUsername, newGame);
-  const senderSocket = connectedUsers.get(senderUsername);
+  const senderSocket = getPongSocket(senderUsername);
   if(pong_data.gameMode === "remote"){
     // REMOTE GAME
     if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
@@ -120,18 +123,18 @@ export function handleCreateGame(senderUsername: string, pong_data: CreateGameDa
 
 }
 
-export 
-
-function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
+export function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void {
   let countdown = globalCountdown;
 
-  const senderSocket = connectedUsers.get(senderUsername);
+  const senderSocket = getPongSocket(senderUsername);
   if (!senderSocket || senderSocket.readyState !== WebSocket.OPEN) return;
 
   let opponent: string = "";
   // console.log("game id", pong_data);
   for (const [username, game] of currentGames.entries()) {
-    if(pong_data.gameId === game.getUniqeID()){
+    if(pong_data.gameId === game.getUniqeID() 
+      && game.getGameState() === "waiting"
+      && game.getlPlayerName() !== senderUsername) {  // we cannot join our own game
       game.setGameState('countdown');
       game.setOpponentName(senderUsername, pong_data.OpponentAlias);
       // console.log("-->",game.getrPlayerName(), game.getrPlayerAlias());
@@ -140,8 +143,11 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
     }
   }
   // console.log("opponent ", opponent);
-  const opponentSocket = connectedUsers.get(opponent);
-  if (!opponentSocket || opponentSocket.readyState !== WebSocket.OPEN) return;
+  const opponentSocket = getPongSocket(opponent);
+  if (!opponentSocket || opponentSocket.readyState !== WebSocket.OPEN) {
+    console.error(`Opponent socket is not open or does not exist: ${opponent}`);
+    return;
+  }
   const response = {
         target_endpoint: 'pong-api',
         type: 'countdown',
@@ -154,9 +160,6 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
 
   // set sockets to current instance
   currentGames.get(opponent)?.setSockets(senderSocket, opponentSocket);
-  
-
-  
     const interval = setInterval(() => {
     countdown--;
     if (countdown <= 0) {
@@ -171,8 +174,6 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
       }
       startGameLoop(currentGames.get(opponent)!);
 
-
-
       setTimeout(() => {
       }, 1000);
     } 
@@ -180,20 +181,38 @@ function handlerJoinGame(senderUsername: string, pong_data: JoinGameData): void 
 }
 
 
-
-
 export function startGameLoop(game: PongGame) {
     const fps = 30;
     const intervalMs = 1000 / fps;
     console.log("----------------->",game.getlPlayerAlias())
     const intervalId = setInterval(() => {    
+	try {
+	  game.update();
+	} catch (err) {
+	  console.error("Error during game.update():", err);
+	}
     if (game.getGameState() === 'finished') {
       clearInterval(intervalId);
       // console.log(`Game ${game.getUniqeID()} ended.`);
   
       return;
       }
-      game.update();
+
+	  const lSocket = game.getlPlayerSocket();
+	  const rSocket = game.getrPlayerSocket();
+
+      if (!lSocket || lSocket.readyState !== WebSocket.OPEN) {
+        endOfGame(game.getrPlayerName(), "Opponent disconnected (left)");
+        clearInterval(intervalId);
+        return;
+      }
+
+      if (!rSocket || rSocket.readyState !== WebSocket.OPEN) {
+        endOfGame(game.getlPlayerName(), "Opponent disconnected (right)");
+        clearInterval(intervalId);
+        return;
+      }
+
       const gameState = game.getGameStatePayload();
       const response = {
             target_endpoint: 'pong-api',
@@ -231,22 +250,22 @@ export function startGameLoop(game: PongGame) {
         }
     };
   
-  
+
       const lPlayerSocket = game.getlPlayerSocket();
       const rPlayerSocket = game.getrPlayerSocket();
       if (lPlayerSocket && lPlayerSocket.readyState === WebSocket.OPEN) {
-        console.log("leftplayersend");
+        // console.log("leftplayersend");
         lPlayerSocket.send(JSON.stringify(response));
       }
       else{
-        console.log("not leftplayersend");
+        // console.log("not leftplayersend");
       }
       if (rPlayerSocket && rPlayerSocket.readyState === WebSocket.OPEN) {
-        console.log("rightplayersend");
+        // console.log("rightplayersend");
         rPlayerSocket.send(JSON.stringify(response));
       }
       else{
-        console.log("not rightplayersend");
+        // console.log("not rightplayersend");
       }
     }, intervalMs);
   }

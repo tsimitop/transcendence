@@ -26,7 +26,6 @@ import { ValidateAccessTokenResponseType } from "../context/UserContext";
 
 type NewAccessTokenResponseType = {
   errorMessage: string;
-  newJwtAccessToken: string;
   userId: string;
   email: string;
   username: string;
@@ -93,9 +92,7 @@ abstract class Router {
   static async requestUserAuthStatus() {
     // let data: AuthCheckType | null = null;
     try {
-      const data =
-        ((await userContext.isUserSignedIn()) as ValidateAccessTokenResponseType) ||
-        null;
+      const data = ((await userContext.isUserSignedIn()) as ValidateAccessTokenResponseType) || null;
 
    if (data && data.isAccessTokenValid) {
 	     userContext.setState({
@@ -104,8 +101,7 @@ abstract class Router {
 	       email: data.email,
 	       username: data.username,
 	       isSignedIn: true,
-	       jwtAccessToken: localStorage.getItem("access_token") || "",
-           avatar: data.avatar,
+         avatar: data.avatar,
 	     });
 	   }
 
@@ -117,22 +113,16 @@ abstract class Router {
   }
 
   static async requestNewAccessToken(): Promise<NewAccessTokenResponseType | null> {
-    // let newJwtAccessToken = "";
     try {
       const response = await fetch(
         `${CADDY_SERVER}/api/generate-new-access-token`,
         {
           method: "POST",
           credentials: "include",
-          // headers: {
-          //   Authorization: `Bearer ${}`,
-          // },
         }
       );
       const data = (await response.json()) as NewAccessTokenResponseType;
-      // console.log("data after new access token generation:", data);
       const {
-        newJwtAccessToken,
         userId,
         email,
         username,
@@ -140,10 +130,7 @@ abstract class Router {
         errorMessage,
 		avatar,
       } = data;
-      if (!newJwtAccessToken) {
-        // throw new Error(
-        //   "New access token could not be created! Refresh token might be expired"
-        // );
+      if (errorMessage) {
         throw errorMessage;
       }
       userContext.setState({
@@ -152,7 +139,6 @@ abstract class Router {
         email,
         username,
         isSignedIn,
-        jwtAccessToken: newJwtAccessToken,
 		avatar,
       });
 
@@ -206,22 +192,8 @@ abstract class Router {
   }
 
   static async findViewToRender(routeToGo: string) {
-    let data:
-      | ValidateAccessTokenResponseType
-      | (NewAccessTokenResponseType & { isAccessTokenValid?: boolean })
-      | null = null;
+    let data: ValidateAccessTokenResponseType | null = null;
     let viewToRender = null;
-
-    const user = userContext.state;
-
-    if (userContext.state.isSignedIn && !userContext.state.jwtAccessToken) {
-      const has2Fa = await Router.is2FaActive(user);
-      if (has2Fa) {
-        routeToGo = "/2fa";
-        viewToRender = Router.getViewForGuestUser(routeToGo);
-        return viewToRender;
-      }
-    }
 
     data = await Router.requestUserAuthStatus();
     if (!data) {
@@ -239,9 +211,8 @@ abstract class Router {
 
     if (data?.isNewAccessTokenNeeded) {
       console.log("getting new access token . . .");
-      data = await Router.requestNewAccessToken();
-      // console.log("newJwtAccessToken", newJwtAccessToken);
-      if (!data || !data.newJwtAccessToken) {
+      const newTokenData = await Router.requestNewAccessToken();
+      if (!newTokenData || newTokenData.errorMessage) {
         userContext.setState({
           ...userContext.state,
           id: "",

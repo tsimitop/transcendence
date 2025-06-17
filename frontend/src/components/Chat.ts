@@ -3,6 +3,7 @@ import Component, {
 	ChildElementType,
 	ChildrenStringType,
   } from "../models/Component";
+import { CADDY_SERVER } from "../constants";
   
   /**
    * Chat component class.
@@ -115,35 +116,37 @@ import Component, {
 		}
 	  }
   
-	/**
-	 * @brief Initializes a WebSocket connection with retry logic if the token is missing.
-	 */
-	public initSocket(retryCount = 0): void {
-	  const token = localStorage.getItem("access_token");
-  
-	  // Retry a few times if token is not yet in localStorage
-	  if (!token) {
-		if (retryCount >= this.maxReconnectAttempts) {
-		  console.error("Access token not found. Chat is disabled.");
+	public async initSocket(): Promise<void> {
+	  try {
+		// Get the access token from the server
+		const response = await fetch(`${CADDY_SERVER}/api/ws-token`, {
+		  method: "GET",
+		  credentials: "include",
+		});
+		const data = await response.json();
+		console.log("data after fetching ws-token:", data);
+		if (data.errorMessage || !data.token) {
+		  console.error("Failed to get WebSocket token:", data.errorMessage);
 		  this.showSystemMessage("[Chat disabled: No token found]", "text-red-500");
 		  return;
 		}
-  
-		console.warn(`Access token missing. Retrying in 500ms... (attempt ${retryCount + 1})`);
-		setTimeout(() => this.initSocket(retryCount + 1), 500);
+
+		// Open a WebSocket connection using the token from cookies
+		const socketUrl = `${CADDY_SERVER.replace(/^http/, "ws")}/ws?token=${data.token}&type=chat`;
+		console.log("Connecting to chat server at:", socketUrl);
+		this.socket = new WebSocket(socketUrl);
+
+		// Connection established
+		this.socket.onopen = () => {
+		  console.log("Connected to chat server.");
+		  this.reconnectAttempts = 0;
+		  this.showSystemMessage("[Connected to server]", "text-green-500");
+		};
+	  } catch (error) {
+		console.error("Failed to initialize WebSocket:", error);
+		this.showSystemMessage("[Chat disabled: Connection failed]", "text-red-500");
 		return;
 	  }
-  
-	  // Open a WebSocket connection using the JWT token
-	  const socketUrl = `wss://localhost:4443/ws?token=${token}`;
-	  this.socket = new WebSocket(socketUrl);
-  
-	  // Connection established
-	  this.socket.onopen = () => {
-		console.log("Connected to chat server.");
-		this.reconnectAttempts = 0;
-		this.showSystemMessage("[Connected to server]", "text-green-500");
-	  };
   
 	  // Incoming message from server
 	  this.socket.onmessage = (event) => {
@@ -177,7 +180,7 @@ import Component, {
 			break;
 	  
 		  default:
-			message.textContent = `[Unknown message type]`;
+			message.textContent = `[Unknown message type]: ${parsed.type}`;
 			message.classList.add("text-red-500");
 		}
 	  
