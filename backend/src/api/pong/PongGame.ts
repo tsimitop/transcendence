@@ -2,6 +2,7 @@ import { PongGameBall } from "./PongBall";
 import { PongGamePaddle } from "./PongPaddle";
 import { GameStateData } from "./PongMessages";
 import { endOfGame } from "./PongMsgHandler";
+import UserDb from "../../user-database/UserDb";
 
 type GameState = 'waiting' | 'countdown' | 'playing' | 'paused' | 'finished';
 
@@ -204,7 +205,7 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
 
 
     update(){
-      // let winner: string = "";
+      let winner: string = "";
       if(this.gameState === "finished") return;
       
       //update ball posistion
@@ -224,8 +225,11 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
         if(this.outOfFieldCheck()){ this.setToRestart(); }
 
         this.updateGameStatData();
-        // winner = this.checkEndOfGame();
-        this.checkEndOfGame();
+        winner = this.checkEndOfGame();
+		if (winner) {
+		  UserDb.updateMatchTable(this, winner);
+		}
+        // this.checkEndOfGame();
     }
     getGameStatePayload(): GameStateData { return this.gameStateData; }
 

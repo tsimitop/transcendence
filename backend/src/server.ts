@@ -9,9 +9,6 @@ import crypto from "crypto";
 import fs from "fs";
 import { startWebSocketServer } from "./websocket/WebSocket";
 import { SESSION_COOKIE_NAME } from "./constants";
-import usersRoutes from "./api/users/users";
-import friendsRoutes from "./api/friends/friends";
-import editingRoutes from "./api/editing/editing";
 
 export const fastify = Fastify({
   logger: true,
@@ -28,9 +25,6 @@ const start = async function () {
       root: path.join(__dirname, '..', 'avatars'),
       prefix: '/avatars/',
     });
-    await fastify.register(usersRoutes);
-	await fastify.register(friendsRoutes);
-	await fastify.register(editingRoutes);
     await fastify.register(fastifySession, {
       secret,
       cookie: {

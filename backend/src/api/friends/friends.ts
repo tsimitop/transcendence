@@ -3,6 +3,7 @@ import { QueryFriend } from "../../user-database/friend-queries";
 import { QueryUser } from "../../user-database/queries"; 
 import UserDb from "../../user-database/UserDb";
 import { UserStateType } from "../sign-in/sign-in";
+import { fastify } from "../../server";
 
 const STATUS = {
   PENDING: 'pending',
@@ -26,8 +27,7 @@ interface PendingInfo {
 	username: string;
 }
 
-// created frienships
-export default async function friendsRoutes(fastify: FastifyInstance) {
+// created friendships
 fastify.post('/api/friends', async function (
 	request: FastifyRequest<{Body: FriendRequestBody}>,
 	 reply: FastifyReply) {
@@ -158,4 +158,3 @@ fastify.post('/api/friends/accept', async function (
     return reply.status(500).send({ success: false, message: "Server error"});
   }
 });
-}
