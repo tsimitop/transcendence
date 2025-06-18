@@ -19,6 +19,23 @@ interface UserProfile {
   avatar: string;
 }
 
+type Match = {
+  match_id: number;
+  type: "local" | "remote" | "tournament";
+  user_id_first: number;
+  user_id_second: number;
+  alias_first: string;
+  alias_second: string;
+  winner_alias?: string;
+  winner_id?: number;
+  tournament_id?: number;
+  first_score?: number;
+  second_score?: number;
+  date: string;
+};
+
+type MatchWithSource = Match & { source: 'local' | 'remote' };
+
 class Users extends Component {
   constructor(
     childrenString: ChildrenStringType,
@@ -47,21 +64,127 @@ class Users extends Component {
     const searchTerm = userSearchInput?.value.trim();
     const searchLink = document.getElementById('search-link');
 	const isUserConnected = connectedUsersArray?.includes(searchTerm);
+
 	const user = await Users.search(searchLink, isUserConnected);
+	let matches: MatchWithSource[] = [];
+	if (user) {
+	  const { localMatches, remoteMatches } = await Users.getUserMatches(user.id);
+	  matches = [
+		...localMatches.map(match => ({ ...match, source: 'local' as const })),
+		...remoteMatches.map(match => ({ ...match, source: 'remote' as const }))
+	  ];
+	}
+	const localTotal = matches.filter(match => match.source === 'local').length;
+	const remoteMatchesForUser = matches.filter(m => m.source === 'remote' && (m.user_id_first === user?.id || m.user_id_second === user.id));
+	const wins = remoteMatchesForUser.filter(m => m.winner_id === user?.id).length;
+	const losses = remoteMatchesForUser.length - wins;
+	const total = wins + losses;
+	const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+
+    let matchesHtml = '';
+
+	if (user) {
+	  if (matches.length === 0) {
+		matchesHtml = `<section class="my-12"><p class="test-center my-8 text-gray-500">No match history found for ${user.username}.</p></section>`;
+	  } else {
+		matchesHtml = `
+		<section class="my-12">
+		  <h2 class="text-3xl font-bold mb-4 text-center">Match History</h2>
+
+		  <div class="flex items-center justify-center gap-6 mb-6 text-center">
+	        <div>
+	          <div class="text-4xl font-bold text-green-600">${wins}</div>
+	          <div class="text-sm text-gray-600">Wins</div>
+	        </div>
+	        <div>
+	          <div class="text-4xl font-bold text-red-600">${losses}</div>
+	          <div class="text-sm text-gray-600">Losses</div>
+	        </div>
+			<div>
+	          <div class="text-4xl font-bold text-purple-600">${localTotal}</div>
+	          <div class="text-sm text-gray-600">Local</div>
+	        </div>
+	      </div>
+
+		  <div class="max-w-md mx-auto mb-6">
+	        <div class="flex justify-between mb-1 text-sm font-medium text-gray-700">
+	          <span>Win Rate</span>
+	          <span>${winRate}%</span>
+	        </div>
+	        <div class="w-full bg-gray-300 rounded h-4">
+	          <div class="bg-green-500 h-4 rounded" style="width: ${winRate}%;"></div>
+	        </div>
+	      </div>
+
+		  <div class="flex flex-col gap-4 max-w-3xl mx-auto">
+		    ${matches.map((match: MatchWithSource) => {
+		      const userInMatch = user.id === match.user_id_first || user.id === match.user_id_second;
+		      const userWon = userInMatch && match.winner_id === user.id;
+
+			  let remoteClass = "";
+		      if (match.source === 'remote' && userInMatch) {
+		        remoteClass = userWon ? "bg-green-300" : "bg-red-300";
+		      }
+			  const baseClass = match.source === 'local' ? "bg-purple-300" : `theme-bg-${themeState.state}`;
+		      const matchClass = match.source === 'remote' && userInMatch ? remoteClass : baseClass;
+		      if (match.winner_alias)
+			    return `
+		          <div class="p-4 border rounded-lg shadow-sm ${matchClass}">
+		            <p>
+		              <strong>${match.alias_first} [${match.first_score ?? 0}]</strong> vs 
+		              <strong>${match.alias_second} [${match.second_score ?? 0}]</strong> — 
+		              ${match.winner_alias ? `<strong>${match.winner_alias}</strong> WON the match` : "TBD"}
+		              <span class="text-sm text-gray-500">(${new Date(match.date).toLocaleString()})</span>
+		            </p>
+		          </div>
+		        `;
+			  else
+			    return "";
+		    }).join('')}
+		  </div>
+		</section>
+		`;
+	  }
+	}
     let html: string;
     if (!user) {
       const safeSearchTerm = DOMPurify.sanitize(searchTerm || "");
-      html = `
-        <h1>User ${safeSearchTerm} not found</h1>
-      `;
-    } else if (user.id == Number(userContext.state.id)) { // view yourslef
+      const questionMarks = Array.from({ length: 25 }).map((_) => {
+      const top = Math.floor(Math.random() * 90);   // % from top
+      const left = Math.floor(Math.random() * 90);  // % from left
+      const size = Math.floor(Math.random() * 24) + 12; // font size between 12px and 36px
+      const opacity = (Math.random() * 0.5 + 0.3).toFixed(2); // between 0.3 and 0.8
+      return `<span 
+                class="absolute text-gray-400 select-none pointer-events-none"
+                style="top:${top}%; left:${left}%; font-size:${size}px; opacity:${opacity};"
+              >?</span>`;
+    }).join('');
+  
+    matchesHtml = `
+      <div class="relative w-full h-full min-h-screen overflow-hidden">
+        ${questionMarks}
+      </div>
+    `;
+  
+    html = `
+      <div class="flex items-center justify-center min-h-screen">
+        <h1 class="text-4xl font-semibold text-center">
+          User <span class="text-red-500">${safeSearchTerm}</span> not found
+        </h1>
+      </div>
+    `;
+  } else if (user.id == Number(userContext.state.id)) { // view yourslef
       const safeEmail = DOMPurify.sanitize(user.email || "");
       const safeAvatar = DOMPurify.sanitize(user.avatar || "");
       html = `
-        <div class="user-profile">
-          <h2>Your public profile</h2>
+        <div class="flex items-center justify-between mt-12 mb-6">
+		  <h1 class="text-5xl font-bold">Your public profile</h1>
+		</div>
+
+		<div class="flex flex-col gap-1 mb-20">
 		  <img
 	        src=${CADDY_SERVER}/avatars/${safeAvatar}
+			alt="User's avatar"
 		    class="w-24 h-24 object-cover rounded-full"
 		  />
           <p>Email: ${safeEmail}</p>
@@ -93,9 +216,12 @@ class Users extends Component {
 	  <div>
 	    <h2 class="text-3xl font-bold mb-6">Options</h2>
 	    <div class="flex flex-col gap-2 w-[120px]">
-		  <button class="block-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer" data-userid="${user.id}">
-			Block user
-		  </button>
+		  <div class="flex items-center">
+		    <button class="block-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer" data-userid="${user.id}">
+		  	Block user
+		    </button>
+		    <span class="block-success hidden text-green-600">&#10003;</span>
+	      </div>
 	    </div>
 	  </div>
 	</div>
@@ -121,13 +247,22 @@ class Users extends Component {
 	<div class="flex justify-between items-start mb-12">
 	  <div>
 	    <h2 class="text-3xl font-bold mb-6">Options</h2>
-	    <div class="flex flex-col gap-2 w-[120px]">
-		  <button class="friend-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer" data-userid="${user.id}">
-			Add friend
-		  </button>
-		  <button class="block-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer" data-userid="${user.id}">
-			Block user
-		  </button>
+	    <div class="flex flex-col gap-2 w-[200px]">
+
+	      <div class="flex items-center">
+	        <button class="friend-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer" data-userid="${user.id}">
+	          Add friend
+	        </button>
+	        <span class="friend-success hidden text-green-600 ml-1">&#10003;</span>
+	      </div>
+
+	      <div class="flex items-center">
+	        <button class="block-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer" data-userid="${user.id}">
+	          Block user
+	        </button>
+	        <span class="block-success hidden text-green-600 ml-1">&#10003;</span>
+	      </div>
+
 	    </div>
 	  </div>
 	</div>
@@ -135,7 +270,16 @@ class Users extends Component {
     }
     main.addEventListener("click", Users.handleClick);
 
-    main.insertAdjacentHTML("beforeend", html);
+	main.innerHTML = `
+      <div class="flex min-h-screen">
+        <div class="profile-info w-1/3 p-4">
+          ${html}
+        </div>
+        <div class="matches-wrapper w-2/3 flex justify-start items-start p-4">
+          ${matchesHtml}
+        </div>
+      </div>
+    `;
     const usersInstance = new Users(
       { html: "", position: "beforeend" },
       { element: Header.create(), position: "afterbegin" },
@@ -154,6 +298,20 @@ class Users extends Component {
     } else if (target.classList.contains("block-btn")) {
       Users.blockingUser(event);
     }
+  }
+
+  //green check after successful update of element
+  private static showSuccess(action: "block" | "friend") {
+  const successIndicator = document.querySelector(`.${action}-success`) as HTMLElement;
+  if (successIndicator) {
+    successIndicator.classList.remove("hidden");
+    successIndicator.classList.add("animate-pulse");
+
+    setTimeout(() => {
+      successIndicator.classList.add("hidden");
+      successIndicator.classList.remove("animate-pulse");
+    }, 3000); // auto-hide after 3 seconds
+  }
   }
 
   public static async getConnectedUsers(): Promise<string[] | null>{
@@ -180,7 +338,6 @@ class Users extends Component {
 	  console.error("No search term found on button.");
    	  return null;
 	}
-	console.log("Extracted searchTerm:", searchTerm);
     try {		
       const response = await fetch(`${CADDY_SERVER}/api/users`, {
         method: "POST",
@@ -228,6 +385,7 @@ class Users extends Component {
 		  console.error("Failed to find friend", error)
 	  	return null;
 	  }
+	  Users.showSuccess("friend");
 	} catch(error) {
 		console.error("Error sending friend request: ", error);
 		return null
@@ -253,10 +411,35 @@ class Users extends Component {
 	  });
 	  if (!response.ok)
 	  	return null;
+	  Users.showSuccess("block");
 	} catch(error) {
 	  console.error("Error sending friend request: ", error);
 	  return null
 	}
+  }
+
+  public static async getUserMatches(searchUserId: number, ): Promise<{ localMatches: Match[], remoteMatches: Match[] }> {
+  try {
+    const response = await fetch(`${CADDY_SERVER}/api/users/matches`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+	  body: JSON.stringify({ searchUserId })
+    });
+    if (!response.ok) {
+	  return { localMatches: [], remoteMatches: [] };
+	};
+
+    const data = await response.json();
+	const localMatches = data.localMatches || [];
+	const remoteMatches = data.remoteMatches || [];
+	return { localMatches, remoteMatches };
+  } catch (err) {
+      return { localMatches: [], remoteMatches: [] };
+    }
   }
 }
 

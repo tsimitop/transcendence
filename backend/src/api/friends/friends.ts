@@ -28,7 +28,7 @@ interface PendingInfo {
 	username: string;
 }
 
-// created frienships
+// created friendships
 fastify.post('/api/friends', async function (
 	request: FastifyRequest<{Body: FriendRequestBody}>,
 	 reply: FastifyReply) {
