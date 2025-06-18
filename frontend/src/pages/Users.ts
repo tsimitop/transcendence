@@ -75,7 +75,9 @@ class Users extends Component {
 	  ];
 	}
 	const localTotal = matches.filter(match => match.source === 'local').length;
-	const remoteMatchesForUser = matches.filter(m => m.source === 'remote' && (m.user_id_first === user?.id || m.user_id_second === user.id));
+	const remoteMatchesForUser = matches.filter(
+	m => m.source === 'remote' && (m.user_id_first === user?.id || m.user_id_second === user?.id)
+	);
 	const wins = remoteMatchesForUser.filter(m => m.winner_id === user?.id).length;
 	const losses = remoteMatchesForUser.length - wins;
 	const total = wins + losses;

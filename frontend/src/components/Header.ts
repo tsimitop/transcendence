@@ -70,7 +70,7 @@ class Header extends Component {
 				<a 
 				  id="search-link"
 				  class="nav-link user-link cursor-pointer opacity-50 pointer-events-none ${ROUTER_CLASS_NAME}"
-   				  href="#"
+   				  href="/users"
 				>
 				  Search
 				</a>
@@ -110,7 +110,7 @@ class Header extends Component {
 	        link.setAttribute("href", `/users?query=${encodedQuery}`);
 	      } else {
 	        link.classList.add("pointer-events-none", "opacity-50");
-	        link.setAttribute("href", "#");
+	        link.removeAttribute("href");
 	      }
 	    });
 
