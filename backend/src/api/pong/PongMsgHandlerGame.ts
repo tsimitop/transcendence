@@ -270,3 +270,41 @@ export function startGameLoop(game: PongGame) {
     }, intervalMs);
   }
   
+// quick game for chat
+export function startPongMatchBetween(player1: string, player2: string): void {
+	const socket1 = getPongSocket(player1);
+	const socket2 = getPongSocket(player2);
+
+	if (!socket1 || !socket2) {
+		console.warn(`[QUICKMATCH] One or both players are not connected`);
+		return;
+	}
+
+	const gameId = `${player1}-vs-${player2}-${Date.now()}`;
+	const game = new PongGame(gameId, player1, player1, "remote");
+	game.setOpponentName(player2, player2);
+	game.setSockets(socket1, socket2);
+	game.setGameState("countdown");
+
+	currentGames.set(player1, game);
+	currentGames.set(player2, game);
+
+	const response = {
+		target_endpoint: "pong-api",
+		type: "countdown",
+		value: globalCountdown
+	};
+
+	socket1.send(JSON.stringify(response));
+	socket2.send(JSON.stringify(response));
+
+	let countdown = globalCountdown;
+	const interval = setInterval(() => {
+		countdown--;
+		if (countdown <= 0) {
+			clearInterval(interval);
+			game.setGameState("playing");
+			startGameLoop(game);
+		}
+	}, 1000);
+}

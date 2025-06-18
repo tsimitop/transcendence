@@ -324,6 +324,16 @@ abstract class Router {
     Header.highlightActiveNavLink();
   }
 
+// Navigates to a route with query, updates state, renders view, and highlights active nav link.
+  static async navigateWithQuery(route: ValidUrlPathsType, query: string) {
+	window.history.pushState({}, "", `${route}?${query}`);
+	urlContext.setState({ path: route });
+	const view = await Router.findViewToRender(route);
+	Router.renderPageBasedOnPath(view);
+	Router.listenForRouteChange();
+	Header.highlightActiveNavLink();
+  }
+
   static async is2FaActive(user: UserStateType) {
     try {
       const response = await fetch(`${CADDY_SERVER}/api/has-2fa`, {

@@ -1,5 +1,6 @@
 import { ChatMessage } from "./ChatMessages";
 import { handleChatMessage, handleBlockUser, handleInvite } from "./ChatMessages";
+import { getUserSocket } from "../../websocket/WebSocket";
 
 /**
  * @brief Central handler for all incoming WebSocket messages
