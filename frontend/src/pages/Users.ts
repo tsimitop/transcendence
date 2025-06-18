@@ -42,12 +42,13 @@ class Users extends Component {
           : "theme-primary-dark-full"
       }`
     );
-	const connectedUsersArray = await Users.getConnectedUsers();
-    const userSearchInput = document.getElementById('user-searched') as HTMLInputElement;
-    const searchTerm = userSearchInput?.value.trim();
-    const searchLink = document.getElementById('search-link');
-	const isUserConnected = connectedUsersArray?.includes(searchTerm);
-	const user = await Users.search(searchLink, isUserConnected);
+    const params = new URLSearchParams(window.location.search);
+    const searchTerm = params.get("query")?.trim() || null;
+    const connectedUsersArray = await Users.getConnectedUsers();
+    const isUserConnected = searchTerm
+      ? connectedUsersArray?.includes(searchTerm)
+      : false;
+    const user = await Users.search(searchTerm, isUserConnected);
     let html: string;
     if (!user) {
       const safeSearchTerm = DOMPurify.sanitize(searchTerm || "");
@@ -168,40 +169,34 @@ class Users extends Component {
     return data.connectedUsersArray as string[];
   }
 
-  public static async search(searchLink: any, isUserConnected: boolean | undefined): Promise<UserProfile | null | undefined> {
-	const userState = userContext.state;
-	if (!searchLink) {
-	  console.error("searchLink not found.");
-	  return null;
-	}
-	const url = new URL(searchLink.href);
-	const searchTerm = url.searchParams.get("query");
-	if (!searchTerm) {
-	  console.error("No search term found on button.");
-   	  return null;
-	}
+  public static async search(searchTerm: string | null, isUserConnected: boolean | undefined): Promise<UserProfile | null | undefined> {
+    const userState = userContext.state;
+    if (!searchTerm) {
+      console.error("No search term provided.");
+      return null;
+    }
 	console.log("Extracted searchTerm:", searchTerm);
-    try {		
+    try {
       const response = await fetch(`${CADDY_SERVER}/api/users`, {
         method: "POST",
-		headers: {
-        "Content-Type": "application/json",
-		"Accept": "application/json"
-      },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         credentials: "include",
-		body: JSON.stringify({ userState, searchTerm, isUserConnected }),
+        body: JSON.stringify({ userState, searchTerm, isUserConnected }),
       });
-		if (!response.ok) {
-		  const errorData = await response.json().catch(() => ({}));
-  		  console.log("User search failed with status:", response.status);
-  		  console.log("Error detail:", errorData);
-		  return null;
-		}
-		const data = await response.json();
-		return data.user;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.log("User search failed with status:", response.status);
+        console.log("Error detail:", errorData);
+        return null;
+      }
+      const data = await response.json();
+      return data.user;
     } catch (error) {
       console.error("Search failed: ", error);
-	  return null;
+      return null;
     }
   }
 

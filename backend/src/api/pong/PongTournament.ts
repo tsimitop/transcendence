@@ -39,6 +39,7 @@ export class Tournament {
 		// this.PlayerOneAlias = playerAlias;
 		const socket = getPongSocket(playerName);
 		this.addPlayer(playerName, playerAlias, socket);
+		this.broadcastTournamentCreated();
 	}
 
 /*****************************************************/
@@ -228,5 +229,20 @@ export class Tournament {
 
 		currentTournaments.delete(this.uniqueID);
 		console.log(`Tournament ${this.uniqueID} is finished and removed.`);
+	}
+
+	private broadcastTournamentCreated(): void {
+		const message = "A new Pong tournament starts! Join now!";
+
+		for (const connections of connectedUsers.values()) {
+			const chatSocket = connections.get("chat")?.socket;
+
+			if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+				chatSocket.send(JSON.stringify({
+					type: "TOURNAMENT_NOTIFICATION",
+					message,
+				}));
+			}
+		}
 	}
 }

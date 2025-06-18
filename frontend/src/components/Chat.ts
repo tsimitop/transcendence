@@ -5,6 +5,8 @@ import Component, {
   } from "../models/Component";
 import { CADDY_SERVER } from "../constants";
 import DOMPurify from 'dompurify';
+import { urlContext } from "../context/UrlContext";
+import Router from "../models/Router";
 
   /**
    * Chat component class.
@@ -36,45 +38,87 @@ import DOMPurify from 'dompurify';
 		const input = this.querySelector("#chat-input") as HTMLInputElement;
 		const toggleBtn = this.querySelector("#chat-toggle") as HTMLButtonElement;
 		const chatContent = this.querySelector("#chat-content") as HTMLDivElement;
-
 	    const recipientSelect = this.querySelector("#recipient-select") as HTMLSelectElement;
-
+		const inviteBtn = this.querySelector("#invite-btn") as HTMLButtonElement;
 		if (recipientSelect) {
 		this.fetchFriends().then(friends => {
-			if (!Array.isArray(friends)) return;
+		if (!Array.isArray(friends)) return;
 
-			// Duplikate entfernen
-			const uniqueFriends = Array.from(new Set(friends));
+		const uniqueFriends = Array.from(new Set(friends));
 
-			uniqueFriends.forEach(friend => {
-			// Skip if this friend already exists in dropdown (defensiv)
+		uniqueFriends.forEach(friend => {
+			// Exclude blocked users from recipient list
+			if (this.blockedUsers.has(friend)) return;
+
+			// Skip if this friend already exists in dropdown (defensive)
 			if ([...recipientSelect.options].some(opt => opt.value === friend)) return;
 
 			const option = document.createElement("option");
 			option.value = friend;
 			option.textContent = friend;
 			recipientSelect.appendChild(option);
-			});
+		  });
 		});
 		}
 
+		  // Invite & game button logic
+		if (recipientSelect && inviteBtn) {
+			// Show invite & game button only if a friend is selected 
+			recipientSelect.addEventListener("change", () => {
+			const value = recipientSelect.value;
+			inviteBtn.classList.toggle("hidden", value === "");
+			});
+
+			inviteBtn.addEventListener("click", () => {
+			const target = recipientSelect.value;
+			const from = userContext.state.username;
+
+			if (!target || !from || !this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+
+			const invitePayload = {
+				target_endpoint: "chat-api",
+				payload: {
+				type: "INVITE",
+				from,
+				to: target,
+				},
+			};
+
+			this.socket.send(JSON.stringify(invitePayload));
+			this.showSystemMessage(`[Invite sent to ${target}]`, "text-blue-600");
+			});
+		}
+
+		// Handle sending messages
 		if (sendBtn && input) {
-		  // Send message when button clicked
 		  sendBtn.addEventListener("click", () => this.sendMessage(input));
-	
-		  // Send message on Enter key
 		  input.addEventListener("keypress", (e: KeyboardEvent) => {
 			if (e.key === "Enter") sendBtn.click();
 		  });
 		}
+
 		// Toggle chat visibility
 		if (toggleBtn && chatContent) {
-		  toggleBtn.addEventListener("click", () => {
+		toggleBtn.addEventListener("click", () => {
 			const isHidden = chatContent.classList.toggle("hidden");
 			toggleBtn.textContent = isHidden ? "Expand" : "Minimize";
-		  });
+		});
 		}
-	  }
+
+		// Intercept username clicks to go to user profile
+		this.addEventListener("click", (e: Event) => {
+			const target = e.target as HTMLElement;
+			if (target?.classList.contains("user-link")) {
+				e.preventDefault();
+				const username = target.getAttribute("data-username");
+				if (username) {
+					const newPath = `/users?query=${encodeURIComponent(username)}`;
+					urlContext.setState({ path: "/users" }); // This is okay
+					Router.redirect(newPath as any);
+				}
+			}
+		});
+	}
 
 	/**
 	 * @brief Fetches the list of users blocked by the current user.
@@ -106,7 +150,7 @@ import DOMPurify from 'dompurify';
 
 	/**
 	 * @brief Factory method to create and attach a Chat component to the DOM.
-	 * @return the Chat instance.
+	 * @return The Chat instance.
 	 * @note During development with Vite (HMR), this component might be hot-reloaded.
 	 * As a result, the WebSocket connection will automatically reconnect,
 	 * causing multiple "[Connected to server]" and "Welcome" messages in the chat.
@@ -132,9 +176,14 @@ import DOMPurify from 'dompurify';
 				<button id="chat-toggle" class="text-xs text-blue-500 underline">Expand</button>
 			</div>
 			<div id="chat-content" class="hidden">
-				<select id="recipient-select" class="w-full p-1 border rounded mb-1">
-				<option value="">🌐 Global Chat</option>
+				<div class="flex space-x-1 items-center mb-1">
+				<select id="recipient-select" class="flex-1 p-1 border rounded">
+					<option value="">🌐 Global Chat</option>
 				</select>
+				<button id="invite-btn" class="p-1 px-2 bg-green-500 text-white rounded text-xs hidden">
+					Invite
+				</button>
+				</div>
 				<div id="chat-messages" class="flex-1 overflow-y-auto h-64 border p-2 rounded bg-gray-100 text-sm space-y-1"></div>
 				<div class="flex mt-2">
 				<input type="text" id="chat-input" class="flex-1 p-2 border rounded-l" placeholder="Type a message..." />
@@ -153,6 +202,8 @@ import DOMPurify from 'dompurify';
   
 	/**
 	 * @brief Sends the current input value to the WebSocket server.
+	 *
+	 * @param input - The HTML input element containing the user's message.
 	 */
 	private sendMessage(input: HTMLInputElement): void {
 		const trimmedMessage = input.value.trim();
@@ -272,31 +323,98 @@ import DOMPurify from 'dompurify';
 			}
 			break;
 
-		  case "CHAT":
+		case "CHAT":
+			// Determine if the message is a direct message (DM)
 			const currentUser = userContext.state.username;
-
 			if (parsed.to) {
 				const isInbound = parsed.to === currentUser;
 				const isOutbound = parsed.from === currentUser;
-
+				
+				// Only show DMs if you're the sender or recipient
 				if (!(isInbound || isOutbound)) return;
+				console.log("[Chat] Rendering DM message:", safeFrom, "->", parsed.to);
+				// Render "[DM] from <username>: <message>"
 
-				console.log("[Chat] Rendering DM message:", safeFrom, "→", parsed.to);
-				message.innerHTML = `<strong>[DM]</strong> <b>${safeFrom}</b>: ${safeMessage}`;
+				const label = document.createElement("span");
+				label.textContent = "[DM]";
+				label.className = "font-semibold text-gray-600";
+
+				const anchor = document.createElement("a");
+				anchor.href = "#";
+				anchor.textContent = safeFrom;
+				anchor.className = "text-blue-600 hover:underline font-medium user-link";
+				anchor.dataset.username = safeFrom;
+				// Enable profile link via Router on username click
+				anchor.addEventListener("click", (e) => {
+					e.preventDefault();
+					Router.navigateWithQuery("/users", `query=${encodeURIComponent(safeFrom)}`);
+				});
+
+				message.appendChild(label);
+				message.appendChild(document.createTextNode(" "));
+				message.appendChild(anchor);
+				message.appendChild(document.createTextNode(`: ${safeMessage}`));
 			} else {
-				message.innerHTML = `<b>${safeFrom}</b>: ${safeMessage}`;
+				// Global/public message rendering: <username>: <message>
+				const anchor = document.createElement("a");
+				anchor.href = "#";
+				anchor.textContent = safeFrom;
+				anchor.className = "text-blue-600 hover:underline user-link";
+				anchor.dataset.username = safeFrom;
+				// Profile navigation
+				anchor.addEventListener("click", (e) => {
+					e.preventDefault();
+					Router.navigateWithQuery("/users", `query=${encodeURIComponent(safeFrom)}`);
+				});
+
+				const bold = document.createElement("b");
+				bold.appendChild(anchor);
+
+				message.appendChild(bold);
+				message.appendChild(document.createTextNode(`: ${safeMessage}`));
 			}
 
 			message.classList.add("text-black");
-		    break;
+			break;
 
 		  case "INVITE":
-			message.textContent = `[Invite from ${safeFrom}]`;
-			message.classList.add("text-blue-500");
+			// Render game invite with accept button
+			const inviteFrom = safeFrom;
+			message.classList.add("text-yellow-600");
+
+			const textNode = document.createTextNode(`[Quickmatch invite from ${inviteFrom}] `);
+			message.appendChild(textNode);
+
+			const acceptBtn = document.createElement("button");
+			acceptBtn.textContent = "Accept";
+			acceptBtn.className = "ml-2 px-2 py-1 text-xs bg-yellow-600 text-white rounded";
+			// Send invite acceptance back to the server via WebSocket
+			acceptBtn.addEventListener("click", () => {
+				const acceptPayload = {
+					target_endpoint: "chat-api",
+					payload: {
+						type: "INVITE",
+						from: userContext.state.username,
+						to: inviteFrom,
+						message: "ACCEPT"
+					}
+				};
+				this.socket?.send(JSON.stringify(acceptPayload));
+				this.showSystemMessage(`You accepted ${inviteFrom}'s invite`, "text-green-600");
+			});
+
+			message.appendChild(acceptBtn);
+			break;
+
+		  case "TOURNAMENT_NOTIFICATION":
+			// Display tournament-related system messages
+			message.textContent = `[Tournament] ${safeMessage}`;
+			message.classList.add("text-purple-600", "font-semibold");
 			break;
 
 
 		  default:
+			// Fallback handler for unknown message types
 			message.textContent = `[Unknown message type]: ${DOMPurify.sanitize(parsed.type)}`;
 			message.classList.add("text-red-500");
 		}

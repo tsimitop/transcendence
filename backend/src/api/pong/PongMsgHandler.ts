@@ -14,6 +14,7 @@ import { handleCreateTournament } from './PongMsgHandlerTournament';
 import { handleListGames } from './PongMsgHandlerGame';
 import { handlerJoinGame } from './PongMsgHandlerGame';
 import { handleCreateGame } from './PongMsgHandlerGame';
+import { startGameLoop } from './PongMsgHandlerGame';
 
 export const currentGames: Map<string, PongGame> = new Map();
 export const currentTournaments: Map<string, Tournament> = new Map()
@@ -71,6 +72,9 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
       case 'create_tournament':
         handleCreateTournament(senderUsername, message.pong_data);
         break;
+	  case "QUICKMATCH_ACCEPT":
+		handleQuickmatchAccept(message.pong_data.from, message.pong_data.against);
+		break;
       default:
         console.warn(`[PONG WS] Unknown message: ${message}`);
     }
@@ -123,6 +127,46 @@ function handleInput(senderUsername: string, pong_data: KeyboardInputData): void
       }
   }
 }
+
+function handleQuickmatchAccept(from: string, against: string): void {
+  const socket1 = getPongSocket(from);
+  const socket2 = getPongSocket(against);
+
+  if (!socket1 || !socket2) {
+    console.warn(`[QUICKMATCH] Missing socket: ${!socket1 ? from : against}`);
+    return;
+  }
+
+  const gameId = `${from}-${against}-${Date.now()}`;
+  const game = new PongGame(gameId, from, from, "remote");
+
+  game.setOpponentName(against, against);
+  game.setSockets(socket1, socket2);
+  game.setGameState("countdown");
+
+  currentGames.set(from, game);
+  currentGames.set(against, game);
+
+  const countdownMsg = {
+    target_endpoint: "pong-api",
+    type: "countdown",
+    value: globalCountdown
+  };
+
+  socket1.send(JSON.stringify(countdownMsg));
+  socket2.send(JSON.stringify(countdownMsg));
+
+  let countdown = globalCountdown;
+  const interval = setInterval(() => {
+    countdown--;
+    if (countdown <= 0) {
+      clearInterval(interval);
+      game.setGameState("playing");
+      startGameLoop(game);
+    }
+  }, 1000);
+}
+
 
 export function endOfGame(user: string, message: string) {
   for (const [username, game] of currentGames.entries()) {
