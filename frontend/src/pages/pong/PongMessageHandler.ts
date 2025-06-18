@@ -79,24 +79,25 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     ctx.font = "20px Arial";
     ctx.fillText(data.message, canvas.width / 2, canvas.height / 2 + 20);
 
-    setTimeout(() => {
-      const isTournamentGame = data.gameId && (data.gameId.includes('Tournament') || data.gameId.includes('Final'));
-      if (isTournamentGame) {
-        isInTournament = true;
-        handleTournamentWaiting();
-      } else {
-        const menu = document.getElementById('menuScreen');
-        const gameCanvas = document.getElementById('gameCanvas');
+	setTimeout(() => {
+	const gameId = typeof data.gameId === "string" ? data.gameId : "";
+	const isTournamentGame = gameId.includes('Tournament') || gameId.includes('Final');
+	if (isTournamentGame && !isInTournament) {
+		isInTournament = true;
+		handleTournamentWaiting();
+	} else {
+		const menu = document.getElementById('menuScreen');
+		const gameCanvas = document.getElementById('gameCanvas');
 
-        if (gameCanvas) {
-          gameCanvas.style.display = 'none'; // Hide the game canvas
-        }
+		if (gameCanvas) {
+		  gameCanvas.style.display = 'none'; // Hide the game canvas
+		}
 
-        if (menu) {
-          menu.style.display = 'flex'; // Show menu screen
-        }
-      }
-    }, 5000);
+		if (menu) {
+		menu.style.display = 'flex'; // Show menu screen
+		}
+	}
+	}, 5000);
     
   }
 

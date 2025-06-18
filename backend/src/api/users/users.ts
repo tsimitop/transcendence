@@ -5,6 +5,7 @@ import UserDb from "../../user-database/UserDb";
 import { connectedUsers } from '../../websocket/WebSocket';
 import { UserStateType } from "../sign-in/sign-in";
 import { fastify } from "../../server";
+import { QueryMatch } from "../../user-database/matches";
 
 type SearchRequestBody = {
   userState: UserStateType;
@@ -38,10 +39,10 @@ fastify.post("/api/users", async function (request: FastifyRequest<{ Body: Searc
 	userDb.close();
 	let connectionStatus;
 	if (request.body.isUserConnected) {
-	  connectionStatus = "Online 🟢";
+	  connectionStatus = "Friend is Online 🟢";
 	}
 	else {
-	  connectionStatus = "Offline ⚫";
+	  connectionStatus = "Friend is Offline ⚫";
 	}
     return reply.status(200).send({
 	  user: {
@@ -50,7 +51,6 @@ fastify.post("/api/users", async function (request: FastifyRequest<{ Body: Searc
 	    username: result.username,
 	    is_friend: extractedStatus === "accepted",
 	    onlineStatus: connectionStatus,
-	    // avatar: "default.png",
 	    avatar: result.avatar,
 	  }
 	});
@@ -58,7 +58,7 @@ fastify.post("/api/users", async function (request: FastifyRequest<{ Body: Searc
   (err: any) {
     return reply.status(500).send({ error: "Server error: " + err });
   }  
-});
+  });
 
   fastify.get("/api/users", async function (
     request: FastifyRequest,
@@ -70,4 +70,23 @@ fastify.post("/api/users", async function (request: FastifyRequest<{ Body: Searc
     } catch (err: any) {
       return reply.status(500).send({ error: "Failed to retrieve connected users", detail: err.message });
     }
+});
+
+type MatchBody = {
+	searchUserId: number;
+}
+
+fastify.post("/api/users/matches", async function (request: FastifyRequest<{ Body: MatchBody }>, reply: FastifyReply) {
+  const { searchUserId } = request.body;
+  try {
+	const userDbInstance = new UserDb("/app/database/test.db");
+	const userDb = userDbInstance.openDb();
+	const localMatchesStatement = userDb.prepare(QueryMatch.GET_LOCAL_MATCHES_FOR_USER);
+	const remoteMatchesStatement = userDb.prepare(QueryMatch.GET_REMOTE_MATCHES_FOR_USER);
+	const localMatches = localMatchesStatement.all(searchUserId, searchUserId);
+	const remoteMatches = remoteMatchesStatement.all(searchUserId, searchUserId);
+	return reply.send({ localMatches, remoteMatches });
+  } catch (error) {
+	return reply.send({ errorMessage: error });
+  }
 });

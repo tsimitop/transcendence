@@ -195,7 +195,6 @@ const html = `
           result?.errorMessage || "Failed to upload avatar."
         );
 
-		//   alert(result.errorMessage);// || "Failed to upload avatar."
 		} catch (error) {
 			console.error(`Response body not a valid JSON->errorMessage: ${errorMessage}`);
 			return;
@@ -203,14 +202,9 @@ const html = `
 		console.error(`Response not OK`);
         return;
       }
- 	//   result = await response.json();
- 	//   alert(`${result.message}, userId: ${user.id}`);
 	Edit.showSuccess("avatar");
- 	//   console.log("Server response:", result);
-    //   alert("Avatar uploaded successfully!");
     } catch (error) {
       console.error("Error uploading avatar:", error);
-    //   alert("Upload failed. Check console.");
 	  displayFormValidationError(
         Edit.validationErrorClassName,
         getValidationContainer(),

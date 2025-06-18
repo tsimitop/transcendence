@@ -69,7 +69,8 @@ class Header extends Component {
 				/>
 				<a 
 				  id="search-link"
-				  class="nav-link user-link cursor-pointer ${ROUTER_CLASS_NAME}" href="/users"
+				  class="nav-link user-link cursor-pointer opacity-50 pointer-events-none ${ROUTER_CLASS_NAME}"
+   				  href="/users"
 				>
 				  Search
 				</a>
@@ -97,15 +98,30 @@ class Header extends Component {
 		`;
 
 	setTimeout(() => {
-      const input = document.getElementById("user-searched") as HTMLButtonElement;
-      const link = document.getElementById("search-link");
-      if (input && link) {
-        input.addEventListener("input", () => {
-          const query = encodeURIComponent(input.value.trim());
-          link.setAttribute("href", `/users?query=${query}`);
-        });
-      }
-    }, 0);
+	  const input = document.getElementById("user-searched") as HTMLInputElement;
+	  const link = document.getElementById("search-link") as HTMLAnchorElement;
+
+	  if (input && link) {
+	    input.addEventListener("input", () => {
+	      const query = input.value.trim();
+	      const encodedQuery = encodeURIComponent(query);
+	      if (query.length > 0) {
+	        link.classList.remove("pointer-events-none", "opacity-50");
+	        link.setAttribute("href", `/users?query=${encodedQuery}`);
+	      } else {
+	        link.classList.add("pointer-events-none", "opacity-50");
+	        link.removeAttribute("href");
+	      }
+	    });
+
+	    link.addEventListener("click", (e) => {
+	      if (input.value.trim().length === 0) {
+	        e.preventDefault();
+	      }
+	    });
+	  }
+	}, 0);
+
     const header = document.createElement("header");
     header.classList.add("grow");
     header.insertAdjacentHTML("beforeend", html);

@@ -6,7 +6,12 @@ import { PongGame } from './PongGame';
 import { globalCountdown } from './PongMsgHandler';
 import { JoinGameData } from './PongMessages';
 import { endOfGame } from './PongMsgHandler';
+import UserDb from '../../user-database/UserDb';
+import { QueryMatch } from '../../user-database/matches';
+import { QueryTournament } from '../../user-database/tournaments';
+import { QueryUser } from '../../user-database/queries';
 
+type UserRow = { id: number };
 
 export function handleListGames(senderUsername: string): void {
   const senderSocket = getPongSocket(senderUsername);
@@ -36,6 +41,32 @@ export function handleListGames(senderUsername: string): void {
   senderSocket.send(JSON.stringify(response));
 }
 
+export function insertMatchIntoDb(game: PongGame): void {
+  try {
+    const userDbInstance = new UserDb("database/test.db");
+    const db = userDbInstance.openDb();
+	db.prepare(QueryTournament.CREATE_TOURNAMENTS_TABLE).run();
+    userDbInstance.createUserTableInUserDb(db);
+
+    const stmt = db.prepare(QueryUser.FIND_ID_BY_USERNAME);
+    const id_left = stmt.get(game.getlPlayerName()) as UserRow | undefined;
+    const id_right = stmt.get(game.getrPlayerName()) as UserRow | undefined;
+
+    userDbInstance.createMatchTableDb(db);
+
+    if (id_left && id_right) {
+      const insertStmt = db.prepare(QueryMatch.INSERT_NEW_MATCH);
+      const mode = game.gameMode === "local" ? "local" : "remote";
+      insertStmt.run(mode, id_left.id, id_right.id, game.getlPlayerAlias(), game.getrPlayerAlias());
+      console.log("Match inserted successfully");
+    } else {
+      console.error("Failed to find both user IDs");
+    }
+
+  } catch (err) {
+    console.error("Database error while inserting match:", err);
+  }
+}
 
 export function handleCreateGame(senderUsername: string, pong_data: CreateGameData): void {
 
@@ -83,6 +114,7 @@ export function handleCreateGame(senderUsername: string, pong_data: CreateGameDa
       if (countdown <= 0) {
         clearInterval(interval);
         newGame.setGameState("playing")
+		insertMatchIntoDb(newGame);
         startGameLoop(newGame);
       }
     }, 1000);
@@ -136,6 +168,7 @@ export function handlerJoinGame(senderUsername: string, pong_data: JoinGameData)
         if(pong_data.gameId === game.getUniqeID()){
           game.setGameState('playing');
           opponent = username;
+		  insertMatchIntoDb(game);
           break; 
         }
       }
