@@ -87,11 +87,11 @@ class UserDb extends Sqlite {
 	const stmt = userDb.prepare(`
 	  SELECT match_id, user_id_first, user_id_second
       FROM matches
-      ORDER BY date DESC
+      WHERE match_uuid = ?
       LIMIT 1;
     `);
 
-	const match = stmt.get() as MatchRow;
+	const match = stmt.get(game.getUniqeID()) as MatchRow;
 
 	if (!stmt) {
       console.error("No match found to update.");

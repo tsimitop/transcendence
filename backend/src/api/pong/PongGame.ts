@@ -224,16 +224,12 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
 		if (this.outOfFieldCheck()) {
 		  const result = this.checkEndOfGame();
 		  winner = result;
-		  if (winner) {
-		    UserDb.updateMatchTable(this, winner);
-		  }
+		  if (winner) UserDb.updateMatchTable(this, winner);
 		  if (!result) this.setToRestart();
 		}
         this.updateGameStatData();
         winner = this.checkEndOfGame();
-		if (winner) {
-		  UserDb.updateMatchTable(this, winner);
-		}
+		if (winner) UserDb.updateMatchTable(this, winner);
     }
     getGameStatePayload(): GameStateData { return this.gameStateData; }
 

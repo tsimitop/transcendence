@@ -15,9 +15,10 @@ export enum QueryMatch {
 	tournament_id REFERENCES tournaments(id),
 	first_score INTEGER,
 	second_score INTEGER,
-	date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	match_uuid TEXT NOT NULL
 	);`,
-	INSERT_NEW_MATCH = `INSERT INTO ${table}(type, user_id_first, user_id_second, alias_first, alias_second) VALUES(?, ?, ?, ?, ?);`,
+	INSERT_NEW_MATCH = `INSERT INTO ${table}(type, user_id_first, user_id_second, alias_first, alias_second, match_uuid) VALUES(?, ?, ?, ?, ?, ?);`,
 	GET_LOCAL_MATCHES_FOR_USER = `SELECT * FROM ${table} WHERE type = 'local' AND (user_id_first = ? OR user_id_second = ?) ORDER BY date DESC;`,
 	GET_REMOTE_MATCHES_FOR_USER = `SELECT * FROM ${table} WHERE type = 'remote' AND (user_id_first = ? OR user_id_second = ?) ORDER BY date DESC;`,
 

@@ -23,6 +23,7 @@ import { SESSION_COOKIE_NAME } from "./constants";
 import UserDb from "./user-database/UserDb";
 import { QueryFriend } from "./user-database/friend-queries";
 import { QueryUser } from "./user-database/queries";
+import multipart from '@fastify/multipart';
 
 export const fastify = Fastify({
   logger: true,
@@ -35,6 +36,11 @@ const start = async function () {
     await fastify.register(fastifyFormbody);
     await fastify.register(fastifyCookie);
 	await fastify.register(fastifyMultipart);
+	// fastify.register(multipart, {
+	//   limits: {
+	//     fileSize: 100 * 1024, // 100 KB
+	//   }
+	// });
 	await fastify.register(fastifyStatic, {
       root: path.join(__dirname, '..', 'avatars'),
       prefix: '/avatars/',

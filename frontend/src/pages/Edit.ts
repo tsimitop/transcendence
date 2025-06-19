@@ -55,6 +55,7 @@ const html = `
               Change
             </button>
 		    <span class="username-success hidden text-green-600">&#10003;</span>
+			<span class="username-failure hidden text-red-600">&#10007;</span>
 		  </div>
         </div>
       </div>
@@ -72,6 +73,7 @@ const html = `
               Change
             </button>
 		    <span class="email-success hidden text-green-600">&#10003;</span>
+			<span class="email-failure hidden text-red-600">&#10007;</span>
 		  </div>
         </div>
       </div>
@@ -95,6 +97,7 @@ const html = `
               Change
             </button>
 		    <span class="password-success hidden text-green-600">&#10003;</span>
+			<span class="password-failure hidden text-red-600">&#10007;</span>
 		  </div>
         </div>
       </div>
@@ -112,6 +115,7 @@ const html = `
               Upload
             </button>
 		    <span class="avatar-success hidden text-green-600">&#10003;</span>
+			<span class="avatar-failure hidden text-red-600">&#10007;</span>
 		  </div>
         </div>
       </div>
@@ -171,14 +175,29 @@ const html = `
   }
   }
 
+
+  //red x after unsuccessful update of element
+  private static showFailure(action: "username" | "email" | "password" | "avatar") {
+  const successIndicator = document.querySelector(`.${action}-failure`) as HTMLElement;
+  if (successIndicator) {
+    successIndicator.classList.remove("hidden");
+    successIndicator.classList.add("animate-pulse");
+
+    setTimeout(() => {
+      successIndicator.classList.add("hidden");
+      successIndicator.classList.remove("animate-pulse");
+    }, 3000); // auto-hide after 3 seconds
+  }
+  }
+
   public static async uploadNewAvatar(file: File) {
     const user = userContext.state;
     const formData = new FormData();
-    formData.append("userId", user.id); // id MUST be first, otherwise userId undefined in the backend
     formData.append("avatar", file);
+    formData.append("userId", user.id);
 	let result;
 	const getValidationContainer = () => document.querySelector(".form-and-validation-container")! as HTMLElement;
-    try {
+	try {
       const response = await fetch(`${CADDY_SERVER}/api/editing/avatar`, {
         method: "POST",
         body: formData,
@@ -186,30 +205,33 @@ const html = `
       });
       if (!response.ok) {
 		let errorMessage = "Failed to upload avatar.";
-		try {
 
-		result = await response.json();
-		displayFormValidationError(
-          Edit.validationErrorClassName,
-          getValidationContainer(),
-          result?.errorMessage || "Failed to upload avatar."
-        );
+		try {
+		  result = await response.json();
+		  displayFormValidationError(
+            Edit.validationErrorClassName,
+            getValidationContainer(),
+            result?.errorMessage || "Failed to upload avatar."
+          );
 
 		} catch (error) {
+	  		Edit.showFailure("avatar");
 			console.error(`Response body not a valid JSON->errorMessage: ${errorMessage}`);
 			return;
 		}
-		console.error(`Response not OK`);
+
+	    Edit.showFailure("avatar");
+		console.error(`Response not OK: ${errorMessage}`);
         return;
       }
-	Edit.showSuccess("avatar");
     } catch (error) {
-      console.error("Error uploading avatar:", error);
-	  displayFormValidationError(
-        Edit.validationErrorClassName,
-        getValidationContainer(),
-        "Failed to upload avatar due to a network or server error."
-      );
+	    Edit.showFailure("avatar");
+        console.error("Error uploading avatar:", error);
+	    displayFormValidationError(
+          Edit.validationErrorClassName,
+          getValidationContainer(),
+          "Failed to upload avatar due to a network or server error."
+        );
 	  return;
     }
 	Edit.showSuccess("avatar");
@@ -227,8 +249,6 @@ const html = `
         getValidationContainer(),
         `Please enter a new ${action}.`
         );
-    //   console.error(`No ${action} provided.`);
-    //   alert(`No ${action} provided.`);
       return;
     }
     try {
@@ -245,16 +265,16 @@ const html = `
   	if (!response.ok) {
   	  const errorData = await response.json();
         console.error(`Error performing ${action} change`);
-        // console.error(errorData.errorMessage);
-        // alert(errorData.errorMessage);
 		displayFormValidationError(
           Edit.validationErrorClassName,
           getValidationContainer(),
           errorData.errorMessage || `Failed to update ${action}.`
         );
+	  Edit.showFailure(`${action}`);
   	  return;
   	}
     } catch (error) {
+	  Edit.showFailure(`${action}`);
   	  console.error(`Error performing ${action}:`, error);
     }
 	Edit.showSuccess(`${action}`);
@@ -292,6 +312,7 @@ const html = `
             getValidationContainer(),
             errorData.errorMessage || "Password update failed."
           );
+	  	Edit.showFailure("password");
   	    return;
 	  }
     } catch (error) {

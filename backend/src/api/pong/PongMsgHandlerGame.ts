@@ -57,7 +57,8 @@ export function insertMatchIntoDb(game: PongGame): void {
     if (id_left && id_right) {
       const insertStmt = db.prepare(QueryMatch.INSERT_NEW_MATCH);
       const mode = game.gameMode === "local" ? "local" : "remote";
-      insertStmt.run(mode, id_left.id, id_right.id, game.getlPlayerAlias(), game.getrPlayerAlias());
+	  const uuid = game.getUniqeID();
+      insertStmt.run(mode, id_left.id, id_right.id, game.getlPlayerAlias(), game.getrPlayerAlias(), uuid);
       console.log("Match inserted successfully");
     } else {
       console.error("Failed to find both user IDs");
