@@ -7,6 +7,8 @@ import bcrypt from "bcrypt"
 import FormValidation from "../../utils/FormValidation";
 import path from "path";
 import fs from "fs";
+import { pipeline } from 'stream';
+import { promisify } from 'util';
 
 type SimpleUpdate = {
   user: UserStateType;
@@ -135,45 +137,46 @@ fastify.post(
   "/api/editing/avatar",
   async function (request, reply
   ) {
-    const parts = request.parts(); // async iterable for all parts
-    let filePart;
+	const parts = request.parts(); // async iterable for all parts
+	const pump = promisify(pipeline);
+    let filePart: any;
     let userId;
+	let filename;
 
-    for await (const part of parts) {
-      if (part.type === 'file') {
-        filePart = part;
-      } else if (part.type === 'field' && part.fieldname === 'userId') {
-        userId = part.value;
+	try {
+	  for await (const part of parts) {
+        if (part.type === 'file') {
+	      const sanitizedFilename = part.filename.replace(/\s+/g, '');
+	      const finalFilename = `upload-${Date.now()}-${sanitizedFilename}`;
+	      const uploadPath = path.join(__dirname, '../../../avatars', finalFilename);
+	      await pump(part.file, fs.createWriteStream(uploadPath));
+	      filePart = {
+	        filename: finalFilename,
+	        filepath: uploadPath,
+	      };
+	      filename = finalFilename;
+        } else if (part.type === 'field' && part.fieldname === 'userId') {
+          userId = part.value;
+        }
       }
-    }
 
-    if (!filePart) {
-      reply.code(400).send({ errorMessage: "No file uploaded" });
-      return;
-    }
+      if (!filePart) {
+        reply.code(400).send({ errorMessage: "No file uploaded" });
+        return;
+      }
 
-    if (!userId) {
-      reply.code(400).send({ errorMessage: "No userId provided" });
-      return;
-    }
+      if (!userId) {
+        reply.code(400).send({ errorMessage: "No userId provided" });
+        return;
+      }
 
-    const filename = `upload-${Date.now()}-${filePart.filename}`;
-    const uploadPath = path.join(__dirname, '../../../avatars', filename);
-    await new Promise((resolve, reject) => {
-      const stream = fs.createWriteStream(uploadPath);
-      filePart.file.pipe(stream);
-      filePart.file.on('end', resolve);
-      filePart.file.on('error', reject);
-    });
-
-    try {
       const userDbInstance = new UserDb("/app/database/test.db");
       const userDb = userDbInstance.openDb();
       const storeAvatarStatement = userDb.prepare(QueryUser.SET_NEW_AVATAR);
       storeAvatarStatement.run(filename, userId);
     } catch (error) {
       reply.code(500).send({
-        errorMessage: `Something went wrong while uploading the avatar: ${filename}!`,
+        errorMessage: `Something went wrong while uploading the avatar: ${filename}!, Error: ${error}`,
       });
       return;
     }

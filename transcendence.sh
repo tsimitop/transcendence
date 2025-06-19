@@ -7,16 +7,15 @@ show_help() {
     echo "Usage: ./transcendence.sh [command]"
     echo ""
     echo "Commands:"
-    echo "  build     - Build all Docker services"
-    echo "  up        - Start all Docker services (in foreground)"
-    echo "  up -d     - Start all Docker services in detached mode"
-    echo "  build-up  - Build and start all Docker services (in foreground)"
-    echo "  build-up -d - Build and start all Docker services in detached mode"
-    echo "  down      - Stop and remove all Docker services"
-    echo "  start     - Start existing Docker services (do not recreate)"
-    echo "  stop      - Stop running Docker services"
-    echo "  clean     - Remove all Docker containers and volumes"
-    echo "  help      - Show this help message"
+    echo "  build     		- Build all Docker services"
+    echo "  up        		- Start all Docker services (in foreground)"
+    echo "  up -d     		- Start all Docker services in detached mode"
+	echo "  buildandup [-d]	- Build and start all Docker services (optionally in detached mode)"
+    echo "  down      		- Stop and remove all Docker services"
+    echo "  start     		- Start existing Docker services (do not recreate)"
+    echo "  stop      		- Stop running Docker services"
+    echo "  clean     		- Remove all Docker containers and volumes"
+    echo "  help      		- Show this help message"
 }
 
 case "$1" in
@@ -53,6 +52,7 @@ case "$1" in
         docker rm -f $(docker ps -aq) 2>/dev/null || true
         docker volume rm $(docker volume ls -q) 2>/dev/null || true
         rm ./backend/database/test.db
+		rm -f ./backend/avatars/upload-* 2>/dev/null || true
         rm -rf ./frontend/dist
         echo "All containers and volumes removed."
         ;;

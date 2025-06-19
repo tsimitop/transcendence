@@ -75,51 +75,49 @@ class UserDb extends Sqlite {
   }
 
   public static updateMatchTable(game: PongGame, winner: string) {
-    const userDbInstance = new UserDb("database/test.db");
-    const userDb = userDbInstance.openDb();
+	try {
+	  const userDbInstance = new UserDb("database/test.db");
+	  const userDb = userDbInstance.openDb();
 
-    interface MatchRow {
-      match_id: number;
-      user_id_first: number;
-      user_id_second: number;
-    }
+	  interface MatchRow {
+	    match_id: number;
+	    user_id_first: number;
+	    user_id_second: number;
+	  }
 
-	const stmt = userDb.prepare(`
-	  SELECT match_id, user_id_first, user_id_second
-      FROM matches
-      WHERE match_uuid = ?
-      LIMIT 1;
-    `);
+	  const stmt = userDb.prepare(QueryMatch.GET_MATCH_BY_UUID);
+	  const match = stmt.get(game.getUniqeID()) as MatchRow;
 
-	const match = stmt.get(game.getUniqeID()) as MatchRow;
+	  if (!match) {
+	    console.error(`No match found to update for game.`);
+	    return;
+	  }
 
-	if (!stmt) {
-      console.error("No match found to update.");
-      return;
-    }
+	  let winnerAlias: string;
+	  let winnerId: number;
 
-    let winnerAlias: string;
-    let winnerId: number;
+	  if (winner === "left"){
+	    winnerAlias = game.getlPlayerAlias();
+	    winnerId = match.user_id_first;
+	  } else if (winner === "right") {
+	    winnerAlias = game.getrPlayerAlias();
+	    winnerId = match.user_id_second;
+	  } else {
+		console.warn("Unknown winner side:", winner);
+	    return;
+	  }
 
-	if (winner === "left"){
-	  winnerAlias = game.getlPlayerAlias();
-	  winnerId = match.user_id_first;
-	} else if (winner === "right") {
-	  winnerAlias = game.getrPlayerAlias();
-	  winnerId = match.user_id_second;
-	} else {
-      console.error("Unknown winner specified.");
-      return;
-    }
-
-	const updateStmt = userDb.prepare(`
-      UPDATE matches
-      SET winner_alias = ?, winner_id = ?, first_score = ?, second_score = ?
-      WHERE match_id = ?;
-    `);
-
-	updateStmt.run(winnerAlias, winnerId, game.getlPlayerScore(), game.getrPlayerScore(), match.match_id)
-
+	  const updateStmt = userDb.prepare(QueryMatch.UPDATE_MATCH_RESULT);
+	  updateStmt.run(
+		winnerAlias,
+		winnerId,
+		game.getlPlayerScore(),
+		game.getrPlayerScore(),
+		match.match_id
+	  );
+	} catch (error) {
+	    console.error(`Error while creating/updating match: ${error}`);
+	}
   }
 
   public userExistsInUserDb(

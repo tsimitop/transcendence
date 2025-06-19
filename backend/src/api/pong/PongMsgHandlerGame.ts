@@ -55,7 +55,7 @@ export function insertMatchIntoDb(game: PongGame): void {
     userDbInstance.createMatchTableDb(db);
 
     if (id_left && id_right) {
-      const insertStmt = db.prepare(QueryMatch.INSERT_NEW_MATCH);
+      const insertStmt = db.prepare(QueryMatch.INSERT_MATCH);
       const mode = game.gameMode === "local" ? "local" : "remote";
 	  const uuid = game.getUniqeID();
       insertStmt.run(mode, id_left.id, id_right.id, game.getlPlayerAlias(), game.getrPlayerAlias(), uuid);

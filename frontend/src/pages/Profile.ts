@@ -262,7 +262,7 @@ class Profile extends Component {
 	<div class="flex flex-col gap-1 mb-20">
 	  <img
 	    src=${CADDY_SERVER}/avatars/${safeAvatar}
-	    alt="User's avatar: ${safeAvatar}"
+	    alt="File: ${safeAvatar}"
 		class="w-24 h-24 object-cover rounded-full"
 		/>
 		<p>username: ${safeUsername}</p>

@@ -35,12 +35,12 @@ const start = async function () {
   try {
     await fastify.register(fastifyFormbody);
     await fastify.register(fastifyCookie);
-	await fastify.register(fastifyMultipart);
-	// fastify.register(multipart, {
-	//   limits: {
-	//     fileSize: 100 * 1024, // 100 KB
-	//   }
-	// });
+	// await fastify.register(fastifyMultipart);
+	fastify.register(multipart, {
+	  limits: {
+	    fileSize: 1024 * 1024 * 1024, // 1024 MB
+	  }
+	});
 	await fastify.register(fastifyStatic, {
       root: path.join(__dirname, '..', 'avatars'),
       prefix: '/avatars/',
