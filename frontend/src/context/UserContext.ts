@@ -8,6 +8,8 @@ export type UserStateType = {
   username: string;
   isSignedIn: boolean;
   avatar: string;
+  friends?: string[];
+  blocked?: string[];
 };
 
 export type ValidateAccessTokenResponseType = {
@@ -69,5 +71,44 @@ export const userContext = new UserContext({
   isSignedIn: false,
   avatar: "",
 });
+
+export async function refreshRelations(): Promise<void> {
+  try {
+    const resFriends = await fetch(`${CADDY_SERVER}/api/friends/list`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userState: userContext.state }),
+    });
+    const friendsData = await resFriends.json();
+
+    const resBlocked = await fetch(`${CADDY_SERVER}/api/friends/blocked`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userState: userContext.state }),
+    });
+    const blockedData = await resBlocked.json();
+
+    userContext.setState({
+      ...userContext.state,
+      friends: friendsData.friends || [],
+      blocked: blockedData.blockedUsernames || [],
+    });
+
+	    const profileComponent = document.querySelector("profile-component");
+    if (profileComponent) {
+      import("../pages/Profile").then((ProfileModule) => {
+        const Profile = ProfileModule.default;
+        Profile.friendList?.();
+        Profile.blockedList?.();
+        Profile.fetchAndRenderFriendRequests?.();
+      });
+    }
+  } catch (err) {
+    console.error("Failed to refresh user relations:", err);
+  }
+}
+
 
 export default UserContext;

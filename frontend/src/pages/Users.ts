@@ -6,7 +6,7 @@ import Component, {
   ChildrenStringType,
 } from "../models/Component";
 import { CADDY_SERVER } from "../constants";
-import { userContext } from "../context/UserContext";
+import { userContext, refreshRelations } from "../context/UserContext";
 import DOMPurify from 'dompurify';
 
 interface UserProfile {
@@ -371,19 +371,20 @@ class Users extends Component {
 	}
 	try {
 	  const response = await fetch(`${CADDY_SERVER}/api/friends`, {
-	    method: "POST",
-	    headers: {
-	      "Content-Type": "application/json",
-	      "Accept": "application/json"
-	    },
-	    credentials: "include",
-	    body: JSON.stringify({ userState, userIdBtn: parseInt(userIdBtn)})
-	  });
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			"Accept": "application/json"
+		},
+		credentials: "include",
+		body: JSON.stringify({ userState, userIdBtn: parseInt(userIdBtn)})
+		});
 	  if (!response.ok){
 		  const error = await response.json().catch(() => ({}));
 		  console.error("Failed to find friend", error)
 	  	return null;
 	  }
+	  await refreshRelations();
 	  Users.showSuccess("friend");
 	} catch(error) {
 		console.error("Error sending friend request: ", error);
@@ -410,6 +411,7 @@ class Users extends Component {
 	  });
 	  if (!response.ok)
 	  	return null;
+	  await refreshRelations();
 	  Users.showSuccess("block");
 	} catch(error) {
 	  console.error("Error sending friend request: ", error);

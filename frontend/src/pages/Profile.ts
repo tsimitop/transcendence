@@ -11,6 +11,7 @@ import Component, {
 import Router from "../models/Router";
 import { removeElementsWithSimilarClassName } from "../utils/remove-elements-with-similar-class-name";
 import DOMPurify from 'dompurify';
+import { refreshRelations } from "../context/UserContext";
 
 type Activate2FaResponseType = {
   dataUrl: string;
@@ -467,13 +468,14 @@ static fetchAndRenderFriendRequests() {
         return;
       }
 
+      await refreshRelations();
+      Profile.friendList();
+      Profile.blockedList();
 	  Profile.fetchAndRenderFriendRequests();
 	  // Refresh the friends list
-	  if (action === "accept") {
 	  const chatComponent = document.querySelector("chat-component");
 	  if (chatComponent && typeof (chatComponent as any).refreshFriendsDropdown === "function") {
 		(chatComponent as any).refreshFriendsDropdown();
-	  }
 	}
 
     } catch (error) {
