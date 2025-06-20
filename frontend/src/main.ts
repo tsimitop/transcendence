@@ -2,6 +2,7 @@ import Header from "./components/Header";
 import Router from "./models/Router";
 import Chat from "./components/Chat";
 import { userContext } from "./context/UserContext";
+import { refreshRelations } from "./context/UserContext";
 
 // Boolean flag to prevent multiple chat instances from being created
 let chatStartInProgress = false;
@@ -28,8 +29,24 @@ async function maybeStartChat(): Promise<void> {
 
 		// Initialize the WebSocket connection in the next animation frame
 		requestAnimationFrame(async () => {
-          await chat.initSocket();
-        });
+		await chat.initSocket();
+
+		const socket = chat.getSocket();
+		if (socket) {
+		  socket.addEventListener("message", (event) => {
+			try {
+				const parsed = JSON.parse(event.data);
+				if (parsed.type === "FRIENDSHIP_UPDATE") {
+				console.log("[WS] FRIENDSHIP_UPDATE → refreshRelations()");
+				refreshRelations();
+				}
+			} catch (err) {
+				console.warn("Invalid WS message in main.ts", event.data);
+			}
+			});
+		}
+		});
+
       } else {
         console.warn("Chat.create() returned invalid instance:", chat);
       }

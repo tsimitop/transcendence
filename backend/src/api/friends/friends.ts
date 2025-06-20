@@ -66,7 +66,23 @@ fastify.post('/api/friends', async function (
 			pending_friendship.run(STATUS.PENDING, currentUserId, targetUser);
 		}
 	}
+	const getUsernameStmt = userDb.prepare(QueryUser.MATCH_EACH_ID_TO_USERNAME);
+	const fromUserRow = getUsernameStmt.get(currentUserIdNum) as { username: string } | undefined;
+	const toUserRow = getUsernameStmt.get(targetUser) as { username: string } | undefined;
+
 	userDb.close();
+
+	if (fromUserRow?.username && toUserRow?.username) {
+	const usernamesToNotify = [fromUserRow.username, toUserRow.username];
+
+	usernamesToNotify.forEach(username => {
+		const ws = getUserSocket(username);
+		if (ws && ws.readyState === WebSocket.OPEN) {
+		ws.send(JSON.stringify({ type: "SYSTEM", message: "Friendship request sent" }));
+		ws.send(JSON.stringify({ type: "FRIENDSHIP_UPDATE" }));
+		}
+	});
+	}		
     return reply.status(200).send({ success: true });
   } catch (error) {
     console.error("Friend request error:", error);
@@ -95,8 +111,27 @@ fastify.post('/api/friends/block', async function (
 	blocking_target.run(STATUS.BLOCKED, currentUserId, targetUser);
 	const rejecting_friendship = userDb.prepare(QueryFriend.SET_ONEDIRECTIONAL_STATUS); // reject target's friendship
 	rejecting_friendship.run(STATUS.REJECTED, targetUser, currentUserId);
+	const getUsernameStmt = userDb.prepare(QueryUser.MATCH_EACH_ID_TO_USERNAME);
+	const blockingRow = getUsernameStmt.get(currentUserId) as { username: string } | undefined;
+	const blockedRow = getUsernameStmt.get(targetUser) as { username: string } | undefined;
 	userDb.close();
-    return reply.status(200).send({ success: true });
+
+	if (blockingRow?.username) {
+	const ws = getUserSocket(blockingRow.username);
+	if (ws && ws.readyState === WebSocket.OPEN) {
+		ws.send(JSON.stringify({ type: "SYSTEM", message: "User blocked" }));
+		ws.send(JSON.stringify({ type: "FRIENDSHIP_UPDATE" }));
+	}
+	}
+	if (blockedRow?.username) {
+	const ws = getUserSocket(blockedRow.username);
+	if (ws && ws.readyState === WebSocket.OPEN) {
+		ws.send(JSON.stringify({ type: "SYSTEM", message: "User blocked" }));
+		ws.send(JSON.stringify({ type: "FRIENDSHIP_UPDATE" }));
+	}
+	}
+
+	return reply.status(200).send({ success: true });
   } catch (error) {
     console.error("Friend request error:", error);
     return reply.status(500).send({ success: false, message: "Server error"});
@@ -178,6 +213,14 @@ fastify.post('/api/friends/accept', async function (
 		};
 		ws.send(JSON.stringify(systemMsg));
 		console.log(`[WS] Sent SYSTEM msg to ${username}`);
+
+		// send profile update trigger
+		const profileMsg = {
+			type: "FRIENDSHIP_UPDATE",
+			action: "ACCEPTED",
+			updatedBy: user.username
+		};
+		ws.send(JSON.stringify(profileMsg));
 		}
 	});
 	}

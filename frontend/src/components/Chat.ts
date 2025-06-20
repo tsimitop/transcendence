@@ -313,13 +313,20 @@ import Router from "../models/Router";
 	  
 		switch (parsed.type) {
 		  case "SYSTEM":
-			// SYSTEM messages typically contain no user input, but we still sanitize for safety
 			message.textContent = `[${safeMessage}]`;
 			message.classList.add("text-gray-500", "italic");
-
-			if (safeMessage === "Friendship accepted") {
-				console.log("[WS] Friendship accepted – refreshing dropdown.");
+			if (
+				safeMessage === "Friendship accepted" ||
+				safeMessage === "User blocked" ||
+				safeMessage === "User unblocked") {
+				console.log(`[WS] SYSTEM: ${safeMessage} – refreshing UI`);
 				this.refreshFriendsDropdown();
+				this.showSystemMessage(`[${safeMessage}]`, "text-blue-500");
+				import("../context/UserContext").then(({ refreshRelations }) => {
+				refreshRelations().then(() => {
+					console.log(`[WS] UserContext refreshed after SYSTEM: ${safeMessage}`);
+				});
+				});
 			}
 			break;
 
@@ -412,6 +419,18 @@ import Router from "../models/Router";
 			message.classList.add("text-purple-600", "font-semibold");
 			break;
 
+		  case "FRIENDSHIP_UPDATE":
+			console.log("[WS] FRIENDSHIP_UPDATE received – updating UI");
+			this.refreshFriendsDropdown();
+			// this.showSystemMessage("[Friendship updated]", "text-blue-500");
+			import("../context/UserContext").then(({ refreshRelations }) => {
+				refreshRelations().then(() => {
+				console.log("[WS] UserContext refreshed after FRIENDSHIP_UPDATE");
+				});
+			});
+
+  break;
+
 
 		  default:
 			// Fallback handler for unknown message types
@@ -503,7 +522,14 @@ import Router from "../models/Router";
 			recipientSelect.appendChild(option);
 		});
 	}
-  }
+
+	/**
+	 * @brief Returns the active WebSocket instance (read-only).
+	 */
+	public getSocket(): WebSocket | null {
+	  return this.socket;
+	}
+}
   
   export default Chat;
   
