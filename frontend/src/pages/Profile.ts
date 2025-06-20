@@ -21,6 +21,14 @@ interface FriendRequest {
   username: string;
 }
 
+interface FriendStatus {
+  online: string;
+  username: string;
+}
+interface BlockedUser {
+  username: string;
+}
+
 class Profile extends Component {
   static message2FaclassName = "message-2fa";
   constructor(
@@ -48,14 +56,8 @@ class Profile extends Component {
       Profile.handlePendingAction(event, 'accept');
     } else if (target.classList.contains("block-btn")) {
       Profile.handlePendingAction(event, 'block');
-    // } else if (target.classList.contains("update-btn")) {
-    //   Profile.updateProfile();
 	}
   }
-  
-//   public static async updateProfile() {
-//     Router.redirect("/edit");
-//   }
 
   public static async signOut() {
     try {
@@ -243,9 +245,22 @@ class Profile extends Component {
     main.addEventListener("click", Profile.handleClick);
 
 	//PLACEHOLDER
-	let friendRequestsHtml = `<div class="ml-auto text-right" id="pending-friend-requests">
-	</div>`;
-	//   <img src=${CADDY_SERVER}/avatars/${userContext.state.avatar} alt="Avatar as user's profile picture"/>
+	let friendRequestsHtml = `
+	  <div class="flex gap-8 ml-auto" id="friend-management-section">
+	    <div class="flex flex-col text-left">
+	      <label class="mb-1 font-semibold">Friends</label>
+	      <ul id="friends-list" class="list-none">
+	      </ul>
+	    </div>
+	    <div class="flex flex-col text-left">
+		  <label class="mb-1 font-semibold">Blocked Users</label>
+	      <ul id="blocked-list" class="list-none">
+	      </ul>
+	    </div>
+	    <div class="text-right" id="pending-friend-requests">
+	    </div>
+	  </div>
+	`;
 
 	//MAIN HTML
 	const safeUsername = DOMPurify.sanitize(userContext.state.username || "");
@@ -285,11 +300,11 @@ class Profile extends Component {
 	  ${friendRequestsHtml}
 	</div>
 `;
-	    //   <button class="update-btn theme-btn-${themeState.state} px-4 py-2 cursor-pointer">
-	    //     Update account
-	    //   </button>
+
     main.insertAdjacentHTML("beforeend", html);
 
+	Profile.friendList();
+	Profile.blockedList();
 	Profile.fetchAndRenderFriendRequests();
 
     const SignOutInstance = new Profile(
@@ -311,6 +326,7 @@ static fetchAndRenderFriendRequests() {
 	headers: {
 		'Content-Type': 'application/json'
 	},
+    credentials: "include",
 	body: JSON.stringify({ userState: user })
   })
     .then(res => res.json())
@@ -351,6 +367,79 @@ static fetchAndRenderFriendRequests() {
     .catch(console.error);
   }
 
+  static friendList() {
+    const userState = userContext.state;
+    fetch(`${CADDY_SERVER}/api/friends/list_friend`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({ id: userState.id })
+    })
+    .then(res => res.json())
+	.then((data: { success: boolean; friends: FriendStatus[] }) => {
+      const container = document.getElementById('friends-list') as HTMLSelectElement;
+      if (!container) return;
+	  // console.log("Friend list response:", data);
+      if (!data.friends || data.friends.length === 0) {
+        container.innerHTML = '<option disabled>No friends yet</option>';
+        return;
+      }
+
+	  container.innerHTML = "";
+	  //   console.log(`Checking friends: ${data.friends}`);
+	  //DYNAMIC HTML per friend (option)
+	  data.friends.forEach(friend => {
+		const safeUsername = DOMPurify.sanitize(friend.username || "");
+		const listElement = document.createElement("li");
+		listElement.textContent = `${safeUsername} ${friend.online}`;
+		container.appendChild(listElement);
+      });
+    })
+    .catch((err) => {
+  	  console.error("Friend list fetch error:", err);
+	});
+  }
+
+
+  static blockedList() {
+    const userState = userContext.state;
+    fetch(`${CADDY_SERVER}/api/friends/list_block`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({ id: userState.id })
+    })
+    .then(res => res.json())
+	.then((data: { success: boolean; blocked: BlockedUser[] }) => {
+      const container = document.getElementById('blocked-list') as HTMLSelectElement;
+      if (!container) return;
+	  // console.log("Blocked list response:", data);
+      if (!data.blocked || data.blocked.length === 0) {
+        container.innerHTML = '<option disabled>No blocked users</option>';
+        return;
+      }
+
+	  container.innerHTML = "";
+	  //   console.log(`Checking blocked: ${data.blocked}`);
+	  //DYNAMIC HTML per blocked user (option)
+	  data.blocked.forEach(enemy => {
+		const safeUsername = DOMPurify.sanitize(enemy.username || "");
+		const listElement = document.createElement("li");
+		listElement.textContent = `${safeUsername}`;
+		container.appendChild(listElement);
+      });
+    })
+    .catch((err) => {
+  	  console.error("Blocked list fetch error:", err);
+    });
+  }
+
   public static async handlePendingAction(event: MouseEvent, action: 'accept' | 'block') {
     const userState = userContext.state;
     const target = event.target as HTMLElement;
@@ -379,7 +468,7 @@ static fetchAndRenderFriendRequests() {
       }
 
 	  Profile.fetchAndRenderFriendRequests();
-	  // Refresh the friends dropdown
+	  // Refresh the friends list
 	  if (action === "accept") {
 	  const chatComponent = document.querySelector("chat-component");
 	  if (chatComponent && typeof (chatComponent as any).refreshFriendsDropdown === "function") {

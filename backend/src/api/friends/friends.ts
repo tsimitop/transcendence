@@ -5,6 +5,7 @@ import UserDb from "../../user-database/UserDb";
 import { UserStateType } from "../sign-in/sign-in";
 import { fastify } from "../../server";
 import { getUserSocket, blockedUsers } from "../../websocket/WebSocket";
+import { connectedUsers } from '../../websocket/WebSocket';
 
 const STATUS = {
   PENDING: 'pending',
@@ -235,4 +236,90 @@ fastify.post('/api/friends/blocked', async function (
   const blockedUsernames = blocked ? Array.from(blocked) : [];
 
   return reply.status(200).send({ success: true, blockedUsernames });
+});
+
+
+// return string array of all friend's FriendStatus of current user
+interface FriendStatus {
+  online: string;
+  username: string;
+}
+
+fastify.post('/api/friends/list_friend', async function (
+  request: FastifyRequest<{Body: UserStateType;}>,
+	 reply: FastifyReply) {
+	const userId = request.body.id;
+    if (!userId) {
+      return reply.status(401).send({ success: false, errorMessage: `Not authenticated: ${userId}` });
+    }
+
+  try {
+	const userDbInstance = new UserDb("/app/database/test.db");
+	const userDb = userDbInstance.openDb();
+
+	const friendsStmt = userDb.prepare(QueryFriend.LIST_OF_FRIENDS);
+	const friends = friendsStmt.all(userId) as { friend_id: number }[];
+	const friendsIds = friends.map((row) => row.friend_id);
+
+	const usernameStmt = userDb.prepare(QueryUser.MATCH_EACH_ID_TO_USERNAME);
+	const connectedUsernames = Array.from(connectedUsers.keys());
+	
+
+    const friendStatuses: FriendStatus[] = friendsIds.map((id) => {
+      const userRow = usernameStmt.get(id) as { username: string } | undefined;
+	  if (!userRow?.username) return null;
+      const isOnline = connectedUsernames.includes(userRow.username);
+      return {
+        username: userRow.username,
+        online: isOnline ? "🟢" : "⚫"
+      };
+    })
+	.filter(Boolean) as FriendStatus[];
+
+	userDb.close();
+    return reply.status(200).send({ success: true, friends: friendStatuses });
+  } catch (error) {
+    console.error("Friend list error:", error);
+    return reply.status(500).send({ success: false, message: `Server error: ${error}`});
+  }
+});
+
+
+interface BlockedUser {
+  username: string;
+}
+
+fastify.post('/api/friends/list_block', async function (
+  request: FastifyRequest<{Body: UserStateType;}>,
+	 reply: FastifyReply) {
+	const userId = request.body.id;
+    if (!userId) {
+      return reply.status(401).send({ success: false, errorMessage: `Not authenticated: ${userId}` });
+    }
+
+  try {
+	const userDbInstance = new UserDb("/app/database/test.db");
+	const userDb = userDbInstance.openDb();
+
+	const blockedStmt = userDb.prepare(QueryFriend.LIST_OF_BLOCKED);
+	const blocked = blockedStmt.all(userId) as { friend_id: number }[];
+	const blockedIds = blocked.map((row) => row.friend_id);
+
+	const usernameStmt = userDb.prepare(QueryUser.MATCH_EACH_ID_TO_USERNAME);
+
+    const blockedStatuses: BlockedUser[] = blockedIds.map((id) => {
+      const userRow = usernameStmt.get(id) as { username: string } | undefined;
+	  if (!userRow?.username) return null;
+      return {
+        username: userRow.username,
+      };
+    })
+	.filter(Boolean) as BlockedUser[];
+
+	userDb.close();
+    return reply.status(200).send({ success: true, blocked: blockedStatuses });
+  } catch (error) {
+    console.error("Friend list error:", error);
+    return reply.status(500).send({ success: false, message: `Server error: ${userId}`});
+  }
 });
