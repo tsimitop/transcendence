@@ -22,11 +22,11 @@ export function getPongHTML(theme: string): string {
     <!-- Menu -->
     <div id="menuScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
       <h2 class="text-3xl font-semibold">Select Game Mode</h2>
-      <button id="LocalGameButton" class="btn-primary">Local 1 vs 1</button>
-      <button id="RemoteGameButton" class="btn-primary">Create Remote 1 vs 1</button>
-      <button id="JoinButton" class="btn-primary">Join Remote 1 vs 1</button>
-      <button id="RemoteTournamentButton" class="btn-primary">Create Remote Tournament</button>
-      <button id="JoinTournamentButton" class="btn-primary">Join Remote Tournament</button>
+      <button id="LocalGameButton" class="btn-primary cursor-pointer">Local 1 vs 1</button>
+      <button id="RemoteGameButton" class="btn-primary cursor-pointer">Create Remote 1 vs 1</button>
+      <button id="JoinButton" class="btn-primary cursor-pointer">Join Remote 1 vs 1</button>
+      <button id="RemoteTournamentButton" class="btn-primary cursor-pointer">Create Remote Tournament</button>
+      <button id="JoinTournamentButton" class="btn-primary cursor-pointer">Join Remote Tournament</button>
     </div>
 
     <!-- LocalGameSettings -->
@@ -34,31 +34,31 @@ export function getPongHTML(theme: string): string {
       <h2 class="text-2xl font-semibold">Enter Player Name</h2>
       <input id="player1Input" placeholder="Player 1 alias" class="input-primary" />
       <input id="player2Input" placeholder="Player 2 alias" class="input-primary hidden" />
-      <button id="startLocalGameBtn" class="btn-green">Start Game</button>
-      <button id="backLocalGameSettingsBtn" class="btn-secondary">Back</button>
+      <button id="startLocalGameBtn" class="btn-green cursor-pointer">Start Game</button>
+      <button id="backLocalGameSettingsBtn" class="btn-secondary cursor-pointer">Back</button>
     </div>
 
     <!-- Remote Option -->
     <div id="remoteOptionScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
       <h2 class="text-2xl font-semibold">Remote Game Options</h2>
       <input id="remoteAliasInput" placeholder="Your alias" class="input-primary" />
-      <button id="createRemoteGameBtn" class="btn-green">Create New Game</button>
-      <button id="backFromRemoteOptionsBtn" class="btn-secondary">Back</button>
+      <button id="createRemoteGameBtn" class="btn-green cursor-pointer">Create New Game</button>
+      <button id="backFromRemoteOptionsBtn" class="btn-secondary cursor-pointer">Back</button>
     </div>
 
     <!-- Join Game Alias Entry -->
     <div id="joinAliasScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
       <h2 class="text-2xl font-semibold">Join Remote Game</h2>
       <input id="JoinAliasInput" placeholder="Your alias" class="input-primary" />
-      <button id="joinRemoteGamePageBtn" class="btn-primary">Continue</button>
-      <button id="backFromJoinOptionsBtn" class="btn-secondary">Back</button>
+      <button id="joinRemoteGamePageBtn" class="btn-primary cursor-pointer">Continue</button>
+      <button id="backFromJoinOptionsBtn" class="btn-secondary cursor-pointer">Back</button>
     </div>
 
     <!-- Game List Page -->
     <div id="gameListScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12 w-full max-w-xl px-4">
       <h2 class="text-2xl font-semibold">Available Games</h2>
       <div id="availableGamesList" class="text-center text-gray-300 mb-4">Loading...</div>
-      <button id="backFromGameListBtn" class="btn-secondary self-center">Back</button>
+      <button id="backFromGameListBtn" class="btn-secondary self-center cursor-pointer">Back</button>
     </div>
 
 
@@ -66,23 +66,23 @@ export function getPongHTML(theme: string): string {
     <div id="remoteTournamentOptionScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
       <h2 class="text-2xl font-semibold">Remote Tournament Options</h2>
       <input id="remoteTournamentAliasInput" placeholder="Your alias" class="input-primary" />
-      <button id="createRemoteTournamentBtn" class="btn-green">Create New Tournament</button>
-      <button id="backFromTournamentRemoteOptionsBtn" class="btn-secondary">Back</button>
+      <button id="createRemoteTournamentBtn" class="btn-green cursor-pointer">Create New Tournament</button>
+      <button id="backFromTournamentRemoteOptionsBtn" class="btn-secondary cursor-pointer">Back</button>
     </div>
 
     <!-- Join Game Tournament Alias Entry -->
     <div id="joinTournamentAliasScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12">
       <h2 class="text-2xl font-semibold">Join Remote Tournament</h2>
       <input id="JoinAliasInput2" placeholder="Your alias" class="input-primary" />
-      <button id="joinRemoteTournamentGamePageBtn" class="btn-primary">Continue</button>
-      <button id="backFromJoinTournamentOptionsBtn" class="btn-secondary">Back</button>
+      <button id="joinRemoteTournamentGamePageBtn" class="btn-primary cursor-pointer">Continue</button>
+      <button id="backFromJoinTournamentOptionsBtn" class="btn-secondary cursor-pointer">Back</button>
     </div>
 
     <!-- Tournament List Page -->
     <div id="tournamentListScreen" class="screen hidden flex flex-col items-center justify-center gap-4 mt-12 w-full max-w-xl px-4">
       <h2 class="text-2xl font-semibold">Available Tournaments</h2>
       <div id="availableTournamentList" class="text-center text-gray-300 mb-4">Loading...</div>
-      <button id="backFromTournamentListBtn" class="btn-secondary self-center">Back</button>
+      <button id="backFromTournamentListBtn" class="btn-secondary self-center cursor-pointer">Back</button>
     </div>
 
 

@@ -3,6 +3,7 @@ import { setGameRunning } from "./PongMenu";
 import { GameStateData } from "./PongGame";
 import { GameOverData } from "./PongGame";
 import DOMPurify from 'dompurify';
+import Header from "../../components/Header";
 
 let isInTournament = false;
 
@@ -67,6 +68,12 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
+// ###########
+  const pongPage = document.querySelector("pong-component")!;
+  const header = document.querySelector("header-component")!;
+  if (!header) {
+    pongPage.insertAdjacentElement("afterbegin", Header.create());
+  }
 
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error("Canvas context not available");
