@@ -305,6 +305,7 @@ export function startPongMatchBetween(player1: string, player2: string): void {
 		if (countdown <= 0) {
 			clearInterval(interval);
 			game.setGameState("playing");
+	  		insertMatchIntoDb(game);
 			startGameLoop(game);
 		}
 	}, 1000);
