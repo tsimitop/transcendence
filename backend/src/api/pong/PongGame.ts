@@ -29,7 +29,7 @@ export class PongGame {
   private lPlayerScore: number = 0;
   private rPlayerScore: number = 0;
 
-  private maxScore: number = 5;
+  private maxScore: number = 2;
 
   public gameMode: string = "local";
 

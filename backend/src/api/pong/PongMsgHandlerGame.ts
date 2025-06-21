@@ -255,19 +255,19 @@ export function startGameLoop(game: PongGame) {
       const lPlayerSocket = game.getlPlayerSocket();
       const rPlayerSocket = game.getrPlayerSocket();
       if (lPlayerSocket && lPlayerSocket.readyState === WebSocket.OPEN) {
-        console.log("leftplayersend");
+        // console.log("leftplayersend");
         lPlayerSocket.send(JSON.stringify(response));
       }
-      else{
-        console.log("not leftplayersend");
-      }
+      // else{
+      //   console.log("not leftplayersend");
+      // }
       if (rPlayerSocket && rPlayerSocket.readyState === WebSocket.OPEN) {
-        console.log("rightplayersend");
+        // console.log("rightplayersend");
         rPlayerSocket.send(JSON.stringify(response));
       }
-      else{
-        console.log("not rightplayersend");
-      }
+      // else{
+      //   console.log("not rightplayersend");
+      // }
     }, intervalMs);
   }
   

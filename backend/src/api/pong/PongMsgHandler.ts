@@ -221,10 +221,9 @@ export function endOfGame(user: string, message: string) {
   
 
 export function deleteGameBecauseUserReconnected(user: string): void {
-  
+  console.log("IS IT CALLED")
   for (const [username, game] of currentGames.entries()) {
     // console.log(game.getUniqeID(), "<---->", username);
-    
     if(user === game.getlPlayerName() || user === game.getrPlayerName()) {
       // console.log("setgametofinish")
       // game.setGameState("finished");
@@ -232,17 +231,21 @@ export function deleteGameBecauseUserReconnected(user: string): void {
       break;
     }
   }
-  
   for (const [username, tournament] of currentTournaments.entries()) {
+    console.log(currentTournaments)
+    console.log(tournament)
+    tournament.removePlayer(user);
     // console.log(tournament.getUniqeID(), "<---->", username);
-    if(tournament.getCurrentPlayers() === 1)
-        currentTournaments.delete(user);
+    if(tournament.getCurrentPlayers() < 1 )
+    {
+      currentTournaments.delete(tournament.getUniqeID());
+      currentTournaments.clear();
+    }
     else{
       // if more than one player is connected to the game
       // console.log("more than one player is waiting only delete the one that left")
       // console.log(tournament.getAllPlayers())
       // console.log(user, "----", username)
-      tournament.removePlayer(user);
     } 
   }
 }
