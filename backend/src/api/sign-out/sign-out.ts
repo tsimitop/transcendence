@@ -1,8 +1,11 @@
-// import { FastifyRequest } from "fastify";
+import { FastifyRequest } from "fastify";
 import { SESSION_COOKIE_NAME } from "../../constants";
 import { fastify } from "../../server";
+import { unregisterUser } from "../../websocket/WebSocket";
+import { UserStateType } from "../sign-in/sign-in";
 
-fastify.post("/api/sign-out", async function (request, reply) {
+fastify.post("/api/sign-out", async function (request: FastifyRequest<{Body: { user: UserStateType };}>, reply) {
+  const username = request.body.user.username;
   reply.clearCookie("refreshtoken", {
     httpOnly: true,
     secure: true,
@@ -27,6 +30,9 @@ fastify.post("/api/sign-out", async function (request, reply) {
     sameSite: "none",
     path: "/",
   });
+  if (username) {
+	unregisterUser(username);
+  }
 
   request.session.user = undefined;
   request.session.destroy();

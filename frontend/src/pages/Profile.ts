@@ -63,9 +63,14 @@ class Profile extends Component {
   public static async signOut() {
     try {
       // console.log("signing out");
+	  const user = userContext.state;
       const response = await fetch(`${CADDY_SERVER}/api/sign-out`, {
         method: "POST",
         credentials: "include",
+		headers: {
+			"Content-Type": "application/json",
+		},
+	    body: JSON.stringify({ user }),
       });
       const data = await response.json();
       if (!data.errorMessage) {
