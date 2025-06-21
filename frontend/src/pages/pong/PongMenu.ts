@@ -189,10 +189,15 @@ export function setupMenu(pong: Pong) {
     const alias1 = alias1Input.value.trim();
     const alias2 = alias2Input.value.trim();
 
+    
     if (!alias1 || !alias2) {
       return alert("Please enter both player aliases");
     }
-
+    
+    const header = document.querySelector("header-component")!;
+    const pongPage = document.querySelector("pong-component")!;
+    pongPage.removeChild(header);
+    
     showOnly(gameCanvas);
 
     pong.socket?.send(JSON.stringify({

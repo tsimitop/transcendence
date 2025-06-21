@@ -7,6 +7,7 @@ import { CADDY_SERVER } from "../constants";
 import DOMPurify from 'dompurify';
 import { urlContext } from "../context/UrlContext";
 import Router from "../models/Router";
+import themeState from "../context/ThemeContext";
 
   /**
    * Chat component class.
@@ -186,8 +187,8 @@ import Router from "../models/Router";
 				</div>
 				<div id="chat-messages" class="flex-1 overflow-y-auto h-64 border p-2 rounded bg-gray-100 text-sm space-y-1"></div>
 				<div class="flex mt-2">
-				<input type="text" id="chat-input" class="flex-1 p-2 border rounded-l" placeholder="Type a message..." />
-				<button id="send-btn" class="p-2 bg-blue-500 text-white rounded-r">Send</button>
+				<input type="text" id="chat-input" class="flex-1 p-2 border rounded" placeholder="Type a message..." />
+				<button id="send-btn" class="p-2 theme-btn-${themeState.state} text-white rounded ml-1">Send</button>
 				</div>
 			</div>
 			</div>
