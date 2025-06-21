@@ -227,8 +227,11 @@ export class Tournament {
 			}
 		}
 
-		currentTournaments.delete(this.uniqueID);
-		console.log(`Tournament ${this.uniqueID} is finished and removed.`);
+		if(currentTournaments.delete(this.uniqueID))
+			console.log(`Tournament ${this.uniqueID} is finished and removed.`);
+		else
+			console.log(`Tournament ${this.uniqueID} NOOOOOOOOOOOOOOOOOOOOOOOT removed.`);
+				
 	}
 
 	private broadcastTournamentCreated(): void {

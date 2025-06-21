@@ -13,7 +13,7 @@ export function handleListTournament(senderUsername: string): void {
   const tournamentList = [];
 
   for (const [username, tournament] of currentTournaments.entries()) {
-    if (tournament.getTournamentState() === "waiting") {
+    if (tournament.getTournamentState() === "waiting" && tournament.getCurrentPlayers() < 4) {
       tournamentList.push({
         id: tournament.getUniqeID(),
         owner: username,
@@ -74,7 +74,7 @@ export function handleCreateTournament(senderUsername: string, pong_data: Create
   const newTournament = new Tournament(uniqueGameID, senderUsername, pong_data.playerAlias);
 
   // add tournament to list
-  currentTournaments.set(senderUsername, newTournament);
+  currentTournaments.set(uniqueGameID, newTournament);
 
   const senderSocket = getPongSocket(senderUsername);
     if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
