@@ -67,14 +67,18 @@ class Users extends Component {
 	: false;
 	const user = await Users.search(searchTerm, isUserConnected);
 	let matches: MatchWithSource[] = [];
+	let localTotal;
 	if (user) {
-	  const { localMatches, remoteMatches } = await Users.getUserMatches(user.id);
+	const { localMatches, remoteMatches } = await Users.getUserMatches(user.id);
+	localTotal = matches.filter(
+	  match => match.source === 'local' && match.winner_id && match.winner_alias
+	).length;
 	  matches = [
 		...localMatches.map(match => ({ ...match, source: 'local' as const })),
 		...remoteMatches.map(match => ({ ...match, source: 'remote' as const }))
 	  ];
 	}
-	const localTotal = matches.filter(match => match.source === 'local').length;
+	// const localTotal = matches.filter(match => match.source === 'local').length;
 	const remoteMatchesForUser = matches.filter(
 	m => m.source === 'remote' && (m.user_id_first === user?.id || m.user_id_second === user?.id)
 	);
@@ -129,6 +133,7 @@ class Users extends Component {
 		      }
 			  const baseClass = match.source === 'local' ? "bg-purple-300" : `theme-bg-${themeState.state}`;
 		      const matchClass = match.source === 'remote' && userInMatch ? remoteClass : baseClass;
+			  const localTime = new Date(match.date + "Z").toLocaleString();
 		      if (match.winner_alias)
 			    return `
 		          <div class="p-4 border rounded-lg shadow-sm ${matchClass}">
@@ -136,7 +141,7 @@ class Users extends Component {
 		              <strong>${match.alias_first} [${match.first_score ?? 0}]</strong> vs 
 		              <strong>${match.alias_second} [${match.second_score ?? 0}]</strong> — 
 		              ${match.winner_alias ? `<strong>${match.winner_alias}</strong> WON the match` : "TBD"}
-		              <span class="text-sm text-gray-500">(${new Date(match.date).toLocaleString()})</span>
+		              <span class="text-sm text-gray-500">(${localTime}})</span>
 		            </p>
 		          </div>
 		        `;

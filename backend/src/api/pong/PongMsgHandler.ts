@@ -15,6 +15,7 @@ import { handleListGames } from './PongMsgHandlerGame';
 import { handlerJoinGame } from './PongMsgHandlerGame';
 import { handleCreateGame } from './PongMsgHandlerGame';
 import { startGameLoop } from './PongMsgHandlerGame';
+import { insertMatchIntoDb } from './PongMsgHandlerGame';
 
 export const currentGames: Map<string, PongGame> = new Map();
 export const currentTournaments: Map<string, Tournament> = new Map()
@@ -163,6 +164,7 @@ function handleQuickmatchAccept(from: string, against: string): void {
       clearInterval(interval);
       game.setGameState("playing");
       startGameLoop(game);
+	  insertMatchIntoDb(game);
     }
   }, 1000);
 }
