@@ -4,6 +4,7 @@ import { GameStateData } from "./PongGame";
 import { GameOverData } from "./PongGame";
 import DOMPurify from 'dompurify';
 import Header from "../../components/Header";
+import { userContext } from "../../context/UserContext";
 
 let isInTournament = false;
 
@@ -53,7 +54,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
   export function handleGameOver(data: GameOverData) {
     setGameRunning(false);
-    // console.log(data);
+    console.log(data);
     const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     if (!canvas) {
       console.warn("Canvas element not found - user may have navigated away");
@@ -90,19 +91,25 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 	const gameId = typeof data.gameId === "string" ? data.gameId : "";
 	const isTournamentGame = gameId.includes('Tournament') || gameId.includes('Final');
 	if (isTournamentGame && !isInTournament) {
-		isInTournament = true;
-		handleTournamentWaiting();
-	} else {
-		const menu = document.getElementById('menuScreen');
-		const gameCanvas = document.getElementById('gameCanvas');
-
-		if (gameCanvas) {
-		  gameCanvas.style.display = 'none'; // Hide the game canvas
-		}
-
-		if (menu) {
-		menu.style.display = 'flex'; // Show menu screen
-		}
+    console.log("------------------------------THAT TWO")
+    const menu = document.getElementById('menuScreen');
+    const gameCanvas = document.getElementById('gameCanvas');
+    
+    if (gameCanvas) {
+      gameCanvas.style.display = 'none'; // Hide the game canvas
+    }
+    
+    if (menu) {
+      menu.style.display = 'flex'; // Show menu screen
+    }
+	}
+  else {
+    console.log("------------------------------THIS ONE")
+    isInTournament = true;
+    // only send to winner
+    console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",data.winnerId,".........", userContext.state.username)
+    if(data.winnerId === userContext.state.username)
+      handleTournamentWaiting();
 	}
 	}, 5000);
     
