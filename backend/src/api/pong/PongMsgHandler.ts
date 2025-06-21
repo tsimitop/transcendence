@@ -51,6 +51,7 @@ export function handlePongPayload(senderUsername: string, payload: any): void {
       pong_data: payload.pong_data,
     };
 
+    
     switch (message.type) {
       case 'input':
         handleInput(senderUsername, message.pong_data);
