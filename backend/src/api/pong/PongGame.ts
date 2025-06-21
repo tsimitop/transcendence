@@ -19,7 +19,8 @@ export class PongGame {
   public lPaddle: PongGamePaddle;
   public rPaddle: PongGamePaddle;
 
-  
+  private maxSpeed: number = 3;
+
   private gameState: GameState = "waiting";
   private lPlayerAlias: string = "Player1";
   private rPlayerAlias: string = "Player2";
@@ -219,7 +220,9 @@ constructor(uniqueID: string, lPlayerName: string, lPlayerAlias: string, gameMod
       if(this.checkCollisionWithPaddle()) { 
         this.ball.setVx(-1);
         // this.adjustBallAngleAfterPaddleBounce();
-        this.ball.setSpeed(0.3) }
+        if(this.ball.getSpeed() < this.maxSpeed)
+          this.ball.setSpeed(0.3)
+      }
 
 		if (this.outOfFieldCheck()) {
 		  const result = this.checkEndOfGame();
