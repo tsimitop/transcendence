@@ -69,16 +69,15 @@ class Users extends Component {
 	let matches: MatchWithSource[] = [];
 	let localTotal;
 	if (user) {
-	const { localMatches, remoteMatches } = await Users.getUserMatches(user.id);
-	localTotal = matches.filter(
-	  match => match.source === 'local' && match.winner_id && match.winner_alias
-	).length;
+	  const { localMatches, remoteMatches } = await Users.getUserMatches(user.id);
 	  matches = [
-		...localMatches.map(match => ({ ...match, source: 'local' as const })),
-		...remoteMatches.map(match => ({ ...match, source: 'remote' as const }))
+	  ...localMatches.map(match => ({ ...match, source: 'local' as const })),
+	  ...remoteMatches.map(match => ({ ...match, source: 'remote' as const }))
 	  ];
+	  localTotal = matches.filter(
+	    match => match.source === 'local' && match.winner_id && match.winner_alias
+	  ).length;
 	}
-	// const localTotal = matches.filter(match => match.source === 'local').length;
 	const remoteMatchesForUser = matches.filter(
 	m => m.source === 'remote' && (m.user_id_first === user?.id || m.user_id_second === user?.id)
 	);
