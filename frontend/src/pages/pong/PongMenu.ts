@@ -223,7 +223,7 @@ export function setupMenu(pong: Pong) {
 
   backFromGameListBtn.onclick = () => {
     resetTournamentState();
-    showOnly(remoteOptions);
+    showOnly(get('joinAliasScreen'));
     if (gameListInterval) clearInterval(gameListInterval);
   };
 
