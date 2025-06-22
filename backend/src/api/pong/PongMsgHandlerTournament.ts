@@ -74,6 +74,8 @@ export function handleCreateTournament(senderUsername: string, pong_data: Create
   const newTournament = new Tournament(uniqueGameID, senderUsername, pong_data.playerAlias);
 
   // add tournament to list
+  if (currentTournaments.size > 0)
+    return;
   currentTournaments.set(uniqueGameID, newTournament);
 
   const senderSocket = getPongSocket(senderUsername);
