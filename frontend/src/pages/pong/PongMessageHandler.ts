@@ -108,7 +108,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     isInTournament = true;
     // only send to winner
     console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",data.winnerId,".........", userContext.state.username)
-    if(data.winnerId === userContext.state.username)
+    if(data.winnerId === userContext.state.username  && isTournamentGame)
       handleTournamentWaiting();
 	}
 	}, 5000);
