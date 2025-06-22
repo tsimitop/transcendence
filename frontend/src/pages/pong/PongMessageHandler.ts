@@ -3,7 +3,6 @@ import { setGameRunning } from "./PongMenu";
 import { GameStateData } from "./PongGame";
 import { GameOverData } from "./PongGame";
 import DOMPurify from 'dompurify';
-import Header from "../../components/Header";
 import { userContext } from "../../context/UserContext";
 
 let isInTournament = false;
@@ -70,11 +69,10 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     canvas.height = canvas.clientHeight;
 
 // ###########
-  const pongPage = document.querySelector("pong-component")!;
-  const header = document.querySelector("header-component")!;
-  if (!header) {
-    pongPage.insertAdjacentElement("afterbegin", Header.create());
-  }
+    const header = document.querySelector("header-component") as HTMLElement;
+    if (header) {
+      header.style.display = "flex";
+    }
 
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error("Canvas context not available");
@@ -205,9 +203,10 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
 
 
         // ############
-    const header = document.querySelector("header-component")!;
-    const pongPage = document.querySelector("pong-component")!;
-    pongPage.removeChild(header);
+        const header = document.querySelector("header-component") as HTMLElement;
+        if (header) {
+          header.style.display = "none";
+        }
 
     // Show canvas
     canvas.style.display = "block";
@@ -392,9 +391,10 @@ export function handleWaitingForUser() {
       };
 
     // ############
-    const header = document.querySelector("header-component")!;
-    const pongPage = document.querySelector("pong-component")!;
-    pongPage.removeChild(header);
+    const header = document.querySelector("header-component") as HTMLElement;
+    if (header) {
+      header.style.display = "none";
+    }
 
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(joinRequest));
@@ -510,9 +510,10 @@ export function handleWaitingForUser() {
 
 
         // ############
-    const header = document.querySelector("header-component")!;
-    const pongPage = document.querySelector("pong-component")!;
-    pongPage.removeChild(header);
+        const header = document.querySelector("header-component") as HTMLElement;
+        if (header) {
+          header.style.display = "none";
+        }
 
         if (socket && socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify(joinRequest));

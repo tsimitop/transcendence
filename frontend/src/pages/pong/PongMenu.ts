@@ -134,9 +134,10 @@ export function setupMenu(pong: Pong) {
     }));
 
         // ############
-    const header = document.querySelector("header-component")!;
-    const pongPage = document.querySelector("pong-component")!;
-    pongPage.removeChild(header);
+    const header = document.querySelector("header-component") as HTMLElement;
+    if (header) {
+      header.style.display = "none";
+    }
   };
 
   createRemoteTournamentBtn.onclick = () => {
@@ -160,9 +161,10 @@ export function setupMenu(pong: Pong) {
 
 
     // ############
-    const header = document.querySelector("header-component")!;
-    const pongPage = document.querySelector("pong-component")!;
-    pongPage.removeChild(header);
+    const header = document.querySelector("header-component") as HTMLElement;
+    if (header) {
+      header.style.display = "none";
+    }
 
   };
 
@@ -206,9 +208,10 @@ export function setupMenu(pong: Pong) {
       return alert("Please enter both player aliases");
     }
     
-    const header = document.querySelector("header-component")!;
-    const pongPage = document.querySelector("pong-component")!;
-    pongPage.removeChild(header);
+    const header = document.querySelector("header-component") as HTMLElement;
+    if(header) {
+      header.style.display = "none";
+    }
     
     showOnly(gameCanvas);
 

@@ -176,10 +176,10 @@ fastify.post(
       storeAvatarStatement.run(filename, userId);
     } catch (error) {
       reply.code(500).send({
-        errorMessage: `Something went wrong while uploading the avatar: ${filename}!, Error: ${error}`,
+        errorMessage: `Something went wrong while uploading the avatar!, Error: ${error}`,
       });
       return;
     }
 
-    reply.send({message: `Avatar uploaded: ${filename}`});
+    reply.send({message: `Avatar uploaded`});
 });

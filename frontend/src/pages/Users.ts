@@ -79,7 +79,7 @@ class Users extends Component {
 	  ).length;
 	}
 	const remoteMatchesForUser = matches.filter(
-	m => m.source === 'remote' && (m.user_id_first === user?.id || m.user_id_second === user?.id)
+	m => m.source === 'remote' && (m.user_id_first === user?.id || m.user_id_second === user?.id) && m.winner_id && m.winner_alias
 	);
 	const wins = remoteMatchesForUser.filter(m => m.winner_id === user?.id).length;
 	const losses = remoteMatchesForUser.length - wins;
