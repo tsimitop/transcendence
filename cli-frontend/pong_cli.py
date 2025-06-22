@@ -1092,8 +1092,8 @@ class PongCli:
         menu: List[Tuple[str, Optional[Any]]] = [
             ("Create a new game", self.create_game_screen),
             ("Join an existing game", self.join_existing_game_screen),
-            ("Create a tournament", self.create_tournament_screen),
-            ("Join a tournament", self.join_tournament_screen),
+            # ("Create a tournament", self.create_tournament_screen),
+            # ("Join a tournament", self.join_tournament_screen),
             ("Debug mode", self.debug_screen),
             ("Quit", None),
         ]
