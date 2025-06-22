@@ -212,7 +212,7 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
   
     const drawCountdown = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.font = "72px Arial";
+      ctx.font = "24px Arial";
       ctx.fillStyle = "white";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";

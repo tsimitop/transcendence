@@ -86,15 +86,16 @@ export function handleCreateTournament(senderUsername: string, pong_data: Create
     senderSocket.send(JSON.stringify(response));
     return;
   }
+}
   currentTournaments.set(uniqueGameID, newTournament);
 
-    if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
-      const response = {
-        target_endpoint: 'pong-api',
-        type: 'game_created',
-        gameId: uniqueGameID
-      };
-      senderSocket.send(JSON.stringify(response));
-    }
+  if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
+    const response = {
+      target_endpoint: 'pong-api',
+      type: 'game_created',
+      gameId: uniqueGameID
+    };
+    senderSocket.send(JSON.stringify(response));
+
   }
 }
