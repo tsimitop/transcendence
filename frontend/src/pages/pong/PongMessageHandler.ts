@@ -3,7 +3,6 @@ import { setGameRunning } from "./PongMenu";
 import { GameStateData } from "./PongGame";
 import { GameOverData } from "./PongGame";
 import DOMPurify from 'dompurify';
-import Header from "../../components/Header";
 import { userContext } from "../../context/UserContext";
 
 let isInTournament = false;
