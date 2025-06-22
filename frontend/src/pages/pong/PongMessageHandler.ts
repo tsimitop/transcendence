@@ -390,6 +390,12 @@ export function handleWaitingForUser() {
           }
         }
       };
+
+    // ############
+    const header = document.querySelector("header-component")!;
+    const pongPage = document.querySelector("pong-component")!;
+    pongPage.removeChild(header);
+
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(joinRequest));
       } else {
@@ -398,10 +404,7 @@ export function handleWaitingForUser() {
     });
 
 
-    // ############
-    const header = document.querySelector("header-component")!;
-    const pongPage = document.querySelector("pong-component")!;
-    pongPage.removeChild(header);
+
 
     // Append info and button to list item
     li.appendChild(infoDiv);
@@ -504,6 +507,13 @@ export function handleWaitingForUser() {
             }
           }
         };
+
+
+        // ############
+    const header = document.querySelector("header-component")!;
+    const pongPage = document.querySelector("pong-component")!;
+    pongPage.removeChild(header);
+
         if (socket && socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify(joinRequest));
         } else {
@@ -512,10 +522,6 @@ export function handleWaitingForUser() {
       });
 
 
-      // ############
-    const header = document.querySelector("header-component")!;
-    const pongPage = document.querySelector("pong-component")!;
-    pongPage.removeChild(header);
 
 
     li.appendChild(infoDiv);
