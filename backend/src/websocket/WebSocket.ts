@@ -7,6 +7,7 @@ import { handleWebsocketPayload } from './MessageHandler';
 import { endOfGame, endOfGame2 } from '../api/pong/PongMsgHandler';
 import { deleteGameBecauseUserReconnected } from '../api/pong/PongMsgHandler';
 import { QueryFriend } from '../user-database/friend-queries';
+import { QueryUser } from '../user-database/queries';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -124,6 +125,7 @@ export function startWebSocketServer(server: any) {
     }
 
     console.log(`[WS] User connected: ${username} (type: ${connectionType})`);
+	broadcastOnlineStatus(username, true);
 
     // Only delete running games for pong connections
     if (connectionType === 'pong') {
@@ -141,7 +143,8 @@ export function startWebSocketServer(server: any) {
     // Handle socket close event
     socket.on('close', () => {
       console.log(`[WS] User disconnected: ${username} (type: ${connectionType})`);
-      unregisterUser(username, connectionType);
+      broadcastOnlineStatus(username, false);
+	  unregisterUser(username, connectionType);
 
       // Only end games for pong connections
       if (connectionType === 'pong') {
@@ -209,4 +212,38 @@ export function unregisterUser(username: string, type: 'chat' | 'pong' = 'chat')
   if (userConnections.size === 0) {
     connectedUsers.delete(username);
   }
+}
+
+
+export function broadcastOnlineStatus(username: string, isOnline: boolean): void {
+  const userDbInstance = new UserDb("database/test.db");
+  const db = userDbInstance.openDb();
+
+  const getUserId = db.prepare(QueryUser.FIND_ID_BY_USERNAME);
+  const userRow = getUserId.get(username) as { id: number } | undefined;
+  if (!userRow) {
+    db.close();
+    return;
+  }
+
+  const stmt = db.prepare(QueryFriend.LIST_OF_ACCEPTED);
+  const friends = stmt.all(userRow.id, userRow.id) as { friend_id: number }[];
+
+  const getUsername = db.prepare(QueryUser.MATCH_EACH_ID_TO_USERNAME);
+
+  for (const friend of friends) {
+    const friendRow = getUsername.get(friend.friend_id) as { username: string } | undefined;
+    if (!friendRow?.username) continue;
+
+    const ws = getUserSocket(friendRow.username);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: "FRIENDSHIP_UPDATE",
+        friend: username,
+        online: isOnline
+      }));
+    }
+  }
+
+  db.close();
 }

@@ -331,7 +331,7 @@ import themeState from "../context/ThemeContext";
 			}
 			break;
 
-		case "CHAT":
+		  case "CHAT":
 			// Determine if the message is a direct message (DM)
 			const currentUser = userContext.state.username;
 			if (parsed.to) {
@@ -420,18 +420,19 @@ import themeState from "../context/ThemeContext";
 			message.classList.add("text-purple-600", "font-semibold");
 			break;
 
-		  case "FRIENDSHIP_UPDATE":
+		case "FRIENDSHIP_UPDATE":
 			console.log("[WS] FRIENDSHIP_UPDATE received – updating UI");
+			if (parsed.friend && typeof parsed.online === "boolean") {
+				const statusText = parsed.online ? "online" : "offline";
+				console.log(`[WS] ${parsed.friend} is now ${statusText}`);
+			}
 			this.refreshFriendsDropdown();
-			// this.showSystemMessage("[Friendship updated]", "text-blue-500");
 			import("../context/UserContext").then(({ refreshRelations }) => {
 				refreshRelations().then(() => {
 				console.log("[WS] UserContext refreshed after FRIENDSHIP_UPDATE");
 				});
 			});
-
-  break;
-
+			break;
 
 		  default:
 			// Fallback handler for unknown message types
@@ -501,8 +502,6 @@ import themeState from "../context/ThemeContext";
 	 */
 	public async refreshFriendsDropdown(): Promise<void> {
 		const now = Date.now();
-
-		// Verhindert mehrfachen Aufruf innerhalb von 2 Sekunden
 		if (now - this.lastDropdownUpdate < 2000) {
 			console.log("[Dropdown] Skipping redundant refresh.");
 			return;

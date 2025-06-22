@@ -1,7 +1,7 @@
 import { FastifyRequest } from "fastify";
 import { SESSION_COOKIE_NAME } from "../../constants";
 import { fastify } from "../../server";
-import { unregisterUser } from "../../websocket/WebSocket";
+import { unregisterUser, broadcastOnlineStatus } from "../../websocket/WebSocket";
 import { UserStateType } from "../sign-in/sign-in";
 
 fastify.post("/api/sign-out", async function (request: FastifyRequest<{Body: { user: UserStateType };}>, reply) {
@@ -32,6 +32,7 @@ fastify.post("/api/sign-out", async function (request: FastifyRequest<{Body: { u
   });
   if (username) {
 	unregisterUser(username);
+	broadcastOnlineStatus(username, false);
   }
 
   request.session.user = undefined;
