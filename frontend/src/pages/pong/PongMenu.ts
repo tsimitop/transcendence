@@ -132,6 +132,11 @@ export function setupMenu(pong: Pong) {
         }
       }
     }));
+
+        // ############
+    const header = document.querySelector("header-component")!;
+    const pongPage = document.querySelector("pong-component")!;
+    pongPage.removeChild(header);
   };
 
   createRemoteTournamentBtn.onclick = () => {
@@ -152,6 +157,13 @@ export function setupMenu(pong: Pong) {
         }
       }
     }));
+
+
+    // ############
+    const header = document.querySelector("header-component")!;
+    const pongPage = document.querySelector("pong-component")!;
+    pongPage.removeChild(header);
+
   };
 
   // Join remote game buttons

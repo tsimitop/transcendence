@@ -201,6 +201,14 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     document.querySelectorAll(".screen").forEach((el) => {
       (el as HTMLElement).style.display = "none";
     });
+
+
+
+        // ############
+    const header = document.querySelector("header-component")!;
+    const pongPage = document.querySelector("pong-component")!;
+    pongPage.removeChild(header);
+
     // Show canvas
     canvas.style.display = "block";
     canvas.width = canvas.clientWidth;
@@ -389,6 +397,12 @@ export function handleWaitingForUser() {
       }
     });
 
+
+    // ############
+    const header = document.querySelector("header-component")!;
+    const pongPage = document.querySelector("pong-component")!;
+    pongPage.removeChild(header);
+
     // Append info and button to list item
     li.appendChild(infoDiv);
     li.appendChild(joinBtn);
@@ -496,6 +510,13 @@ export function handleWaitingForUser() {
           console.error("Socket is not open");
         }
       });
+
+
+      // ############
+    const header = document.querySelector("header-component")!;
+    const pongPage = document.querySelector("pong-component")!;
+    pongPage.removeChild(header);
+
 
     li.appendChild(infoDiv);
     li.appendChild(joinBtn);
