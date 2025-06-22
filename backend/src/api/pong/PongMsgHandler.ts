@@ -219,6 +219,57 @@ export function endOfGame(user: string, message: string) {
 }
 
   
+export function endOfGame2(user: string, message: string) {
+  for (const [username, game] of currentGames.entries()) {
+    const lPlayer = game.getlPlayerName();
+    const rPlayer = game.getrPlayerName();
+
+    if(user == lPlayer)
+      user = rPlayer;
+    else if(user == rPlayer)
+      user = lPlayer;
+
+    if (user !== lPlayer && user !== rPlayer) continue;
+
+    game.setGameState("finished");
+
+    const winnerId = user;
+    const response = {
+      target_endpoint: 'pong-api',
+      type: 'game_over',
+      pong_data: {
+        gameId: game.getUniqeID(),
+        winnerId: winnerId,
+        message: message,
+        finalScore: {
+          left: game.getlPlayerScore(),
+          right: game.getrPlayerScore(),
+        }
+      }
+    };
+    const lsocket = game.getlPlayerSocket();
+    const rsocket = game.getrPlayerSocket();
+    if (lsocket?.readyState === WebSocket.OPEN) {
+      lsocket.send(JSON.stringify(response));
+    }
+    if (rsocket?.readyState === WebSocket.OPEN) {
+      rsocket.send(JSON.stringify(response));
+    }
+
+    // Remove game from all player keys (both left and right player)
+    currentGames.delete(lPlayer);
+    currentGames.delete(rPlayer);
+
+    for (const [_, tournament] of currentTournaments.entries()) {
+      if (tournament.hasPlayer(user)) {
+        console.log("notifyMatchEnd called with:", user);
+        tournament.notifyMatchEnd(user);
+        break;
+      }
+    }
+    break;
+  }
+}
 
 export function deleteGameBecauseUserReconnected(user: string): void {
   console.log("IS IT CALLED")

@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { IncomingMessage } from 'http';
 import UserDb from "../user-database/UserDb";
 import { handleWebsocketPayload } from './MessageHandler';
-import { endOfGame } from '../api/pong/PongMsgHandler';
+import { endOfGame, endOfGame2 } from '../api/pong/PongMsgHandler';
 import { deleteGameBecauseUserReconnected } from '../api/pong/PongMsgHandler';
 import { QueryFriend } from '../user-database/friend-queries';
 
@@ -145,7 +145,7 @@ export function startWebSocketServer(server: any) {
 
       // Only end games for pong connections
       if (connectionType === 'pong') {
-        endOfGame(username, "WIN THROUGH DISSCONNETION");
+        endOfGame2(username, "WIN THROUGH DISSCONNETION");
       }
     });
 
