@@ -73,12 +73,21 @@ export function handleCreateTournament(senderUsername: string, pong_data: Create
   const uniqueGameID = `${senderUsername}-Tournament-${Date.now()}`;
   const newTournament = new Tournament(uniqueGameID, senderUsername, pong_data.playerAlias);
 
+  const senderSocket = getPongSocket(senderUsername);
   // add tournament to list
   if (currentTournaments.size > 0)
+  {
+    if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
+    const response = {
+      target_endpoint: 'pong-api',
+      type: 'server_full',
+      message: "Server is Full - refresh and retry"
+    };
+    senderSocket.send(JSON.stringify(response));
     return;
+  }
   currentTournaments.set(uniqueGameID, newTournament);
 
-  const senderSocket = getPongSocket(senderUsername);
     if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
       const response = {
         target_endpoint: 'pong-api',
@@ -87,4 +96,5 @@ export function handleCreateTournament(senderUsername: string, pong_data: Create
       };
       senderSocket.send(JSON.stringify(response));
     }
+  }
 }

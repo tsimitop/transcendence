@@ -79,3 +79,9 @@ export interface PongErrorData {
     message: string;
     code: number;
 }
+
+
+export interface Serverfull {
+    type: string;
+    message : string;
+}

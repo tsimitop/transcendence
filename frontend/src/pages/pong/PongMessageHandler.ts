@@ -26,6 +26,9 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
       case 'countdown':
         handleCountdownGame(data);
         break;
+      case 'server_full':
+        showFull(data);
+        break;
       case 'game_created':
         handleGameCreated(data);
         break;
@@ -183,6 +186,40 @@ export function     handlePongMessage(data: any, socket: WebSocket | null ) {
     .join("   ");
 
     ctx.fillText(`${scoreText}`, canvas.width / 2, 30);
+
+  }
+
+  export function showFull(data: any) {
+    const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
+    if (!canvas) {
+      console.warn("Canvas element not found - user may have navigated away");
+      return;
+    }
+    // Hide all UI screens
+    document.querySelectorAll(".screen").forEach((el) => {
+      (el as HTMLElement).style.display = "none";
+    });
+    // Show canvas
+    canvas.style.display = "block";
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas context not available");
+  
+    let countdown = data.message;
+
+    console.log(countdown);
+  
+    const drawCountdown = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "72px Arial";
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(countdown), canvas.width / 2, canvas.height / 2);
+    };
+  
+    drawCountdown();
 
   }
 
