@@ -1760,13 +1760,8 @@ async def main() -> None:
             tg.create_task(game_client.start())
             tg.create_task(game_client.consume_backend_messages())
             tg.create_task(terminal_ui.run())
-    except* Exception as exc_group:
-        for exc in exc_group.exceptions:
-            if not isinstance(exc, GracefulExit):
-                logger.error(f"Unhandled exception: {exc}")
-                raise
-            else:
-                logger.info(f"Graceful exit: {exc}")
+    except Exception as exc:
+        logger.debug(f"", exc_info=True)
     finally:
         logger.info("Application shutting down")
         terminal_ui.cleanup()
