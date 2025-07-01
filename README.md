@@ -76,6 +76,12 @@ API.
   - Accessibility: Expanding browser compatibility **???** (Supports Google Chrome and Firefox out of the box, but does not work in Safari)
   - Accessibility: Add accessibility features for visually impaired users (**Partially**).
     
+#### <u>Thaleia</u>
+ * User Management
+   - Profiles (visit others, update yours)
+   - Match history and statistics per user
+   - Relatinships and online status (friend/blocked, online/offline)
+
 #### <u>Waldi</u>
 * Client implementation of Pong game (Frontend, GUI, consuming the API)
 * Live Chat frontend
